@@ -10,6 +10,23 @@
       body {
         font-family: 'Inter', sans-serif;
       }
+      .jackpot-card {
+        box-shadow: 0 8px 25px -5px color-mix(in srgb, var(--glow-color, #000) 20%, transparent);
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+      }
+      .jackpot-card:hover {
+        box-shadow: 0 12px 40px -10px color-mix(in srgb, var(--glow-color, #000) 50%, transparent);
+      }
+      @keyframes scroll {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+      .animate-scroll {
+        animation: scroll var(--animation-duration, 30s) linear infinite;
+      }
+      .group:hover .animate-scroll, .animate-scroll:hover {
+        animation-play-state: paused;
+      }
     </style>
   <script type="importmap">
 {

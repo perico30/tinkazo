@@ -175,6 +175,15 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
                 <div><label className="block mb-1">Título del Pop-up</label><input type="text" value={config.welcomePopup.title} onChange={e => handleNestedChange('welcomePopup', 'title', e.target.value)} className="w-full bg-gray-700 p-2 rounded" /></div>
                 <div><label className="block mb-1">Texto del Pop-up</label><textarea value={config.welcomePopup.text} onChange={e => handleNestedChange('welcomePopup', 'text', e.target.value)} className="w-full bg-gray-700 p-2 rounded"></textarea></div>
                 <ImageUpload label="Imagen del Pop-up" imageUrl={config.welcomePopup.imageUrl} onImageSelect={url => handleNestedChange('welcomePopup', 'imageUrl', url)} />
+                {config.welcomePopup.imageUrl && (
+                    <button 
+                        type="button" 
+                        onClick={() => handleNestedChange('welcomePopup', 'imageUrl', '')}
+                        className="text-sm text-red-400 hover:underline -mt-2"
+                    >
+                        Eliminar imagen
+                    </button>
+                )}
             </div>
           )}
         </div>

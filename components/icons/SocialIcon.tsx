@@ -4,6 +4,7 @@ import TwitterIcon from './TwitterIcon';
 import InstagramIcon from './InstagramIcon';
 import YoutubeIcon from './YoutubeIcon';
 import LinkedinIcon from './LinkedinIcon';
+import WhatsappIcon from './WhatsappIcon';
 
 interface SocialIconProps {
   platform: string;
@@ -22,6 +23,8 @@ const SocialIcon: React.FC<SocialIconProps> = ({ platform, className = 'h-6 w-6'
       return <YoutubeIcon className={className} />;
     case 'linkedin':
       return <LinkedinIcon className={className} />;
+    case 'whatsapp':
+      return <WhatsappIcon className={className} />;
     default:
       // Fallback icon (simple circle)
       return (
