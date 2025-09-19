@@ -1,0 +1,262 @@
+import React, { useRef, useState } from 'react';
+import type { AppConfig, SocialLink, LegalLink, CarouselImage, JackpotConfig } from '../../types';
+import ImageUpload from '../../components/admin/ImageUpload';
+import PlusIcon from '../../components/icons/PlusIcon';
+import TrashIcon from '../../components/icons/TrashIcon';
+import DragHandleIcon from '../../components/icons/DragHandleIcon';
+
+interface ConfigurationTabProps {
+  config: AppConfig;
+  setConfig: React.Dispatch<React.SetStateAction<AppConfig>>;
+}
+
+
+const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Refs for drag & drop
+  const carouselDragItem = useRef<number | null>(null);
+  const carouselDragOverItem = useRef<number | null>(null);
+  const sectionDragItem = useRef<number | null>(null);
+  const sectionDragOverItem = useRef<number | null>(null);
+  const [draggingSection, setDraggingSection] = useState<number | null>(null);
+
+  const handleValueChange = <T extends keyof AppConfig>(key: T, value: AppConfig[T]) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+  };
+  
+  const handleNestedChange = <T extends keyof AppConfig, N extends keyof AppConfig[T]>(key: T, nestedKey: N, value: AppConfig[T][N]) => {
+    setConfig(prev => ({ ...prev, [key]: { ...(prev[key] as object), [nestedKey]: value } }));
+  };
+
+  const handleJackpotChange = (index: 0 | 1, key: keyof JackpotConfig, value: any) => {
+    const newJackpots = [...config.jackpots] as [JackpotConfig, JackpotConfig];
+    newJackpots[index] = { ...newJackpots[index], [key]: value };
+    handleValueChange('jackpots', newJackpots);
+  };
+  
+   const handleJackpotColorChange = (index: 0 | 1, colorKey: 'primary' | 'secondary', value: string) => {
+    const newJackpots = [...config.jackpots] as [JackpotConfig, JackpotConfig];
+    const newColors = { ...newJackpots[index].colors, [colorKey]: value };
+    newJackpots[index] = { ...newJackpots[index], colors: newColors };
+    handleValueChange('jackpots', newJackpots);
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, callback: (dataUrl: string) => void) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          callback(event.target.result);
+        }
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
+  const handleAddCarouselImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileChange(e, (url) => {
+        const newImage: CarouselImage = { id: new Date().toISOString(), url };
+        setConfig(prev => ({ ...prev, carouselImages: [...prev.carouselImages, newImage]}));
+    });
+  };
+
+  const handleRemoveCarouselImage = (id: string) => {
+    setConfig(prev => ({ ...prev, carouselImages: prev.carouselImages.filter(img => img.id !== id) }));
+  }
+
+  // Drag and drop for carousel
+  const handleCarouselDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => { carouselDragItem.current = position; e.dataTransfer.effectAllowed = 'move'; };
+  const handleCarouselDragEnter = (e: React.DragEvent<HTMLDivElement>, position: number) => { carouselDragOverItem.current = position; };
+  const handleCarouselDrop = () => {
+    if (carouselDragItem.current === null || carouselDragOverItem.current === null) return;
+    const newImages = [...config.carouselImages];
+    const dragItemContent = newImages[carouselDragItem.current];
+    newImages.splice(carouselDragItem.current, 1);
+    newImages.splice(carouselDragOverItem.current, 0, dragItemContent);
+    carouselDragItem.current = null;
+    carouselDragOverItem.current = null;
+    setConfig(prev => ({ ...prev, carouselImages: newImages }));
+  };
+  
+  // Drag and drop for sections
+  const handleSectionDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => { 
+    sectionDragItem.current = position; 
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingSection(position);
+  };
+  const handleSectionDragEnter = (position: number) => { sectionDragOverItem.current = position; };
+  const handleSectionDrop = () => {
+    if (sectionDragItem.current === null || sectionDragOverItem.current === null) return;
+    const newSections = [...config.sectionsOrder];
+    const dragItemContent = newSections[sectionDragItem.current];
+    newSections.splice(sectionDragItem.current, 1);
+    newSections.splice(sectionDragOverItem.current, 0, dragItemContent);
+    sectionDragItem.current = null;
+    sectionDragOverItem.current = null;
+    setConfig(prev => ({ ...prev, sectionsOrder: newSections }));
+    setDraggingSection(null);
+  };
+  const handleSectionDragEnd = () => {
+    setDraggingSection(null);
+  }
+  
+  // Footer handlers
+  const handleSocialChange = (index: number, key: keyof SocialLink, value: string) => {
+    const newLinks = [...config.footer.socialLinks];
+    newLinks[index] = { ...newLinks[index], [key]: value };
+    handleNestedChange('footer', 'socialLinks', newLinks);
+  };
+  const addSocialLink = () => handleNestedChange('footer', 'socialLinks', [...config.footer.socialLinks, { platform: '', url: '' }]);
+  const removeSocialLink = (index: number) => handleNestedChange('footer', 'socialLinks', config.footer.socialLinks.filter((_, i) => i !== index));
+  const handleLegalChange = (index: 0 | 1, key: keyof LegalLink, value: string) => {
+    const newLinks = [...config.footer.legalLinks] as [LegalLink, LegalLink];
+    newLinks[index] = { ...newLinks[index], [key]: value };
+    handleNestedChange('footer', 'legalLinks', newLinks);
+  };
+
+  const sectionNames: { [key in AppConfig['sectionsOrder'][0]]: string } = {
+    jackpots: 'Pozos Acumulados',
+    carousel: 'Carrusel de Imágenes',
+    jornadas: 'Jornadas Deportivas',
+  };
+
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Apariencia */}
+      <details open className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Apariencia</summary>
+        <div className="mt-4 grid md:grid-cols-2 gap-6">
+          <div><label className="block mb-1">Nombre App</label><input type="text" value={config.appName} onChange={e => handleValueChange('appName', e.target.value)} className="w-full bg-gray-700 p-2 rounded" /></div>
+          <ImageUpload label="Logo de la App" imageUrl={config.logoUrl} onImageSelect={url => handleValueChange('logoUrl', url)} />
+          <div className="flex items-center justify-between"><label>Color de Fondo</label><input type="color" value={config.theme.backgroundColor} onChange={e => handleNestedChange('theme', 'backgroundColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
+          <div className="flex items-center justify-between"><label>Color de Texto</label><input type="color" value={config.theme.textColor} onChange={e => handleNestedChange('theme', 'textColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
+          <div className="flex items-center justify-between md:col-span-2"><label>Color Primario (Botones)</label><input type="color" value={config.theme.primaryColor} onChange={e => handleNestedChange('theme', 'primaryColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
+        </div>
+      </details>
+
+      {/* Orden de Secciones */}
+      <details className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Orden de Secciones</summary>
+        <div className="mt-4 space-y-2">
+            <p className="text-sm text-gray-400 mb-2">Arrastra y suelta para reordenar las secciones de la página de inicio.</p>
+            {config.sectionsOrder.map((sectionKey, index) => (
+                <div 
+                    key={sectionKey}
+                    draggable
+                    onDragStart={e => handleSectionDragStart(e, index)}
+                    onDragEnter={() => handleSectionDragEnter(index)}
+                    onDragEnd={handleSectionDragEnd}
+                    onDrop={handleSectionDrop}
+                    onDragOver={e => e.preventDefault()}
+                    className={`flex items-center gap-4 bg-gray-700 p-3 rounded-lg cursor-grab transition-opacity ${draggingSection === index ? 'opacity-50' : ''}`}
+                    aria-roledescription={`Sección arrastrable: ${sectionNames[sectionKey]}`}
+                >
+                    <DragHandleIcon className="h-5 w-5 text-gray-400" />
+                    <span className="font-medium">{sectionNames[sectionKey]}</span>
+                </div>
+            ))}
+        </div>
+      </details>
+
+      {/* Inicio */}
+      <details className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Página de Inicio</summary>
+        <div className="mt-4 space-y-4">
+          <h3 className="font-bold">Mensaje de Bienvenida</h3>
+          <div><label className="block mb-1">Título</label><input type="text" value={config.welcomeMessage.title} onChange={e => handleNestedChange('welcomeMessage', 'title', e.target.value)} className="w-full bg-gray-700 p-2 rounded" /></div>
+          <div><label className="block mb-1">Descripción</label><textarea value={config.welcomeMessage.description} onChange={e => handleNestedChange('welcomeMessage', 'description', e.target.value)} className="w-full bg-gray-700 p-2 rounded h-24"></textarea></div>
+          <hr className="border-gray-600 my-4" />
+          <h3 className="font-bold">Pop-up de Bienvenida</h3>
+          <div className="flex items-center gap-4"><label>Activar Pop-up</label><input type="checkbox" checked={config.welcomePopup.enabled} onChange={e => handleNestedChange('welcomePopup', 'enabled', e.target.checked)} className="h-6 w-6" /></div>
+          {config.welcomePopup.enabled && (
+            <div className="space-y-4 pl-4 border-l-2 border-gray-700">
+                <div><label className="block mb-1">Título del Pop-up</label><input type="text" value={config.welcomePopup.title} onChange={e => handleNestedChange('welcomePopup', 'title', e.target.value)} className="w-full bg-gray-700 p-2 rounded" /></div>
+                <div><label className="block mb-1">Texto del Pop-up</label><textarea value={config.welcomePopup.text} onChange={e => handleNestedChange('welcomePopup', 'text', e.target.value)} className="w-full bg-gray-700 p-2 rounded"></textarea></div>
+                <ImageUpload label="Imagen del Pop-up" imageUrl={config.welcomePopup.imageUrl} onImageSelect={url => handleNestedChange('welcomePopup', 'imageUrl', url)} />
+            </div>
+          )}
+        </div>
+      </details>
+
+      {/* Pozos Acumulados */}
+      <details className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Pozos Acumulados</summary>
+        <div className="mt-4 grid md:grid-cols-2 gap-8">
+            {config.jackpots.map((jackpot, index) => (
+                <div key={index} className="space-y-4 bg-gray-700/50 p-4 rounded">
+                    <h3 className="font-bold">{jackpot.title}</h3>
+                    <div><label className="block mb-1">Detalle</label><input type="text" value={jackpot.detail} onChange={e => handleJackpotChange(index as 0|1, 'detail', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
+                    <div><label className="block mb-1">Monto</label><input type="text" value={jackpot.amount} onChange={e => handleJackpotChange(index as 0|1, 'amount', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
+                    <ImageUpload label="Imagen de Fondo (Opcional)" imageUrl={jackpot.backgroundImage} onImageSelect={url => handleJackpotChange(index as 0|1, 'backgroundImage', url)} />
+                    <div className="flex items-center justify-between"><label>Color Primario</label><input type="color" value={jackpot.colors.primary} onChange={e => handleJackpotColorChange(index as 0|1, 'primary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
+                    <div className="flex items-center justify-between"><label>Color Secundario/Fondo</label><input type="color" value={jackpot.colors.secondary} onChange={e => handleJackpotColorChange(index as 0|1, 'secondary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
+                </div>
+            ))}
+        </div>
+      </details>
+
+      {/* Carrusel */}
+      <details className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Carrusel de Imágenes</summary>
+        <div className="mt-4">
+            <input type="file" accept="image/png, image/jpeg" className="hidden" ref={fileInputRef} onChange={handleAddCarouselImage} />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {config.carouselImages.map((image, index) => (
+                    <div key={image.id} className="relative group cursor-move" draggable onDragStart={e => handleCarouselDragStart(e, index)} onDragEnter={e => handleCarouselDragEnter(e, index)} onDragEnd={handleCarouselDrop} onDragOver={e => e.preventDefault()}>
+                        <img src={image.url} className="w-full h-24 object-cover rounded" alt="" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <button onClick={() => handleRemoveCarouselImage(image.id)} className="text-red-400 p-2"><TrashIcon /></button>
+                        </div>
+                    </div>
+                ))}
+                 <button onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-600 rounded flex flex-col items-center justify-center h-24 hover:bg-gray-700">
+                    <PlusIcon />
+                    <span className="text-xs">Añadir</span>
+                </button>
+            </div>
+        </div>
+      </details>
+      
+      {/* Recargas */}
+      <details className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Recargas y Bonos</summary>
+        <div className="mt-4 grid md:grid-cols-1 gap-6 items-start">
+            <ImageUpload label="Imagen QR para Recargas" imageUrl={config.recharge.qrCodeUrl} onImageSelect={url => handleNestedChange('recharge', 'qrCodeUrl', url)} />
+            {/* FIX: Removed bonusPercentage input as it does not exist on the RechargeConfig type. */}
+        </div>
+      </details>
+
+      {/* Pie de Página */}
+      <details className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Pie de Página</summary>
+        <div className="mt-4 space-y-6">
+            <div><label className="block mb-1">Copyright</label><input type="text" value={config.footer.copyright} onChange={e => handleNestedChange('footer', 'copyright', e.target.value)} className="w-full bg-gray-700 p-2 rounded"/></div>
+            <div>
+                <h4 className="font-semibold mb-2">Redes Sociales</h4>
+                {config.footer.socialLinks.map((link, i) => (
+                    <div key={i} className="flex items-center gap-2 mb-2 p-2 bg-gray-700/50 rounded">
+                        <input type="text" placeholder="Plataforma (ej. facebook)" value={link.platform} onChange={e => handleSocialChange(i, 'platform', e.target.value)} className="w-1/3 bg-gray-600 p-1 rounded" />
+                        <input type="text" placeholder="URL" value={link.url} onChange={e => handleSocialChange(i, 'url', e.target.value)} className="w-2/3 bg-gray-600 p-1 rounded" />
+                        <button onClick={() => removeSocialLink(i)} className="text-red-400 p-1"><TrashIcon className="h-5 w-5"/></button>
+                    </div>
+                ))}
+                <button onClick={addSocialLink} className="text-cyan-400 mt-2">Añadir Red Social</button>
+            </div>
+            <div>
+                <h4 className="font-semibold mb-2">Textos Legales</h4>
+                {config.footer.legalLinks.map((link, i) => (
+                    <div key={i} className="space-y-2 mb-4">
+                        <label className="block font-medium">{link.title}</label>
+                        <textarea value={link.content} onChange={e => handleLegalChange(i as 0 | 1, 'content', e.target.value)} className="w-full bg-gray-700 p-2 rounded h-32" />
+                    </div>
+                ))}
+            </div>
+        </div>
+      </details>
+    </div>
+  );
+};
+
+export default ConfigurationTab;
