@@ -93,8 +93,8 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
 
                 <div className="mt-6 bg-gray-800 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="text-center sm:text-left">
-                        <p className="text-lg">Costo del Cartón: <span className="font-bold text-cyan-400">${jornada.cartonPrice.toFixed(2)}</span></p>
-                        <p className="text-sm">Tu saldo actual: <span className="font-semibold">${(currentUser.balance || 0).toFixed(2)}</span></p>
+                        <p className="text-lg">Costo del Cartón: <span className="font-bold text-cyan-400">Bs {jornada.cartonPrice.toFixed(2)}</span></p>
+                        <p className="text-sm">Tu saldo actual: <span className="font-semibold">Bs {(currentUser.balance || 0).toFixed(2)}</span></p>
                     </div>
                     <button 
                         onClick={handleSubmit}

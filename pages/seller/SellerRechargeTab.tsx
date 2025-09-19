@@ -91,7 +91,7 @@ const SellerRechargeTab: React.FC<SellerRechargeTabProps> = ({ config, currentUs
                         {rechargeHistory.map(req => (
                             <div key={req.id} className="bg-gray-700 p-3 rounded-md flex justify-between items-center text-sm">
                                 <div>
-                                    <p className="font-bold">${req.amount.toFixed(2)}</p>
+                                    <p className="font-bold">Bs {req.amount.toFixed(2)}</p>
                                     <p className="text-xs text-gray-400">{new Date(req.requestDate).toLocaleString()}</p>
                                 </div>
                                 <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStyles[req.status]}`}>{req.status}</span>

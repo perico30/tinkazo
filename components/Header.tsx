@@ -68,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({
               </span>
               {userRole === 'client' && (
                 <span className="text-sm font-bold text-cyan-300 bg-gray-700/50 px-3 py-1.5 rounded-full">
-                    Saldo: ${(currentUser.balance || 0).toFixed(2)}
+                    Saldo: Bs {(currentUser.balance || 0).toFixed(2)}
                 </span>
               )}
               {userRole === 'seller' && onSellerPanelClick && (

@@ -139,13 +139,13 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
                 <div className="flex flex-col sm:flex-row gap-4">
                     <HeaderCard 
                         title="Saldo Actual" 
-                        value={`$${(currentUser.balance || 0).toFixed(2)}`}
+                        value={`Bs ${(currentUser.balance || 0).toFixed(2)}`}
                         onRechargeClick={() => setActiveTab('recharge')}
                         onWithdrawClick={() => setActiveTab('recharge')}
                     />
                     <HeaderCard 
                         title="Ganancias Totales" 
-                        value="$0.00"
+                        value="Bs 0.00"
                     />
                 </div>
 

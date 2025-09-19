@@ -54,7 +54,7 @@ const ClientRechargesTab: React.FC<ClientRechargesTabProps> = ({ currentUser, co
                                     <tr key={req.id} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
                                         <td className="px-6 py-4">{new Date(req.requestDate).toLocaleString()}</td>
                                         <td className="px-6 py-4 font-medium whitespace-nowrap">{user?.username || 'N/A'}</td>
-                                        <td className="px-6 py-4 font-semibold">${req.amount.toFixed(2)}</td>
+                                        <td className="px-6 py-4 font-semibold">Bs {req.amount.toFixed(2)}</td>
                                         <td className="px-6 py-4">
                                             <button
                                                 onClick={() => setViewingProof(req.proofOfPaymentUrl || null)}

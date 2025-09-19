@@ -37,7 +37,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
         }
     };
 
-    const rechargeWhatsappMessage = `Hola ${sellerName}, he registrado una solicitud de recarga por $${rechargeAmount}. Mi usuario es: ${currentUser.username}. Quedo a la espera de la aprobación.`;
+    const rechargeWhatsappMessage = `Hola ${sellerName}, he registrado una solicitud de recarga por Bs ${rechargeAmount}. Mi usuario es: ${currentUser.username}. Quedo a la espera de la aprobación.`;
     const rechargeWhatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(rechargeWhatsappMessage)}`;
 
     const handleWithdrawalSubmit = (e: React.FormEvent) => {
@@ -137,7 +137,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                             {rechargeHistory.map(req => (
                                 <div key={req.id} className="bg-gray-700 p-3 rounded-md flex justify-between items-center text-sm">
                                     <div>
-                                        <p className="font-bold">${req.amount.toFixed(2)}</p>
+                                        <p className="font-bold">Bs {req.amount.toFixed(2)}</p>
                                         <p className="text-xs text-gray-400">{new Date(req.requestDate).toLocaleString()}</p>
                                     </div>
                                     <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStylesRecharge[req.status]}`}>{req.status}</span>
@@ -152,7 +152,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
             <div className="bg-gray-800 p-6 rounded-lg space-y-4 flex flex-col">
                 <h2 className="font-bold text-xl text-purple-400">Solicitar Retiro</h2>
                 <form onSubmit={handleWithdrawalSubmit} className="space-y-4">
-                     <p className="text-gray-300 text-sm">Completa el formulario para solicitar un retiro de tu saldo. Tu saldo actual es: <span className="font-bold text-white">${(currentUser.balance || 0).toFixed(2)}</span></p>
+                     <p className="text-gray-300 text-sm">Completa el formulario para solicitar un retiro de tu saldo. Tu saldo actual es: <span className="font-bold text-white">Bs {(currentUser.balance || 0).toFixed(2)}</span></p>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Monto a Retirar</label>
                         <input 
@@ -184,7 +184,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                             {withdrawalHistory.map(req => (
                                 <div key={req.id} className="bg-gray-700 p-3 rounded-md flex justify-between items-center text-sm">
                                     <div>
-                                        <p className="font-bold">${req.amount.toFixed(2)}</p>
+                                        <p className="font-bold">Bs {req.amount.toFixed(2)}</p>
                                         <p className="text-xs text-gray-400">{new Date(req.requestDate).toLocaleString()}</p>
                                     </div>
                                     <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStylesWithdrawal[req.status]}`}>{req.status}</span>

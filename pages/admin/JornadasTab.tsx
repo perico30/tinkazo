@@ -269,7 +269,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div><p className="text-gray-400">1er Premio</p><p className="font-bold text-lg">{jornada.firstPrize}</p></div>
                                 <div><p className="text-gray-400">2do Premio</p><p className="font-bold text-lg">{jornada.secondPrize}</p></div>
-                                <div className="col-span-2"><p className="text-gray-400">Precio Cartón</p><p className="font-bold text-lg">${(jornada.cartonPrice || 0).toFixed(2)}</p></div>
+                                <div className="col-span-2"><p className="text-gray-400">Precio Cartón</p><p className="font-bold text-lg">Bs {(jornada.cartonPrice || 0).toFixed(2)}</p></div>
                             </div>
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-400 mb-2">Gestionar Estado</h4>

@@ -61,14 +61,14 @@ const App: React.FC = () => {
       {
         title: 'El Botín Acumulado',
         detail: 'El Botín Acumulado',
-        amount: '$1,250,000 MXN',
+        amount: 'Bs 1,250,000',
         colors: { primary: '#22d3ee', secondary: '#1f2937' }, // cyan-400, gray-800
         backgroundImage: '',
       },
       {
         title: 'El Gordito Mensual',
         detail: 'El Gordito Mensual',
-        amount: '$300,000 MXN',
+        amount: 'Bs 300,000',
         colors: { primary: '#c084fc', secondary: '#1f2937' }, // purple-400, gray-800
         backgroundImage: '',
       },

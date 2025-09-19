@@ -114,12 +114,12 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
             <div className="flex flex-col sm:flex-row gap-4">
                 <HeaderCard 
                     title="Mi Saldo" 
-                    value={`$${(currentUser.balance || 0).toFixed(2)}`}
+                    value={`Bs ${(currentUser.balance || 0).toFixed(2)}`}
                     onRechargeClick={() => setActiveTab('recharge')}
                 />
                 <HeaderCard 
                     title="Ganancias (Comisiones)" 
-                    value="$0.00"
+                    value="Bs 0.00"
                 />
             </div>
 

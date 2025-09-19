@@ -131,7 +131,7 @@ const JornadasSection: React.FC<{ jornadas: Jornada[], teams: Team[], cartones: 
               <div className="mt-4 space-y-2">
                 <p className="text-lg font-semibold">1er Lugar: <span className="font-extrabold text-2xl">{jornada.firstPrize}</span></p>
                 <p className="text-md font-semibold">2do Lugar: <span className="font-bold text-xl">{jornada.secondPrize}</span></p>
-                 <p className="text-sm font-semibold mt-2">Precio Cartón: <span className="font-bold text-lg">${(jornada.cartonPrice || 0).toFixed(2)}</span></p>
+                 <p className="text-sm font-semibold mt-2">Precio Cartón: <span className="font-bold text-lg">Bs {(jornada.cartonPrice || 0).toFixed(2)}</span></p>
               </div>
             </div>
             <button 
