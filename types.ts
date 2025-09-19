@@ -87,6 +87,7 @@ export interface Jornada {
   cartonPrice: number;
   matches: Match[];
   botinMatchId?: string | null;
+  flagIconUrl?: string;
   styling: {
     textColor: string;
     buttonColor: string;

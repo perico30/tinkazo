@@ -104,7 +104,14 @@ const CarouselSection: React.FC<{ images: CarouselImage[] }> = ({ images }) => {
     );
 };
 
-const JornadasSection: React.FC<{ jornadas: Jornada[], teams: Team[], cartones: Carton[], currentUser: RegisteredUser | null, onPlayJornada: (jornada: Jornada) => void }> = ({ jornadas, teams, cartones, currentUser, onPlayJornada }) => {
+const JornadasSection: React.FC<{ 
+    jornadas: Jornada[], 
+    teams: Team[], 
+    cartones: Carton[], 
+    currentUser: RegisteredUser | null, 
+    gorditoJornadaId?: string | null;
+    onPlayJornada: (jornada: Jornada) => void 
+}> = ({ jornadas, teams, cartones, currentUser, gorditoJornadaId, onPlayJornada }) => {
   const openJornadas = jornadas.filter(j => j.status === 'abierta');
 
   if (openJornadas.length === 0) {
@@ -134,11 +141,23 @@ const JornadasSection: React.FC<{ jornadas: Jornada[], teams: Team[], cartones: 
               backgroundPosition: 'center'
             }}
           >
-            <div className={`text-center ${jornada.styling.backgroundImage ? 'bg-black/50 p-4 rounded-md' : ''}`}>
-              <h3 className="text-xl font-bold">{jornada.name}</h3>
+            <div className={`relative text-center ${jornada.styling.backgroundImage ? 'bg-black/50 p-4 rounded-md' : ''}`}>
+               <div className="absolute -top-2 -right-2 flex flex-col gap-1.5">
+                    {jornada.id === gorditoJornadaId && (
+                        <span className="text-xs font-bold bg-purple-500 text-white px-2 py-0.5 rounded-full shadow-lg">GORDITO</span>
+                    )}
+                    {jornada.botinMatchId && (
+                        <span className="text-xs font-bold bg-cyan-500 text-gray-900 px-2 py-0.5 rounded-full shadow-lg">BOTÍN</span>
+                    )}
+                </div>
+                <div className="flex items-center justify-center gap-3 mb-2">
+                    {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="" className="h-10 w-10 object-contain rounded-full bg-white/10 p-1" />}
+                    <h3 className="text-xl font-bold">{jornada.name}</h3>
+                </div>
               <div className="mt-4 space-y-2">
                 <p className="text-lg font-semibold">1er Lugar: <span className="font-extrabold text-2xl">{jornada.firstPrize}</span></p>
                 <p className="text-md font-semibold">2do Lugar: <span className="font-bold text-xl">{jornada.secondPrize}</span></p>
+                 <p className="text-sm font-semibold mt-2">Partidos: <span className="font-bold text-lg">{jornada.matches.length}</span></p>
                  <p className="text-sm font-semibold mt-2">Precio Cartón: <span className="font-bold text-lg">Bs {(jornada.cartonPrice || 0).toFixed(2)}</span></p>
               </div>
             </div>
@@ -176,7 +195,14 @@ const HomePage: React.FC<HomePageProps> = (props) => {
   const sectionComponents = {
     jackpots: <JackpotsSection jackpots={appConfig.jackpots} />,
     carousel: <CarouselSection images={appConfig.carouselImages} />,
-    jornadas: <JornadasSection jornadas={appConfig.jornadas} teams={appConfig.teams} cartones={appConfig.cartones} currentUser={currentUser} onPlayJornada={onPlayJornada} />,
+    jornadas: <JornadasSection 
+                jornadas={appConfig.jornadas} 
+                teams={appConfig.teams} 
+                cartones={appConfig.cartones} 
+                currentUser={currentUser} 
+                onPlayJornada={onPlayJornada}
+                gorditoJornadaId={appConfig.gorditoJornadaId}
+              />,
   };
   
   return (

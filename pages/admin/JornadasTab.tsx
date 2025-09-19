@@ -20,6 +20,7 @@ const JornadaModal: React.FC<{
     const [secondPrize, setSecondPrize] = useState(jornada?.secondPrize || '');
     const [cartonPrice, setCartonPrice] = useState(jornada?.cartonPrice?.toString() || '');
     const [status, setStatus] = useState<'abierta' | 'cerrada' | 'cancelada'>(jornada?.status || 'abierta');
+    const [flagIconUrl, setFlagIconUrl] = useState(jornada?.flagIconUrl || '');
     const [styling, setStyling] = useState(jornada?.styling || {
         textColor: '#ffffff',
         buttonColor: '#06b6d4',
@@ -42,6 +43,7 @@ const JornadaModal: React.FC<{
             cartonPrice: Number(cartonPrice),
             status,
             styling,
+            flagIconUrl,
             matches: jornada.matches || [],
             botinMatchId: jornada.botinMatchId || null,
         });
@@ -51,7 +53,7 @@ const JornadaModal: React.FC<{
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div className="bg-gray-800 rounded-lg max-w-lg w-full" onClick={e => e.stopPropagation()}>
-                <div className="p-6">
+                <div className="p-6 max-h-[80vh] overflow-y-auto">
                     <h2 className="text-xl font-bold mb-4">{jornada.id ? 'Editar Jornada' : 'Añadir Jornada'}</h2>
                     <div className="space-y-4">
                         <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-gray-700 p-2 rounded" placeholder="Nombre de la Jornada" />
@@ -67,6 +69,7 @@ const JornadaModal: React.FC<{
                             <div className="flex items-center justify-between"><label>Color Botón</label><input type="color" value={styling.buttonColor} onChange={e => setStyling(s => ({...s, buttonColor: e.target.value}))} className="w-12 h-10 rounded bg-gray-700"/></div>
                             <div className="flex items-center justify-between"><label>Color Fondo</label><input type="color" value={styling.backgroundColor} onChange={e => setStyling(s => ({...s, backgroundColor: e.target.value}))} className="w-12 h-10 rounded bg-gray-700"/></div>
                         </div>
+                        <ImageUpload label="Bandera o Icono (Opcional)" imageUrl={flagIconUrl} onImageSelect={setFlagIconUrl} />
                         <ImageUpload label="Imagen de Fondo (Opcional)" imageUrl={styling.backgroundImage} onImageSelect={url => setStyling(s => ({...s, backgroundImage: url}))} />
                     </div>
                 </div>
