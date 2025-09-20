@@ -140,25 +140,6 @@ const App: React.FC = () => {
     loadConfig();
   }, []);
 
-  // Effect to save config to Firestore on change, with debounce
-  useEffect(() => {
-    // Don't save until config is loaded from Firestore
-    if (!isConfigLoaded) {
-      return;
-    }
-    
-    // Set up the debounced save
-    const handler = setTimeout(() => {
-        setDoc(doc(db, "tinkazoConfig", "main"), appConfig)
-            .catch(error => console.error("Failed to save config to Firestore:", error));
-    }, 1500); // 1.5 second debounce
-
-    // Cleanup function to cancel the timeout if component unmounts or appConfig changes again
-    return () => {
-        clearTimeout(handler);
-    };
-  }, [appConfig, isConfigLoaded]);
-
 
   useEffect(() => {
     // Apply the correct background class to the body
@@ -360,13 +341,21 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     return newConfig;
 };
 
-  const handleSaveConfig = (newConfig: AppConfig) => {
+  const handleSaveConfig = async (newConfig: AppConfig) => {
     const processedConfig = processJornadaResults(newConfig);
+    // Update local state immediately for a responsive UI
     setAppConfig(processedConfig);
-    showNotification('Se guardaron los cambios');
-    // This explicitly keeps the user on the admin page, preventing the
-    // reported redirect to the home page after saving.
     setCurrentView('admin');
+    
+    try {
+        // Save the updated config to Firestore and wait for it to complete
+        await setDoc(doc(db, "tinkazoConfig", "main"), processedConfig);
+        showNotification('¡Cambios guardados con éxito!');
+    } catch (error) {
+        console.error("Error saving config to Firestore:", error);
+        showNotification('Error al guardar los cambios. Por favor, inténtalo de nuevo.');
+        // Optional: Could revert state here, but for now, an error message is sufficient
+    }
   }
   
   const handleLegalClick = (link: LegalLink) => {
