@@ -76,7 +76,7 @@ const SellerRechargeTab: React.FC<SellerRechargeTabProps> = ({ config, currentUs
                     />
                     <button 
                         type="submit"
-                        className="w-full text-center bg-cyan-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-cyan-400 transition-colors"
+                        className="w-full text-center text-white font-bold py-2 rounded-lg btn-gradient disabled:bg-none disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none disabled:filter-none disabled:shadow-none"
                         disabled={!rechargeAmount || !proofOfPaymentUrl}
                     >
                         Enviar Solicitud

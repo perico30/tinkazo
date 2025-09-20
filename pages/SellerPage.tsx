@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { AppConfig, RegisteredUser, RechargeRequest } from '../types';
+import type { AppConfig, RegisteredUser, Carton, Prediction } from '../types';
 import LogoutIcon from '../components/icons/LogoutIcon';
 import HomeIcon from '../components/icons/HomeIcon';
 import UsersIcon from '../components/icons/UsersIcon';
@@ -11,6 +11,8 @@ import SellerSettingsTab from './seller/SellerSettingsTab';
 import SellerRechargeTab from './seller/SellerRechargeTab';
 import ClientRechargesTab from './seller/ClientRechargesTab';
 import CheckCircleIcon from '../components/icons/CheckCircleIcon';
+import ClientTicketsModal from './seller/ClientTicketsModal';
+import CartonModal from '../components/CartonModal';
 
 
 interface SellerPageProps {
@@ -41,7 +43,17 @@ const HeaderCard: React.FC<{ title: string; value: string; onRechargeClick?: () 
 
 const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUser, onRequestRecharge, onProcessClientRecharge, onLogout, onExit }) => {
   const [activeTab, setActiveTab] = useState<SellerTab>('dashboard');
-  
+  const [viewingClientTickets, setViewingClientTickets] = useState<RegisteredUser | null>(null);
+  const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
+
+  const handleViewClientTickets = (client: RegisteredUser) => {
+    setViewingClientTickets(client);
+  };
+
+  const handleViewCarton = (carton: Carton) => {
+    setViewingCarton(carton);
+  };
+
   const tabs: { id: SellerTab; label: string; icon: React.FC<{className?: string}> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'clients', label: 'Mis Clientes', icon: UsersIcon },
@@ -55,7 +67,11 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
       case 'dashboard':
         return <SellerDashboardTab currentUser={currentUser} config={config} />;
       case 'clients':
-        return <SellerClientsTab currentUser={currentUser} config={config} />;
+        return <SellerClientsTab 
+                  currentUser={currentUser} 
+                  config={config} 
+                  onViewClientTickets={handleViewClientTickets}
+                />;
       case 'client-recharges':
         return <ClientRechargesTab currentUser={currentUser} config={config} onProcessClientRecharge={onProcessClientRecharge} />;
       case 'recharge':
@@ -68,69 +84,96 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
   }
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 p-4 flex flex-col">
-        <div className="text-center mb-10">
-          <h1 className="text-2xl font-bold text-cyan-400">Panel Vendedor</h1>
-          <p className="text-sm text-gray-400">{currentUser.username}</p>
-        </div>
-        <nav className="flex-grow">
-          <ul>
-            {tabs.map(tab => (
-              <li key={tab.id} className="mt-2">
-                <button
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 text-left px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-300' : 'hover:bg-gray-700'}`}
-                >
-                  <tab.icon className="h-5 w-5" />
-                  {tab.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="space-y-2">
-           <button
-             onClick={onExit}
-             className="w-full text-left px-4 py-2 rounded-lg transition-colors hover:bg-gray-700"
-            >
-              Ver Página
-           </button>
-           <button
-             onClick={onLogout}
-             className="w-full flex items-center gap-2 text-left px-4 py-2 rounded-lg transition-colors hover:bg-red-500/20 text-red-400"
-            >
-             <LogoutIcon className="h-5 w-5"/>
-             Cerrar Sesión
-           </button>
-        </div>
-      </aside>
+    <>
+      {viewingClientTickets && (
+          <ClientTicketsModal
+              client={viewingClientTickets}
+              cartones={config.cartones.filter(c => c.userId === viewingClientTickets.id)}
+              jornadas={config.jornadas}
+              onClose={() => setViewingClientTickets(null)}
+              onViewCarton={handleViewCarton}
+          />
+      )}
+      {viewingCarton && (
+          <CartonModal
+              carton={viewingCarton}
+              jornada={config.jornadas.find(j => j.id === viewingCarton.jornadaId) || null}
+              teams={config.teams}
+              appName={config.appName}
+              logoUrl={config.logoUrl}
+              onClose={() => setViewingCarton(null)}
+              onSave={() => { /* Sellers can't edit client tickets */ }}
+              isReadOnly={true}
+          />
+      )}
+      <div className="flex h-screen bg-gray-900 text-white">
+        {/* Sidebar */}
+        <aside className="w-64 sidebar-bg p-4 flex flex-col">
+          <div className="text-center mb-10">
+            <h1 className="text-2xl font-bold text-cyan-400">Panel Vendedor</h1>
+            <p className="text-sm text-gray-400">{currentUser.username}</p>
+          </div>
+          <nav className="flex-grow">
+            <ul>
+              {tabs.map(tab => (
+                <li key={tab.id} className="mt-2">
+                  <button
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg text-sm ${
+                      activeTab === tab.id
+                        ? 'active-tab-gradient'
+                        : 'inactive-tab'
+                    }`}
+                  >
+                    <tab.icon className="h-5 w-5" />
+                    {tab.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="space-y-2">
+            <button
+              onClick={onExit}
+              className="w-full text-left px-4 py-2 rounded-lg transition-colors hover:bg-gray-700"
+              >
+                Ver Página
+            </button>
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center gap-2 text-left px-4 py-2 rounded-lg transition-colors hover:bg-red-500/20 text-red-400"
+              >
+              <LogoutIcon className="h-5 w-5"/>
+              Cerrar Sesión
+            </button>
+          </div>
+        </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="p-6 space-y-6">
-            {/* Header with metrics */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <HeaderCard 
-                    title="Mi Saldo" 
-                    value={`Bs ${(currentUser.balance || 0).toFixed(2)}`}
-                    onRechargeClick={() => setActiveTab('recharge')}
-                />
-                <HeaderCard 
-                    title="Ganancias (Comisiones)" 
-                    value="Bs 0.00"
-                />
-            </div>
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="p-6 space-y-6">
+              {/* Header with metrics */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                  <HeaderCard 
+                      title="Mi Saldo" 
+                      value={`Bs ${(currentUser.balance || 0).toFixed(2)}`}
+                      onRechargeClick={() => setActiveTab('recharge')}
+                  />
+                  <HeaderCard 
+                      title="Ganancias (Comisiones)" 
+                      value="Bs 0.00"
+                  />
+              </div>
 
-            {/* Tab content */}
-            <div className="bg-gray-800/50 p-6 rounded-lg">
-                <h2 className="text-xl font-bold mb-4 capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
-                {renderTabContent()}
-            </div>
-        </div>
-      </main>
-    </div>
+              {/* Tab content */}
+              <div className="bg-gray-800/50 p-6 rounded-lg">
+                  <h2 className="text-xl font-bold mb-4 capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
+                  {renderTabContent()}
+              </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 };
 

@@ -1,8 +1,10 @@
 import React from 'react';
 
-const LogoIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
+// FIX: Added style prop to allow inline styling for effects like drop-shadow.
+const LogoIcon: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className = 'h-8 w-8', style }) => (
   <svg
     className={className}
+    style={style}
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"

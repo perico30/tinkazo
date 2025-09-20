@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -38,38 +38,43 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<RegisteredUser | null>(null);
   const [legalModalContent, setLegalModalContent] = useState<LegalLink | null>(null);
   const [jornadaToPlay, setJornadaToPlay] = useState<Jornada | null>(null);
+  const [resultNotificationCarton, setResultNotificationCarton] = useState<Carton | null>(null);
+
 
   const [appConfig, setAppConfig] = useState<AppConfig>({
     appName: 'TINKAZO',
     theme: {
-      backgroundColor: '#111827',
+      backgroundColor: '#020617',
       textColor: '#ffffff',
-      primaryColor: '#06b6d4', // cyan-500
+      primaryColor: '#a855f7', // purple-500
+      backgroundStyle: 'space',
     },
     logoUrl: '',
     welcomeMessage: {
-      title: '¡Bienvenido a TINKAZO!',
-      description: 'Tu plataforma para demostrar que eres el mejor pronosticador. Revisa las jornadas, arma tu quiniela y compite por los grandes premios.',
+      title: 'Desafía tu Suerte en TINKAZO',
+      description: 'La arena definitiva para los pronosticadores más audaces. Domina las jornadas, crea tu jugada maestra y conquista premios legendarios.',
     },
     welcomePopup: {
       enabled: true,
-      title: '¡Aviso Importante!',
-      text: 'Las jornadas de la Champions League están por cerrar. ¡No te quedes fuera y haz tu pronóstico ahora!',
+      title: '¡Atención, Estratega!',
+      text: 'Las jornadas de la Champions League están en su punto más álgido. ¡El tiempo se acaba! ¡Asegura tu predicción y no te quedes fuera de la gloria!',
       imageUrl: '',
     },
     jackpots: [
       {
-        title: 'El Botín Acumulado',
-        detail: 'El Botín Acumulado',
+        title: 'GRAN POZO',
+        detail: 'GRAN POZO',
         amount: 'Bs 1,250,000',
-        colors: { primary: '#22d3ee', secondary: '#1f2937' }, // cyan-400, gray-800
+        backgroundType: 'color',
+        colors: { primary: '#22d3ee', backgroundColor: '#1f2937' }, // cyan-400, gray-800
         backgroundImage: '',
       },
       {
-        title: 'El Gordito Mensual',
-        detail: 'El Gordito Mensual',
+        title: 'SUPER POZO',
+        detail: 'SUPER POZO',
         amount: 'Bs 300,000',
-        colors: { primary: '#c084fc', secondary: '#1f2937' }, // purple-400, gray-800
+        backgroundType: 'color',
+        colors: { primary: '#a855f7', backgroundColor: '#1f2937' }, // purple-500, gray-800
         backgroundImage: '',
       },
     ],
@@ -82,7 +87,7 @@ const App: React.FC = () => {
         qrCodeUrl: '',
     },
     adminWhatsappNumber: '+51987654321',
-    sectionsOrder: ['jackpots', 'carousel', 'jornadas'],
+    sectionsOrder: ['jornadas', 'jackpots', 'carousel'],
     teams: [],
     jornadas: [],
     gorditoJornadaId: null,
@@ -96,6 +101,9 @@ const App: React.FC = () => {
         { platform: 'facebook', url: '#' },
         { platform: 'twitter', url: '#' },
         { platform: 'instagram', url: '#' },
+        { platform: 'tiktok', url: '#' },
+        { platform: 'youtube', url: '#' },
+        { platform: 'discord', url: '#' },
       ],
       legalLinks: [
         { title: 'Términos y Condiciones', content: 'Aquí va el contenido completo de los términos y condiciones del servicio...' },
@@ -103,6 +111,30 @@ const App: React.FC = () => {
       ],
     },
   });
+
+  useEffect(() => {
+    // Apply the correct background class to the body
+    document.body.classList.remove('body-bg-space', 'body-bg-business');
+    document.body.classList.add(`body-bg-${appConfig.theme.backgroundStyle}`);
+    // Apply text color
+    document.body.style.color = appConfig.theme.textColor;
+  }, [appConfig.theme.backgroundStyle, appConfig.theme.textColor]);
+
+  useEffect(() => {
+    if (currentUser && userRole === 'client') {
+      const cartonToNotify = appConfig.cartones.find(carton => {
+        if (carton.userId !== currentUser.id || carton.resultNotified) {
+          return false;
+        }
+        const jornada = appConfig.jornadas.find(j => j.id === carton.jornadaId);
+        return jornada && jornada.resultsProcessed;
+      });
+      setResultNotificationCarton(cartonToNotify || null);
+    } else {
+        setResultNotificationCarton(null);
+    }
+  }, [currentUser, appConfig.cartones, appConfig.jornadas, userRole]);
+
 
   const navigateToLogin = useCallback(() => setCurrentView('login'), []);
   const navigateToRegister = useCallback(() => setCurrentView('register'), []);
@@ -163,9 +195,43 @@ const App: React.FC = () => {
     setCurrentView('home');
   }, []);
   
+  const processJornadaResults = (config: AppConfig): AppConfig => {
+    const newConfig = JSON.parse(JSON.stringify(config)); // Deep copy to avoid mutation issues
+    
+    newConfig.jornadas.forEach((jornada: Jornada, jornadaIndex: number) => {
+        const allMatchesHaveResults = jornada.matches.length > 0 && jornada.matches.every(m => m.result);
+        
+        if (jornada.status === 'cerrada' && allMatchesHaveResults && !jornada.resultsProcessed) {
+            console.log(`Processing results for jornada: ${jornada.name}`);
+            
+            // 1. Mark jornada as processed
+            newConfig.jornadas[jornadaIndex].resultsProcessed = true;
+
+            // 2. Find and update cartones
+            newConfig.cartones = newConfig.cartones.map((carton: Carton) => {
+                if (carton.jornadaId === jornada.id) {
+                    let hits = 0;
+                    jornada.matches.forEach(match => {
+                        if (match.result && carton.predictions[match.id] === match.result) {
+                            hits++;
+                        }
+                    });
+                    return { ...carton, hits };
+                }
+                return carton;
+            });
+
+            // TODO: Winner prize distribution logic can be added here in the future
+        }
+    });
+
+    return newConfig;
+  };
+
   const handleSaveConfig = (newConfig: AppConfig) => {
-    setAppConfig(newConfig);
-    alert('¡Configuración guardada!');
+    const processedConfig = processJornadaResults(newConfig);
+    setAppConfig(processedConfig);
+    alert('¡Configuración guardada y resultados procesados!');
     setCurrentView('home');
   }
   
@@ -194,11 +260,22 @@ const App: React.FC = () => {
         alert('Tu cuenta debe ser activada por un administrador antes de poder jugar.');
         return;
     }
+
+    const sortedMatches = [...jornada.matches].sort((a,b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+    if (sortedMatches.length > 0) {
+        const firstMatchDate = new Date(sortedMatches[0].dateTime);
+        const now = new Date();
+        if ((firstMatchDate.getTime() - now.getTime()) <= 10 * 60 * 1000) {
+            alert('El tiempo para comprar un cartón para esta jornada ha expirado.');
+            return;
+        }
+    }
+
     setJornadaToPlay(jornada);
     setCurrentView('purchaseCarton');
   }, [currentUser]);
 
-  const handlePurchaseCarton = useCallback((jornadaId: string, predictions: { [matchId: string]: Prediction }, price: number) => {
+  const handlePurchaseCarton = useCallback((jornadaId: string, predictions: { [matchId: string]: Prediction }, price: number, botinPrediction: { localScore: number; visitorScore: number; } | null) => {
     if (!currentUser) {
       alert('Error: No se encontró el usuario.');
       return;
@@ -214,6 +291,7 @@ const App: React.FC = () => {
       jornadaId,
       predictions,
       purchaseDate: new Date().toISOString(),
+      botinPrediction: botinPrediction,
     };
     
     const updatedUser = { ...currentUser, balance: (currentUser.balance || 0) - price };
@@ -229,7 +307,7 @@ const App: React.FC = () => {
     navigateToHome();
   }, [currentUser, navigateToHome]);
 
-  const handleUpdateCarton = useCallback((cartonId: string, newPredictions: { [matchId: string]: Prediction }) => {
+  const handleUpdateCarton = useCallback((cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number } | null) => {
     const carton = appConfig.cartones.find(c => c.id === cartonId);
     if (!carton) {
         alert('No se encontró el cartón.');
@@ -251,11 +329,21 @@ const App: React.FC = () => {
 
     setAppConfig(prev => ({
         ...prev,
-        cartones: prev.cartones.map(c => c.id === cartonId ? { ...c, predictions: newPredictions } : c),
+        cartones: prev.cartones.map(c => c.id === cartonId ? { ...c, predictions: newPredictions, botinPrediction: newBotinPrediction } : c),
     }));
 
     alert('¡Cartón actualizado con éxito!');
   }, [appConfig.cartones, appConfig.jornadas]);
+
+  const handleResultAcknowledged = useCallback((cartonId: string) => {
+    setAppConfig(prev => ({
+      ...prev,
+      cartones: prev.cartones.map(c => 
+        c.id === cartonId ? { ...c, resultNotified: true } : c
+      ),
+    }));
+    setResultNotificationCarton(null);
+  }, []);
 
   const handleRequestWithdrawal = useCallback((userId: string, amount: number, userQrCodeUrl: string) => {
       const user = appConfig.users.find(u => u.id === userId);
@@ -435,6 +523,8 @@ const App: React.FC = () => {
   }, [appConfig.rechargeRequests]);
 
   const renderView = () => {
+    const userCartonCount = currentUser ? appConfig.cartones.filter(c => c.userId === currentUser.id).length : 0;
+    
     switch (currentView) {
       case 'login':
         return <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
@@ -480,7 +570,7 @@ const App: React.FC = () => {
                 onExit={navigateToHome}
             />
         ) : <HomePage
-            appConfig={appConfig} userRole={userRole} currentUser={currentUser} onLoginClick={navigateToLogin} onRegisterClick={navigateToRegister} onHomeClick={navigateToHome} onAdminClick={navigateToAdmin} onSellerPanelClick={navigateToSellerPanel} onClientPanelClick={navigateToClientPanel} onLogoutClick={handleLogout} onLegalClick={handleLegalClick} onPlayJornada={handlePlayJornada}
+            appConfig={appConfig} userRole={userRole} currentUser={currentUser} userCartonCount={userCartonCount} onLoginClick={navigateToLogin} onRegisterClick={navigateToRegister} onHomeClick={navigateToHome} onAdminClick={navigateToAdmin} onSellerPanelClick={navigateToSellerPanel} onClientPanelClick={navigateToClientPanel} onLogoutClick={handleLogout} onLegalClick={handleLegalClick} onPlayJornada={handlePlayJornada} onResultAcknowledged={handleResultAcknowledged} resultNotificationCarton={resultNotificationCarton}
           />;
       case 'home':
       default:
@@ -489,6 +579,7 @@ const App: React.FC = () => {
             appConfig={appConfig}
             userRole={userRole}
             currentUser={currentUser}
+            userCartonCount={userCartonCount}
             onLoginClick={navigateToLogin}
             onRegisterClick={navigateToRegister}
             onHomeClick={navigateToHome}
@@ -498,6 +589,8 @@ const App: React.FC = () => {
             onLogoutClick={handleLogout}
             onLegalClick={handleLegalClick}
             onPlayJornada={handlePlayJornada}
+            onResultAcknowledged={handleResultAcknowledged}
+            resultNotificationCarton={resultNotificationCarton}
           />
         );
     }
@@ -505,12 +598,6 @@ const App: React.FC = () => {
 
   return (
     <>
-      <style>{`
-        body {
-          background-color: ${appConfig.theme.backgroundColor};
-          color: ${appConfig.theme.textColor};
-        }
-      `}</style>
       <div className="min-h-screen">{renderView()}</div>
       {legalModalContent && <LegalModal content={legalModalContent} onClose={() => setLegalModalContent(null)} />}
     </>

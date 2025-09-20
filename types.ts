@@ -12,6 +12,7 @@ export interface ThemeConfig {
   backgroundColor: string;
   textColor: string;
   primaryColor: string;
+  backgroundStyle: 'space' | 'business';
 }
 
 export interface WelcomeMessageConfig {
@@ -30,9 +31,10 @@ export interface JackpotConfig {
   title: string;
   detail: string;
   amount: string;
+  backgroundType: 'color' | 'image';
   colors: {
     primary: string;
-    secondary: string;
+    backgroundColor: string;
   };
   backgroundImage: string;
 }
@@ -94,6 +96,7 @@ export interface Jornada {
     backgroundColor: string;
     backgroundImage: string;
   };
+  resultsProcessed?: boolean;
 }
 
 export interface RegisteredUser {
@@ -119,6 +122,9 @@ export interface Carton {
     jornadaId: string;
     predictions: { [matchId: string]: Prediction };
     purchaseDate: string;
+    botinPrediction?: { localScore: number; visitorScore: number; } | null;
+    hits?: number;
+    resultNotified?: boolean;
 }
 
 export interface WithdrawalRequest {

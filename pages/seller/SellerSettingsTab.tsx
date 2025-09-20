@@ -87,7 +87,7 @@ const SellerSettingsTab: React.FC<SellerSettingsTabProps> = ({ currentUser, onUp
 
 
                 <div className="pt-4 text-right">
-                    <button type="submit" className="flex items-center gap-2 bg-cyan-500 text-gray-900 font-bold px-4 py-2 rounded-lg hover:bg-cyan-400 transition-colors">
+                    <button type="submit" className="flex items-center gap-2 text-white font-bold px-4 py-2 rounded-lg btn-gradient">
                         <SaveIcon className="h-5 w-5"/>
                         Guardar Cambios
                     </button>

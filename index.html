@@ -9,14 +9,146 @@
       /* Custom font could be added here if needed */
       body {
         font-family: 'Inter', sans-serif;
+        /* Base color, specific backgrounds are now class-based */
+        background-color: #020617; /* slate-950 */
+        background-attachment: fixed;
+        position: relative;
+        overflow-x: hidden;
       }
+
+      /* --- Background Styles --- */
+      .body-bg-space {
+        background-image: radial-gradient(ellipse at top, #1e1b4b 20%, #020617 100%);
+      }
+
+      .body-bg-business {
+        background-color: #0a192f; /* Dark navy blue */
+        background-image: radial-gradient(circle at 80% 20%, rgba(100, 255, 218, 0.1), transparent 40%);
+      }
+      .body-bg-business::before {
+        content: '';
+        position: absolute;
+        bottom: -150px;
+        left: -100px;
+        width: 400px;
+        height: 400px;
+        background-image: linear-gradient(180deg, #f09, #ffae00);
+        border-radius: 9999px;
+        transform: rotate(-45deg);
+        filter: blur(80px);
+        opacity: 0.15;
+        z-index: 0;
+      }
+
+
+      /* Gradient text utility */
+      .gradient-text {
+        background: linear-gradient(90deg, #22d3ee, #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-fill-color: transparent;
+      }
+
+      /* Glassmorphism utility */
+      .glass-card {
+        background-color: var(--glass-bg, rgba(15, 23, 42, 0.6)); /* slate-900/60 */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(100, 116, 139, 0.3); /* slate-500/30 */
+      }
+
+      /* Gradient border utility */
+      .gradient-border {
+        position: relative;
+        border: 1px solid transparent;
+        background-clip: padding-box;
+        z-index: 1;
+      }
+      .gradient-border::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: -1;
+        margin: -2px; /* border thickness */
+        border-radius: inherit; /* follow rounded corners */
+        background: linear-gradient(135deg, var(--border-color-start, #22d3ee), var(--border-color-end, #a855f7));
+      }
+
+      /* Feature card style (for general use) */
+      .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 8px 30px -5px color-mix(in srgb, var(--glow-color, #a855f7) 20%, transparent);
+      }
+      .feature-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 40px -8px color-mix(in srgb, var(--glow-color, #a855f7) 40%, transparent);
+      }
+      
+      /* --- New, Isolated Jackpot Card Styles --- */
       .jackpot-card {
-        box-shadow: 0 8px 25px -5px color-mix(in srgb, var(--glow-color, #000) 20%, transparent);
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+          position: relative;
+          border-radius: 1.5rem; /* 24px */
+          padding: 2rem; /* 32px */
+          text-align: center;
+          overflow: hidden;
+          color: white;
+          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4), 0 0 15px -5px var(--glow-color, #a855f7);
+          border: 1px solid rgba(100, 116, 139, 0.3);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
       }
       .jackpot-card:hover {
-        box-shadow: 0 12px 40px -10px color-mix(in srgb, var(--glow-color, #000) 50%, transparent);
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 15px 35px -5px rgba(0,0,0,0.5), 0 0 25px -5px var(--glow-color, #a855f7);
       }
+      .jackpot-card-bg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: 1;
+      }
+      .jackpot-card-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 2;
+          background-color: rgba(2, 6, 23, 0.6); /* slate-950/60 */
+      }
+      .jackpot-card-content {
+          position: relative;
+          z-index: 3;
+      }
+
+      /* Gradient button styles */
+      .btn-gradient, .btn-gradient-purple {
+          transition: all 0.3s ease;
+      }
+      .btn-gradient {
+        background-image: linear-gradient(90deg, #22d3ee, #8b5cf6); /* cyan-400 to violet-500 */
+        box-shadow: 0 4px 15px -5px rgba(139, 92, 246, 0.6);
+      }
+      .btn-gradient:hover {
+        transform: scale(1.05);
+        filter: brightness(1.2);
+        box-shadow: 0 6px 20px -5px rgba(34, 211, 238, 0.7);
+      }
+      .btn-gradient-purple {
+        background-image: linear-gradient(90deg, #a855f7, #ec4899); /* purple-500 to pink-500 */
+        box-shadow: 0 4px 15px -5px rgba(236, 72, 153, 0.6);
+      }
+      .btn-gradient-purple:hover {
+        transform: scale(1.05);
+        filter: brightness(1.2);
+        box-shadow: 0 6px 20px -5px rgba(168, 85, 247, 0.7);
+      }
+
+
+      /* Carousel Animation */
       @keyframes scroll {
         from { transform: translateX(0); }
         to { transform: translateX(-50%); }
@@ -26,6 +158,163 @@
       }
       .group:hover .animate-scroll, .animate-scroll:hover {
         animation-play-state: paused;
+      }
+
+      /* Updated Header */
+      .header-accent {
+        background-color: rgba(2, 6, 23, 0.5); /* slate-950/50 */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(51, 65, 85, 0.5); /* slate-700/50 */
+      }
+
+      /* Updated Sidebar */
+      .sidebar-bg {
+          background-color: rgba(15, 23, 42, 0.7); /* slate-900/70 */
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border-right: 1px solid rgba(51, 65, 85, 0.5); /* slate-700/50 */
+      }
+
+      .active-tab-gradient {
+        position: relative;
+        background: linear-gradient(90deg, #22d3ee, #a855f7); /* New gradient */
+        color: #ffffff; /* white */
+        font-weight: bold;
+        box-shadow: 0 0 15px -3px rgba(34, 211, 238, 0.5); /* cyan glow */
+      }
+       .active-tab-gradient::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 15%;
+        bottom: 15%;
+        width: 4px;
+        border-radius: 2px;
+        background-color: #e5e7eb; /* gray-200 */
+      }
+
+
+      .inactive-tab {
+        color: #d1d5db; /* gray-300 */
+        transition: all 0.2s ease-in-out;
+      }
+
+      .inactive-tab:hover {
+        background-color: rgba(255, 255, 255, 0.05); /* very subtle white */
+        color: #ffffff; /* white */
+        transform: translateX(4px);
+      }
+
+      /* --- Jornada Card (New) --- */
+      .jornada-card {
+          position: relative;
+          width: 100%;
+          /* Approximation of 318x144, but aspect-ratio is better for responsiveness */
+          aspect-ratio: 318 / 144;
+          max-width: 318px;
+          margin: 0 auto;
+          border-radius: 12px;
+          overflow: hidden;
+          color: white;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .jornada-card:hover {
+          transform: scale(1.05);
+          box-shadow: 0 15px 35px -5px rgba(0,0,0,0.5);
+      }
+      .jornada-card-bg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: 1;
+      }
+      .jornada-card-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 2;
+          /* The color will be set via inline style */
+      }
+      .jornada-card-content {
+          position: relative;
+          z-index: 3;
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          padding: 12px;
+      }
+      .jornada-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.75rem; /* 12px */
+          font-weight: 600;
+          opacity: 0.9;
+      }
+      .jornada-card-header .info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+      }
+      .jornada-card-body {
+          flex-grow: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+      }
+      .jornada-card-title {
+          font-size: 1.5rem; /* 24px */
+          font-weight: 800;
+          line-height: 1.2;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      }
+      .jornada-card-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          gap: 12px;
+      }
+      .jornada-prize {
+          text-align: center;
+      }
+      .jornada-prize-label {
+          font-size: 0.65rem; /* ~10px */
+          font-weight: 500;
+          opacity: 0.8;
+      }
+      .jornada-prize-amount {
+          font-size: 0.875rem; /* 14px */
+          font-weight: 700;
+      }
+      .jornada-play-button {
+          background-color: white;
+          color: black;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 16px;
+          font-weight: bold;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: background-color 0.2s ease, transform 0.2s ease;
+      }
+      .jornada-play-button:hover:not(:disabled) {
+          background-color: #f0f0f0;
+          transform: scale(1.05);
+      }
+      .jornada-play-button:disabled {
+          background-color: #6b7280; /* gray-500 */
+          color: #d1d5db; /* gray-300 */
+          cursor: not-allowed;
       }
     </style>
   <script type="importmap">

@@ -35,7 +35,7 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
     handleValueChange('jackpots', newJackpots);
   };
   
-   const handleJackpotColorChange = (index: 0 | 1, colorKey: 'primary' | 'secondary', value: string) => {
+   const handleJackpotColorChange = (index: 0 | 1, colorKey: 'primary' | 'backgroundColor', value: string) => {
     const newJackpots = [...config.jackpots] as [JackpotConfig, JackpotConfig];
     const newColors = { ...newJackpots[index].colors, [colorKey]: value };
     newJackpots[index] = { ...newJackpots[index], colors: newColors };
@@ -130,9 +130,19 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
         <div className="mt-4 grid md:grid-cols-2 gap-6">
           <div><label className="block mb-1">Nombre App</label><input type="text" value={config.appName} onChange={e => handleValueChange('appName', e.target.value)} className="w-full bg-gray-700 p-2 rounded" /></div>
           <ImageUpload label="Logo de la App" imageUrl={config.logoUrl} onImageSelect={url => handleValueChange('logoUrl', url)} />
-          <div className="flex items-center justify-between"><label>Color de Fondo</label><input type="color" value={config.theme.backgroundColor} onChange={e => handleNestedChange('theme', 'backgroundColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
+          <div>
+            <label className="block mb-1">Estilo de Fondo</label>
+            <select
+                value={config.theme.backgroundStyle}
+                onChange={e => handleNestedChange('theme', 'backgroundStyle', e.target.value as 'space' | 'business')}
+                className="w-full bg-gray-700 p-2 rounded"
+            >
+                <option value="space">Espacial</option>
+                <option value="business">Corporativo</option>
+            </select>
+          </div>
           <div className="flex items-center justify-between"><label>Color de Texto</label><input type="color" value={config.theme.textColor} onChange={e => handleNestedChange('theme', 'textColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
-          <div className="flex items-center justify-between md:col-span-2"><label>Color Primario (Botones)</label><input type="color" value={config.theme.primaryColor} onChange={e => handleNestedChange('theme', 'primaryColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
+          <div className="flex items-center justify-between md:col-span-2"><label>Color Primario (Acentos)</label><input type="color" value={config.theme.primaryColor} onChange={e => handleNestedChange('theme', 'primaryColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
         </div>
       </details>
 
@@ -196,11 +206,28 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
             {config.jackpots.map((jackpot, index) => (
                 <div key={index} className="space-y-4 bg-gray-700/50 p-4 rounded">
                     <h3 className="font-bold">{jackpot.title}</h3>
-                    <div><label className="block mb-1">Detalle</label><input type="text" value={jackpot.detail} onChange={e => handleJackpotChange(index as 0|1, 'detail', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
+                    <div><label className="block mb-1">Título</label><input type="text" value={jackpot.detail} onChange={e => handleJackpotChange(index as 0|1, 'detail', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
                     <div><label className="block mb-1">Monto</label><input type="text" value={jackpot.amount} onChange={e => handleJackpotChange(index as 0|1, 'amount', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
-                    <ImageUpload label="Imagen de Fondo (Opcional)" imageUrl={jackpot.backgroundImage} onImageSelect={url => handleJackpotChange(index as 0|1, 'backgroundImage', url)} />
-                    <div className="flex items-center justify-between"><label>Color Primario</label><input type="color" value={jackpot.colors.primary} onChange={e => handleJackpotColorChange(index as 0|1, 'primary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
-                    <div className="flex items-center justify-between"><label>Color Secundario/Fondo</label><input type="color" value={jackpot.colors.secondary} onChange={e => handleJackpotColorChange(index as 0|1, 'secondary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
+                    
+                    <div>
+                        <label className="block mb-1 text-sm font-medium">Tipo de Fondo</label>
+                        <select 
+                            value={jackpot.backgroundType || 'color'} 
+                            onChange={e => handleJackpotChange(index as 0|1, 'backgroundType', e.target.value as 'color' | 'image')}
+                            className="w-full bg-gray-600 p-2 rounded"
+                        >
+                            <option value="color">Color Sólido</option>
+                            <option value="image">Imagen</option>
+                        </select>
+                    </div>
+
+                    {jackpot.backgroundType === 'image' ? (
+                        <ImageUpload label="Imagen de Fondo" imageUrl={jackpot.backgroundImage} onImageSelect={url => handleJackpotChange(index as 0|1, 'backgroundImage', url)} />
+                    ) : (
+                        <div className="flex items-center justify-between"><label>Color de Fondo</label><input type="color" value={jackpot.colors.backgroundColor} onChange={e => handleJackpotColorChange(index as 0|1, 'backgroundColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
+                    )}
+                    
+                    <div className="flex items-center justify-between"><label>Color de Letra y Números</label><input type="color" value={jackpot.colors.primary} onChange={e => handleJackpotColorChange(index as 0|1, 'primary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
                 </div>
             ))}
         </div>

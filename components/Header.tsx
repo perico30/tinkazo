@@ -2,6 +2,7 @@ import React from 'react';
 import type { UserRole, RegisteredUser } from '../types';
 import LogoutIcon from './icons/LogoutIcon';
 import GearIcon from './icons/GearIcon';
+import TicketIcon from './icons/TicketIcon';
 
 interface HeaderProps {
   appName: string;
@@ -9,6 +10,7 @@ interface HeaderProps {
   userRole: UserRole;
   currentUser: RegisteredUser | null;
   primaryColor: string;
+  userCartonCount: number;
   onHomeClick: () => void;
   onLoginClick: () => void;
   onRegisterClick: () => void;
@@ -24,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({
   userRole,
   currentUser,
   primaryColor,
+  userCartonCount,
   onHomeClick, 
   onLoginClick, 
   onRegisterClick,
@@ -33,7 +36,10 @@ const Header: React.FC<HeaderProps> = ({
   onLogoutClick,
 }) => {
   return (
-    <header className="absolute top-0 left-0 right-0 bg-gray-900/50 backdrop-blur-sm py-4 px-8 z-20 border-b border-gray-700/50">
+    <header 
+      className="header-accent py-4 px-8 z-20 sticky top-0"
+      style={{ '--glow-color': primaryColor } as React.CSSProperties}
+    >
       <div className="container mx-auto flex justify-between items-center">
         <div 
           className="flex items-center gap-3 cursor-pointer"
@@ -48,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({
             <>
               <button
                 onClick={onAdminClick}
-                className="flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
               >
                 <GearIcon className="h-5 w-5" />
                 <span>Admin</span>
@@ -67,14 +73,20 @@ const Header: React.FC<HeaderProps> = ({
                 Hola, {currentUser.username}
               </span>
               {userRole === 'client' && (
-                <span className="text-sm font-bold text-cyan-300 bg-gray-700/50 px-3 py-1.5 rounded-full">
+                <span className="text-sm font-bold text-cyan-300 bg-slate-700/50 px-3 py-1.5 rounded-full">
                     Saldo: Bs {(currentUser.balance || 0).toFixed(2)}
                 </span>
+              )}
+              {userRole === 'client' && typeof userCartonCount !== 'undefined' && userCartonCount > 0 && (
+                <div className="flex items-center gap-1.5 text-sm bg-purple-500/30 px-3 py-1.5 rounded-full" title={`${userCartonCount} cartones comprados`}>
+                    <TicketIcon className="h-4 w-4 text-purple-300" />
+                    <span className="font-bold text-white">{userCartonCount}</span>
+                </div>
               )}
               {userRole === 'seller' && onSellerPanelClick && (
                  <button
                     onClick={onSellerPanelClick}
-                    className="flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
                 >
                     <GearIcon className="h-5 w-5" />
                     <span>Panel Vendedor</span>
@@ -83,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({
               {userRole === 'client' && onClientPanelClick && (
                  <button
                     onClick={onClientPanelClick}
-                    className="flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
                 >
                     <GearIcon className="h-5 w-5" />
                     <span>Mi Cuenta</span>
@@ -101,14 +113,13 @@ const Header: React.FC<HeaderProps> = ({
             <>
               <button
                 onClick={onLoginClick}
-                className="px-6 py-2 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-6 py-2 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
               >
                 Inicio de sesión
               </button>
               <button
                 onClick={onRegisterClick}
-                className="px-6 py-2 text-gray-900 font-bold rounded-lg transition-colors shadow-lg"
-                style={{ backgroundColor: primaryColor, filter: 'brightness(1.1)' }}
+                className="px-6 py-2 text-white font-bold rounded-lg shadow-lg btn-gradient"
               >
                 Registro
               </button>

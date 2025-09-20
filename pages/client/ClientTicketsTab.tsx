@@ -31,6 +31,9 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                             <p className="text-sm text-gray-400">
                                 Comprado el: {new Date(carton.purchaseDate).toLocaleString()}
                             </p>
+                            {typeof carton.hits === 'number' && (
+                                <p className="mt-1 text-base font-bold text-cyan-300">Aciertos: {carton.hits}</p>
+                            )}
                         </div>
                         <button 
                             onClick={() => onViewCarton(carton)}

@@ -1,16 +1,15 @@
 import React from 'react';
 
-const YoutubeIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
-  <svg 
-    className={className} 
-    viewBox="0 0 24 24" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg" 
-    aria-hidden="true"
-  >
-    <path 
-      d="M21.582,6.186c-0.23-0.86-0.908-1.538-1.768-1.768C18.254,4,12,4,12,4S5.746,4,4.186,4.418 c-0.86,0.23-1.538,0.908-1.768,1.768C2,7.746,2,12,2,12s0,4.254,0.418,5.814c0.23,0.86,0.908,1.538,1.768,1.768 C5.746,20,12,20,12,20s6.254,0,7.814-0.418c0.861-0.23,1.538-0.908,1.768-1.768C22,16.254,22,12,22,12S22,7.746,21.582,6.186z M10,15.464V8.536L16,12L10,15.464z" 
-    />
+const YoutubeIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
+  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="yt-gradient" x1="0" y1="0" x2="32" y2="32">
+        <stop stopColor="#FF0000"/>
+        <stop offset="1" stopColor="#FF4D4D"/>
+      </linearGradient>
+    </defs>
+    <circle cx="16" cy="16" r="16" fill="url(#yt-gradient)"/>
+    <path d="M22 13.5566C23.3333 14.3094 23.3333 16.1906 22 16.9434L14.5 21.2391C13.1667 21.9919 11.5 21.0513 11.5 19.5457V10.9543C11.5 9.44871 13.1667 8.50811 14.5 9.26091L22 13.5566Z" fill="white"/>
   </svg>
 );
 

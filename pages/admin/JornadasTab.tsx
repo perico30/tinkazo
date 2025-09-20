@@ -1,9 +1,58 @@
 import React, { useState } from 'react';
-import type { AppConfig, Jornada, Match, Team } from '../../types';
+import type { AppConfig, Jornada, Match, Team, Prediction } from '../../types';
 import ImageUpload from '../../components/admin/ImageUpload';
 import PlusIcon from '../../components/icons/PlusIcon';
 import TrashIcon from '../../components/icons/TrashIcon';
 import PencilIcon from '../../components/icons/PencilIcon';
+import SoccerIcon from '../../components/icons/SoccerIcon';
+import ResultsModal from './ResultsModal';
+
+// Helper function
+const hexToRgba = (hex: string, alpha: number): string => {
+    if (!hex || hex.length < 7) hex = '#1f2937'; // Default to a dark color if invalid
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+// Preview Card Component
+const JornadaAdminPreviewCard: React.FC<{ jornada: Jornada }> = ({ jornada }) => {
+    return (
+        <div className="jornada-card w-full max-w-[318px] mx-auto">
+            {jornada.styling.backgroundImage && (
+                <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
+            )}
+            <div
+                className="jornada-card-overlay"
+                style={{ backgroundColor: hexToRgba(jornada.styling.backgroundColor, 0.7) }}
+            ></div>
+            <div className="jornada-card-content" style={{ color: jornada.styling.textColor }}>
+                <header className="jornada-card-header">
+                    <div className="info">
+                        <SoccerIcon className="h-4 w-4" />
+                        <span>{jornada.matches.length} Partidos</span>
+                    </div>
+                    {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="League" className="h-5 w-auto rounded" />}
+                </header>
+                <div className="jornada-card-body">
+                    <h3 className="jornada-card-title">{jornada.name || 'Nombre Jornada'}</h3>
+                </div>
+                <footer className="jornada-card-footer">
+                    <div className="jornada-prize">
+                        <p className="jornada-prize-label">1er Lugar</p>
+                        <p className="jornada-prize-amount">{jornada.firstPrize || 'Bs 1000'}</p>
+                    </div>
+                    <div className="jornada-prize">
+                        <p className="jornada-prize-label">2do Lugar</p>
+                        <p className="jornada-prize-amount">{jornada.secondPrize || 'Bs 500'}</p>
+                    </div>
+                    <button className="jornada-play-button" disabled>Jugar</button>
+                </footer>
+            </div>
+        </div>
+    );
+};
 
 interface JornadasTabProps {
   config: AppConfig;
@@ -46,6 +95,7 @@ const JornadaModal: React.FC<{
             flagIconUrl,
             matches: jornada.matches || [],
             botinMatchId: jornada.botinMatchId || null,
+            resultsProcessed: jornada.resultsProcessed || false,
         });
         onClose();
     };
@@ -139,6 +189,7 @@ const MatchModal: React.FC<{
 const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
     const [jornadaModal, setJornadaModal] = useState<Partial<Jornada> | null>(null);
     const [matchModal, setMatchModal] = useState<{jornadaId: string; match: Partial<Match>}| null>(null);
+    const [resultsModalJornada, setResultsModalJornada] = useState<Jornada | null>(null);
 
     const handleSaveJornada = (jornada: Jornada) => {
         setConfig(prev => {
@@ -155,13 +206,6 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
             setConfig(prev => ({...prev, jornadas: prev.jornadas.filter(j => j.id !== jornadaId)}));
         }
     }
-
-    const handleStatusChange = (jornadaId: string, status: Jornada['status']) => {
-        setConfig(prev => ({
-            ...prev,
-            jornadas: prev.jornadas.map(j => j.id === jornadaId ? { ...j, status } : j)
-        }));
-    };
     
     const handleSaveMatch = (jornadaId: string, match: Match) => {
         setConfig(prev => {
@@ -210,6 +254,24 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
         }));
     };
 
+    const handleSaveResults = (jornadaId: string, results: { [matchId: string]: Prediction }) => {
+        setConfig(prev => {
+            const newJornadas = prev.jornadas.map(j => {
+                if (j.id === jornadaId) {
+                    const newMatches = j.matches.map(m => ({
+                        ...m,
+                        result: results[m.id] || m.result, // Update result
+                    }));
+                    return { ...j, matches: newMatches };
+                }
+                return j;
+            });
+            return { ...prev, jornadas: newJornadas };
+        });
+        setResultsModalJornada(null);
+        alert('Resultados guardados. Presiona "Guardar Cambios" en la cabecera para procesar los ganadores.');
+    };
+
     const getTeam = (teamId: string) => config.teams.find(t => t.id === teamId);
 
     const statusStyles: { [key in Jornada['status']]: string } = {
@@ -222,6 +284,15 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
         <div className="max-w-7xl mx-auto">
             {jornadaModal && <JornadaModal jornada={jornadaModal} onClose={() => setJornadaModal(null)} onSave={handleSaveJornada} />}
             {matchModal && <MatchModal match={matchModal.match} jornadaId={matchModal.jornadaId} teams={config.teams} onClose={() => setMatchModal(null)} onSave={handleSaveMatch} />}
+            {resultsModalJornada && (
+                <ResultsModal 
+                    jornada={resultsModalJornada}
+                    teams={config.teams}
+                    onClose={() => setResultsModalJornada(null)}
+                    onSave={handleSaveResults}
+                />
+            )}
+
 
             <div className="flex justify-between items-center mb-6">
                 <h2 className="font-semibold text-xl">Gestión de Jornadas</h2>
@@ -253,8 +324,11 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {config.jornadas.map(jornada => (
                     <div key={jornada.id} className="bg-gray-800 rounded-lg shadow-lg flex flex-col">
+                        <div className="p-4 bg-gray-900/30">
+                            <JornadaAdminPreviewCard jornada={jornada} />
+                        </div>
                         {/* Card Header */}
-                        <div className="p-4 border-b border-gray-700 flex justify-between items-start">
+                        <div className="p-4 border-t border-b border-gray-700 flex justify-between items-start">
                             <div>
                                 <h3 className="font-bold text-lg">{jornada.name}</h3>
                                 <span className={`mt-1 inline-block text-xs font-bold px-2 py-1 rounded-full uppercase ${statusStyles[jornada.status]}`}>
@@ -274,14 +348,6 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                                 <div><p className="text-gray-400">2do Premio</p><p className="font-bold text-lg">{jornada.secondPrize}</p></div>
                                 <div className="col-span-2"><p className="text-gray-400">Precio Cartón</p><p className="font-bold text-lg">Bs {(jornada.cartonPrice || 0).toFixed(2)}</p></div>
                             </div>
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-400 mb-2">Gestionar Estado</h4>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => handleStatusChange(jornada.id, 'abierta')} className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${jornada.status === 'abierta' ? 'bg-green-500 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600'}`}>Abierta</button>
-                                    <button onClick={() => handleStatusChange(jornada.id, 'cerrada')} className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${jornada.status === 'cerrada' ? 'bg-gray-600 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600'}`}>Cerrada</button>
-                                    <button onClick={() => handleStatusChange(jornada.id, 'cancelada')} className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${jornada.status === 'cancelada' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600'}`}>Cancelada</button>
-                                </div>
-                            </div>
                         </div>
 
                         {/* Matches List */}
@@ -291,7 +357,9 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                                 <button onClick={() => setMatchModal({ jornadaId: jornada.id, match: {} })} className="text-cyan-400 text-sm font-semibold hover:text-cyan-300">Añadir</button>
                             </div>
                             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                                {jornada.matches.map(match => {
+                                {[...jornada.matches]
+                                  .sort((a,b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+                                  .map(match => {
                                     const localTeam = getTeam(match.localTeamId);
                                     const visitorTeam = getTeam(match.visitorTeamId);
                                     return (
@@ -314,7 +382,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                             </div>
                         </div>
                         {/* Botin Match Selector */}
-                        <div className="p-4 border-t border-gray-700 mt-auto bg-gray-900/40 rounded-b-lg">
+                        <div className="p-4 border-t border-gray-700 mt-auto bg-gray-900/40">
                            <label htmlFor={`botin-match-${jornada.id}`} className="block mb-1 text-sm font-medium text-cyan-300">Partido del Botín</label>
                             <select
                                 id={`botin-match-${jornada.id}`}
@@ -335,6 +403,21 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                                 })}
                             </select>
                         </div>
+                        {/* Results Section */}
+                        {jornada.status === 'cerrada' && (
+                            <div className="p-4 border-t border-gray-700 bg-gray-900/40 rounded-b-lg">
+                                {jornada.resultsProcessed ? (
+                                    <p className="text-sm text-green-400 font-semibold text-center">Resultados procesados</p>
+                                ) : (
+                                    <button
+                                        onClick={() => setResultsModalJornada(jornada)}
+                                        className="w-full bg-yellow-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-yellow-400"
+                                    >
+                                        Cargar Resultados
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ))}
                  {config.jornadas.length === 0 && <p className="text-center text-gray-500 py-8 col-span-full">No hay jornadas creadas. Haz clic en "Crear Jornada" para empezar.</p>}

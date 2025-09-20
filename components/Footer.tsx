@@ -9,7 +9,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
   return (
-    <footer className="bg-gray-800 text-gray-400 py-8 px-4 sm:px-6 lg:px-8 mt-16">
+    <footer className="bg-slate-950/30 text-gray-400 py-8 px-4 sm:px-6 lg:px-8 mt-16 border-t border-slate-800">
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
           <p className="text-sm order-3 md:order-1">{config.copyright}</p>
@@ -19,11 +19,11 @@ const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
                 key={link.platform}
                 href={link.url} 
                 aria-label={link.platform} 
-                className="hover:text-white transition-colors"
+                className="hover:opacity-80 transition-transform duration-200 hover:scale-110"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <SocialIcon platform={link.platform} />
+                <SocialIcon platform={link.platform} className="h-8 w-8" />
               </a>
             ))}
           </div>

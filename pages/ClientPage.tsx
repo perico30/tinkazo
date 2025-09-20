@@ -17,7 +17,7 @@ interface ClientPageProps {
   currentUser: RegisteredUser;
   config: AppConfig;
   onUpdateUser: (updatedUser: RegisteredUser) => void;
-  onUpdateCarton: (cartonId: string, newPredictions: { [matchId: string]: Prediction }) => void;
+  onUpdateCarton: (cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number; } | null) => void;
   onRequestWithdrawal: (userId: string, amount: number, userQrCodeUrl: string) => void;
   onRequestRecharge: (userId: string, amount: number, proofOfPaymentUrl: string) => void;
   onLogout: () => void;
@@ -95,7 +95,7 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
       )}
       <div className="flex h-screen bg-gray-900 text-white">
         {/* Sidebar */}
-        <aside className="w-64 bg-gray-800 p-4 flex flex-col">
+        <aside className="w-64 sidebar-bg p-4 flex flex-col">
           <div className="text-center mb-10">
             <h1 className="text-2xl font-bold text-cyan-400">Mi Cuenta</h1>
             <p className="text-sm text-gray-400">{currentUser.username}</p>
@@ -106,7 +106,11 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
                 <li key={tab.id} className="mt-2">
                   <button
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 text-left px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-300' : 'hover:bg-gray-700'}`}
+                    className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg text-sm ${
+                      activeTab === tab.id
+                        ? 'active-tab-gradient'
+                        : 'inactive-tab'
+                    }`}
                   >
                     <tab.icon className="h-5 w-5" />
                     {tab.label}

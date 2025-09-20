@@ -116,7 +116,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                     />
                     <button 
                         type="submit" 
-                        className="w-full bg-cyan-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-cyan-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        className="w-full text-white font-bold py-2 rounded-lg btn-gradient disabled:bg-none disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none disabled:filter-none disabled:shadow-none"
                         disabled={!rechargeAmount || !rechargeProofUrl}
                     >
                         1. Registrar Solicitud de Recarga
@@ -171,7 +171,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                     />
                     <button 
                         type="submit"
-                        className="w-full text-center bg-purple-500 text-white font-bold py-3 rounded-lg hover:bg-purple-400 transition-colors disabled:bg-gray-600"
+                        className="w-full text-center text-white font-bold py-3 rounded-lg btn-gradient-purple disabled:bg-none disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none disabled:filter-none disabled:shadow-none"
                         disabled={!withdrawalAmount || !withdrawalQrCodeUrl || parseFloat(withdrawalAmount) > (currentUser.balance || 0)}
                     >
                         Solicitar Retiro

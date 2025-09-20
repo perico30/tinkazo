@@ -12,6 +12,7 @@ interface UsersTabProps {
   setConfig: React.Dispatch<React.SetStateAction<AppConfig>>;
   onActivateUser?: (userId: string) => void;
   onRechargeUser?: (userId: string, amount: number) => void;
+  onViewClientTickets?: (client: RegisteredUser) => void;
 }
 
 const UserModal: React.FC<{
@@ -141,7 +142,7 @@ const RechargeModal: React.FC<{
 };
 
 
-const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, onRechargeUser }) => {
+const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, onRechargeUser, onViewClientTickets }) => {
     const [activeSubTab, setActiveSubTab] = useState<'client' | 'seller'>('client');
     const [searchQuery, setSearchQuery] = useState('');
     const [modalUser, setModalUser] = useState<Partial<RegisteredUser> | null>(null);
@@ -246,6 +247,11 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right whitespace-nowrap">
+                                        {onViewClientTickets && (
+                                            <button onClick={() => onViewClientTickets(user)} className="font-medium text-cyan-400 hover:underline mr-4">
+                                                Ver Cartones
+                                            </button>
+                                        )}
                                         {onRechargeUser && (
                                             <button onClick={() => setRechargeModalUser(user)} className="p-2 text-cyan-400 hover:text-cyan-300" title="Recargar Saldo">
                                                 <WalletIcon className="h-5 w-5"/>
