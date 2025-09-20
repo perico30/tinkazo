@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -8,6 +8,9 @@ import ClientPage from './pages/ClientPage';
 import PurchaseCartonPage from './pages/PurchaseCartonPage';
 import Notification from './components/Notification';
 import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails } from './types';
+import { db } from './firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
 
 // --- Componente de Modal Legal ---
 const LegalModal: React.FC<{ content: LegalLink; onClose: () => void }> = ({ content, onClose }) => (
@@ -111,24 +114,51 @@ const App: React.FC = () => {
   const [legalModalContent, setLegalModalContent] = useState<LegalLink | null>(null);
   const [jornadaToPlay, setJornadaToPlay] = useState<Jornada | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
-  const [appConfig, setAppConfig] = useState<AppConfig>(() => {
-    const savedConfigJSON = localStorage.getItem('tinkazoAppConfig');
-    if (savedConfigJSON) {
-      try {
-        const savedConfig = JSON.parse(savedConfigJSON);
-        // Merge with initial config to ensure new properties are added
-        return { ...initialAppConfig, ...savedConfig };
-      } catch (e) {
-        console.error('Error parsing appConfig from localStorage', e);
-      }
-    }
-    return initialAppConfig;
-  });
-
+  // Effect to load config from Firestore on startup
   useEffect(() => {
-    localStorage.setItem('tinkazoAppConfig', JSON.stringify(appConfig));
-  }, [appConfig]);
+    const loadConfig = async () => {
+        const configDocRef = doc(db, "tinkazoConfig", "main");
+        try {
+            const docSnap = await getDoc(configDocRef);
+            if (docSnap.exists()) {
+                const loadedConfig = docSnap.data();
+                // Merge with initial config to ensure new properties are added
+                setAppConfig(prev => ({...initialAppConfig, ...loadedConfig}));
+            } else {
+                // Config doesn't exist, create it with initial values
+                await setDoc(configDocRef, initialAppConfig);
+            }
+        } catch (error) {
+            console.error("Error loading config from Firestore:", error);
+        } finally {
+            setIsConfigLoaded(true);
+        }
+    };
+    loadConfig();
+  }, []);
+
+  // Effect to save config to Firestore on change, with debounce
+  useEffect(() => {
+    // Don't save until config is loaded from Firestore
+    if (!isConfigLoaded) {
+      return;
+    }
+    
+    // Set up the debounced save
+    const handler = setTimeout(() => {
+        setDoc(doc(db, "tinkazoConfig", "main"), appConfig)
+            .catch(error => console.error("Failed to save config to Firestore:", error));
+    }, 1500); // 1.5 second debounce
+
+    // Cleanup function to cancel the timeout if component unmounts or appConfig changes again
+    return () => {
+        clearTimeout(handler);
+    };
+  }, [appConfig, isConfigLoaded]);
+
 
   useEffect(() => {
     // Apply the correct background class to the body
