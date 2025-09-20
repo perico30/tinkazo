@@ -236,7 +236,10 @@ const App: React.FC = () => {
   const handleSaveConfig = (newConfig: AppConfig) => {
     const processedConfig = processJornadaResults(newConfig);
     setAppConfig(processedConfig);
-    showNotification('¡Configuración guardada y resultados procesados!');
+    showNotification('Se guardaron los cambios');
+    // This explicitly keeps the user on the admin page, preventing the
+    // reported redirect to the home page after saving.
+    setCurrentView('admin');
   }
   
   const handleLegalClick = (link: LegalLink) => {
