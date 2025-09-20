@@ -59,6 +59,14 @@ const initialAppConfig: AppConfig = {
         colors: { primary: '#22d3ee', backgroundColor: '#1f2937' }, // cyan-400, gray-800
         backgroundImage: '',
     },
+    botinJackpot: {
+        title: 'POZO DEL BOTÍN',
+        detail: 'POZO DEL BOTÍN',
+        amount: '', // This will be overwritten by botinAmount
+        backgroundType: 'color',
+        colors: { primary: '#a855f7', backgroundColor: '#1f2937' }, // purple-500, gray-800
+        backgroundImage: '',
+    },
     carouselImages: [
         { id: '1', url: 'https://picsum.photos/seed/tinkazo1/920/430' },
         { id: '2', url: 'https://picsum.photos/seed/tinkazo2/920/430' },
@@ -108,7 +116,9 @@ const App: React.FC = () => {
     const savedConfigJSON = localStorage.getItem('tinkazoAppConfig');
     if (savedConfigJSON) {
       try {
-        return JSON.parse(savedConfigJSON);
+        const savedConfig = JSON.parse(savedConfigJSON);
+        // Merge with initial config to ensure new properties are added
+        return { ...initialAppConfig, ...savedConfig };
       } catch (e) {
         console.error('Error parsing appConfig from localStorage', e);
       }

@@ -166,6 +166,7 @@ export interface AppConfig {
   welcomeMessage: WelcomeMessageConfig;
   welcomePopup: WelcomePopupConfig;
   gorditoJackpot: JackpotConfig;
+  botinJackpot: JackpotConfig;
   carouselImages: CarouselImage[];
   recharge: RechargeConfig;
   adminWhatsappNumber: string;

@@ -62,19 +62,15 @@ const WelcomeMessage: React.FC<{ title: string; description: string }> = ({ titl
   </section>
 );
 
-const JackpotsSection: React.FC<{ gorditoJackpot: JackpotConfig; botinAmount: number; }> = ({ gorditoJackpot, botinAmount }) => {
+const JackpotsSection: React.FC<{ gorditoJackpot: JackpotConfig; botinJackpot: JackpotConfig; botinAmount: number; }> = ({ gorditoJackpot, botinJackpot, botinAmount }) => {
     
-    // Create a JackpotConfig object for the Botin so we can reuse the card component
-    const botinJackpot: JackpotConfig = {
-        title: 'POZO DEL BOTÍN',
-        detail: 'POZO DEL BOTÍN',
+    // Create a render-specific Botin object with the dynamic amount
+    const botinToRender: JackpotConfig = {
+        ...botinJackpot,
         amount: `Bs ${Math.floor(botinAmount).toLocaleString('es-ES')}`,
-        backgroundType: 'color',
-        colors: { primary: '#a855f7', backgroundColor: '#1f2937' }, // purple-500, gray-800
-        backgroundImage: '',
     };
     
-    const jackpotsToRender = [gorditoJackpot, botinJackpot];
+    const jackpotsToRender = [gorditoJackpot, botinToRender];
 
     return (
     <section className="grid md:grid-cols-2 gap-8">
@@ -271,7 +267,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
   };
 
   const sectionComponents = {
-    jackpots: <JackpotsSection gorditoJackpot={appConfig.gorditoJackpot} botinAmount={appConfig.botinAmount} />,
+    jackpots: <JackpotsSection gorditoJackpot={appConfig.gorditoJackpot} botinJackpot={appConfig.botinJackpot} botinAmount={appConfig.botinAmount} />,
     carousel: <CarouselSection images={appConfig.carouselImages} />,
     jornadas: <JornadasSection 
                 jornadas={appConfig.jornadas} 

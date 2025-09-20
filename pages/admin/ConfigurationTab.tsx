@@ -45,6 +45,23 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
             }
         }));
     };
+
+    const handleBotinJackpotChange = (key: keyof JackpotConfig, value: any) => {
+        setConfig(prev => ({
+            ...prev,
+            botinJackpot: { ...prev.botinJackpot, [key]: value }
+        }));
+    };
+
+    const handleBotinJackpotColorChange = (colorKey: 'primary' | 'backgroundColor', value: string) => {
+        setConfig(prev => ({
+            ...prev,
+            botinJackpot: {
+                ...prev.botinJackpot,
+                colors: { ...prev.botinJackpot.colors, [colorKey]: value }
+            }
+        }));
+    };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, callback: (dataUrl: string) => void) => {
     if (e.target.files && e.target.files[0]) {
@@ -206,51 +223,55 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
       {/* Gestión de Pozos */}
         <details className="bg-gray-800 p-4 rounded-lg">
             <summary className="font-semibold text-lg cursor-pointer">Gestión de Pozos</summary>
-            <div className="mt-4 space-y-6">
-                <div className="bg-gray-700/50 p-4 rounded-lg">
+            <div className="mt-4 grid md:grid-cols-2 gap-6">
+                <div className="bg-gray-700/50 p-4 rounded-lg space-y-4">
                     <h3 className="font-bold text-xl text-cyan-400 mb-2">Pozo "Gordito"</h3>
-                    <p className="text-sm text-gray-400 mb-4">
-                        Este es el pozo fijo que se muestra en la página de inicio y se utiliza como premio principal para la jornada especial del "Gordito".
-                    </p>
-                    <div className="space-y-4">
-                        <div><label className="block mb-1 text-sm">Título</label><input type="text" value={config.gorditoJackpot.detail} onChange={e => handleGorditoJackpotChange('detail', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
-                        <div><label className="block mb-1 text-sm">Monto</label><input type="text" value={config.gorditoJackpot.amount} onChange={e => handleGorditoJackpotChange('amount', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
-                        <div>
-                            <label className="block mb-1 text-sm font-medium">Tipo de Fondo</label>
-                            <select 
-                                value={config.gorditoJackpot.backgroundType || 'color'} 
-                                onChange={e => handleGorditoJackpotChange('backgroundType', e.target.value as 'color' | 'image')}
-                                className="w-full bg-gray-600 p-2 rounded"
-                            >
-                                <option value="color">Color Sólido</option>
-                                <option value="image">Imagen</option>
-                            </select>
-                        </div>
-                        {config.gorditoJackpot.backgroundType === 'image' ? (
-                            <ImageUpload label="Imagen de Fondo" imageUrl={config.gorditoJackpot.backgroundImage} onImageSelect={url => handleGorditoJackpotChange('backgroundImage', url)} />
-                        ) : (
-                            <div className="flex items-center justify-between"><label className="text-sm">Color de Fondo</label><input type="color" value={config.gorditoJackpot.colors.backgroundColor} onChange={e => handleGorditoJackpotColorChange('backgroundColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
-                        )}
-                        <div className="flex items-center justify-between"><label className="text-sm">Color de Texto</label><input type="color" value={config.gorditoJackpot.colors.primary} onChange={e => handleGorditoJackpotColorChange('primary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
+                    <div><label className="block mb-1 text-sm">Título</label><input type="text" value={config.gorditoJackpot.detail} onChange={e => handleGorditoJackpotChange('detail', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
+                    <div><label className="block mb-1 text-sm">Monto (Texto)</label><input type="text" value={config.gorditoJackpot.amount} onChange={e => handleGorditoJackpotChange('amount', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
+                    <div>
+                        <label className="block mb-1 text-sm font-medium">Tipo de Fondo</label>
+                        <select 
+                            value={config.gorditoJackpot.backgroundType || 'color'} 
+                            onChange={e => handleGorditoJackpotChange('backgroundType', e.target.value as 'color' | 'image')}
+                            className="w-full bg-gray-600 p-2 rounded"
+                        >
+                            <option value="color">Color Sólido</option>
+                            <option value="image">Imagen</option>
+                        </select>
                     </div>
+                    {config.gorditoJackpot.backgroundType === 'image' ? (
+                        <ImageUpload label="Imagen de Fondo" imageUrl={config.gorditoJackpot.backgroundImage} onImageSelect={url => handleGorditoJackpotChange('backgroundImage', url)} />
+                    ) : (
+                        <div className="flex items-center justify-between"><label className="text-sm">Color de Fondo</label><input type="color" value={config.gorditoJackpot.colors.backgroundColor} onChange={e => handleGorditoJackpotColorChange('backgroundColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
+                    )}
+                    <div className="flex items-center justify-between"><label className="text-sm">Color de Texto</label><input type="color" value={config.gorditoJackpot.colors.primary} onChange={e => handleGorditoJackpotColorChange('primary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
                 </div>
 
-                <div className="bg-gray-700/50 p-4 rounded-lg">
+                <div className="bg-gray-700/50 p-4 rounded-lg space-y-4">
                     <h3 className="font-bold text-xl text-purple-400 mb-2">Pozo "Botín"</h3>
-                    <p className="text-sm text-gray-400 mb-4">
-                        Este pozo se acumula automáticamente cuando no hay ganadores de 1er premio en una jornada regular. Se gana acertando el marcador exacto de un partido específico.
-                    </p>
+                     <div><label className="block mb-1 text-sm">Título</label><input type="text" value={config.botinJackpot.detail} onChange={e => handleBotinJackpotChange('detail', e.target.value)} className="w-full bg-gray-600 p-2 rounded"/></div>
                     <div>
-                        <label className="block mb-1 text-sm font-medium text-gray-300">Monto Actual del Botín</label>
-                        <input 
-                            type="number" 
-                            value={config.botinAmount || 0} 
-                            onChange={e => handleValueChange('botinAmount', Number(e.target.value))} 
-                            className="w-full bg-gray-700 p-2 rounded"
-                            step="100"
-                        />
-                        <p className="text-xs text-gray-400 mt-1">Puede ajustar este monto manualmente aquí.</p>
+                        <label className="block mb-1 text-sm font-medium">Monto Actual del Botín</label>
+                        <input type="number" value={config.botinAmount || 0} onChange={e => handleValueChange('botinAmount', Number(e.target.value))} className="w-full bg-gray-600 p-2 rounded" step="100"/>
+                         <p className="text-xs text-gray-500 mt-1">Este monto es dinámico, pero puede ajustarse manualmente.</p>
                     </div>
+                     <div>
+                        <label className="block mb-1 text-sm font-medium">Tipo de Fondo</label>
+                        <select 
+                            value={config.botinJackpot.backgroundType || 'color'} 
+                            onChange={e => handleBotinJackpotChange('backgroundType', e.target.value as 'color' | 'image')}
+                            className="w-full bg-gray-600 p-2 rounded"
+                        >
+                            <option value="color">Color Sólido</option>
+                            <option value="image">Imagen</option>
+                        </select>
+                    </div>
+                    {config.botinJackpot.backgroundType === 'image' ? (
+                        <ImageUpload label="Imagen de Fondo" imageUrl={config.botinJackpot.backgroundImage} onImageSelect={url => handleBotinJackpotChange('backgroundImage', url)} />
+                    ) : (
+                        <div className="flex items-center justify-between"><label className="text-sm">Color de Fondo</label><input type="color" value={config.botinJackpot.colors.backgroundColor} onChange={e => handleBotinJackpotColorChange('backgroundColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
+                    )}
+                    <div className="flex items-center justify-between"><label className="text-sm">Color de Texto</label><input type="color" value={config.botinJackpot.colors.primary} onChange={e => handleBotinJackpotColorChange('primary', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-600"/></div>
                 </div>
             </div>
         </details>
