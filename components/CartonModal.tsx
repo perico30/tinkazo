@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Carton, Jornada, Team, Prediction } from '../types';
 import XIcon from './icons/XIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
@@ -40,6 +40,31 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
     const sortedMatches = useMemo(() =>
         jornada ? [...jornada.matches].sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()) : [],
     [jornada]);
+    
+    const botinMatch = useMemo(() => 
+        jornada?.botinMatchId ? jornada.matches.find(m => m.id === jornada.botinMatchId) : null
+    , [jornada]);
+    
+    useEffect(() => {
+        if (!isEffectivelyEditable || !botinMatch) return;
+
+        const local = parseInt(botinPrediction.localScore, 10);
+        const visitor = parseInt(botinPrediction.visitorScore, 10);
+
+        if (!isNaN(local) && !isNaN(visitor)) {
+             let result: Prediction;
+             if (local > visitor) {
+                 result = '1';
+             } else if (local < visitor) {
+                 result = '2';
+             } else {
+                 result = 'X';
+             }
+             if (predictions[botinMatch.id] !== result) {
+                setPredictions(prev => ({ ...prev, [botinMatch.id]: result }));
+             }
+        }
+    }, [botinPrediction, botinMatch, isEffectivelyEditable, predictions]);
 
 
     if (!jornada) {
@@ -63,7 +88,6 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
     };
     
     const handleSave = () => {
-        const botinMatch = jornada.botinMatchId ? jornada.matches.find(m => m.id === jornada.botinMatchId) : null;
         const finalBotinPrediction = botinMatch && botinPrediction.localScore !== '' && botinPrediction.visitorScore !== ''
             ? {
                 localScore: parseInt(botinPrediction.localScore, 10),
@@ -90,7 +114,6 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
         return `${getPredictionClass(prediction, true)} ${isEffectivelyEditable ? 'cursor-pointer' : 'cursor-not-allowed'} ${isSelected ? 'ring-2 ring-offset-2 ring-offset-gray-700 ring-white' : ''}`;
     };
 
-    const botinMatch = jornada.botinMatchId ? jornada.matches.find(m => m.id === jornada.botinMatchId) : null;
     const localBotinTeam = botinMatch ? getTeam(botinMatch.localTeamId) : null;
     const visitorBotinTeam = botinMatch ? getTeam(botinMatch.visitorTeamId) : null;
 
@@ -112,6 +135,7 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
                         const currentPrediction = predictions[match.id];
                         const showResult = jornada.resultsProcessed && match.result;
                         const isCorrect = showResult && currentPrediction === match.result;
+                        const isBotinMatchWithScore = botinMatch && match.id === botinMatch.id && (botinPrediction.localScore !== '' || botinPrediction.visitorScore !== '');
 
                         return (
                             <div key={match.id} className="bg-gray-700 p-3 rounded-lg">
@@ -137,11 +161,20 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
                                                 : <div className="h-6 w-6 rounded-full bg-red-500 flex items-center justify-center"><XIcon className="h-4 w-4 text-white" /></div>
                                         )}
                                         {isEffectivelyEditable ? (
-                                            <>
-                                                <button onClick={() => handlePredictionChange(match.id, '1')} className={getButtonClass(match.id, '1')}>1</button>
-                                                <button onClick={() => handlePredictionChange(match.id, 'X')} className={getButtonClass(match.id, 'X')}><XIcon className="w-4 h-4"/></button>
-                                                <button onClick={() => handlePredictionChange(match.id, '2')} className={getButtonClass(match.id, '2')}>2</button>
-                                            </>
+                                            isBotinMatchWithScore ? (
+                                                <div className="text-center">
+                                                    <p className="text-xs text-purple-300">Auto-Predicción</p>
+                                                    <div className={`${getPredictionClass(currentPrediction)} mx-auto mt-1`}>
+                                                        {currentPrediction === 'X' ? <XIcon className="w-5 h-5"/> : currentPrediction}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => handlePredictionChange(match.id, '1')} className={getButtonClass(match.id, '1')}>1</button>
+                                                    <button onClick={() => handlePredictionChange(match.id, 'X')} className={getButtonClass(match.id, 'X')}><XIcon className="w-4 h-4"/></button>
+                                                    <button onClick={() => handlePredictionChange(match.id, '2')} className={getButtonClass(match.id, '2')}>2</button>
+                                                </>
+                                            )
                                         ) : (
                                             <div className={getPredictionClass(currentPrediction)}>
                                                 {currentPrediction === 'X' ? <XIcon className="w-5 h-5"/> : currentPrediction}

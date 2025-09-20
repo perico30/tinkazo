@@ -37,8 +37,10 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
         }
     };
 
-    const rechargeWhatsappMessage = `Hola ${sellerName}, he registrado una solicitud de recarga por Bs ${rechargeAmount}. Mi usuario es: ${currentUser.username}. Quedo a la espera de la aprobación.`;
-    const rechargeWhatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(rechargeWhatsappMessage)}`;
+    const getWhatsappLink = (request: RechargeRequest) => {
+        const message = `Hola ${sellerName}, he registrado una solicitud de recarga por Bs ${Math.floor(request.amount).toLocaleString('es-ES')}. Mi usuario es: ${currentUser.username}. A continuación adjunto mi comprobante de pago. Quedo a la espera de la aprobación.`;
+        return `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    };
 
     const handleWithdrawalSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,7 +88,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
             <div className="bg-gray-800 p-6 rounded-lg space-y-4 flex flex-col">
                 <h2 className="font-bold text-xl text-cyan-400">Recargar Saldo</h2>
                 <p className="text-gray-300 text-sm">
-                    Realiza tu pago usando el QR, luego registra tu solicitud aquí y envía el comprobante por WhatsApp a <span className="font-semibold text-white">{sellerName}</span>.
+                    Realiza tu pago usando el QR, luego registra tu solicitud aquí y notifica a <span className="font-semibold text-white">{sellerName}</span> desde el historial.
                 </p>
                 <div className="flex justify-center pt-2">
                     {qrCodeUrl ? (
@@ -105,8 +107,8 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                             value={rechargeAmount}
                             onChange={(e) => setRechargeAmount(e.target.value)}
                             className="w-full bg-gray-700 p-2 rounded"
-                            placeholder="Ej. 50.00"
-                            min="0.01" step="0.01" required
+                            placeholder="Ej. 50"
+                            min="1" step="1" required
                         />
                     </div>
                     <ImageUpload
@@ -119,16 +121,8 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                         className="w-full text-white font-bold py-2 rounded-lg btn-gradient disabled:bg-none disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none disabled:filter-none disabled:shadow-none"
                         disabled={!rechargeAmount || !rechargeProofUrl}
                     >
-                        1. Registrar Solicitud de Recarga
+                        Registrar Solicitud de Recarga
                     </button>
-                    <a 
-                        href={rechargeWhatsappLink}
-                        target="_blank" rel="noopener noreferrer"
-                        className={`block w-full text-center font-bold py-2 rounded-lg transition-colors ${!rechargeAmount ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-400'}`}
-                        onClick={(e) => !rechargeAmount && e.preventDefault()}
-                     >
-                        2. Notificar por WhatsApp
-                    </a>
                 </form>
                 {rechargeHistory.length > 0 && (
                     <div className="border-t border-gray-700 pt-4 mt-auto">
@@ -137,10 +131,17 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                             {rechargeHistory.map(req => (
                                 <div key={req.id} className="bg-gray-700 p-3 rounded-md flex justify-between items-center text-sm">
                                     <div>
-                                        <p className="font-bold">Bs {req.amount.toFixed(2)}</p>
+                                        <p className="font-bold">Bs {Math.floor(req.amount).toLocaleString('es-ES')}</p>
                                         <p className="text-xs text-gray-400">{new Date(req.requestDate).toLocaleString()}</p>
                                     </div>
-                                    <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStylesRecharge[req.status]}`}>{req.status}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStylesRecharge[req.status]}`}>{req.status}</span>
+                                        {req.status === 'pending' && (
+                                            <a href={getWhatsappLink(req)} target="_blank" rel="noopener noreferrer" className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded hover:bg-green-500/40 font-semibold">
+                                                Notificar
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -152,7 +153,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
             <div className="bg-gray-800 p-6 rounded-lg space-y-4 flex flex-col">
                 <h2 className="font-bold text-xl text-purple-400">Solicitar Retiro</h2>
                 <form onSubmit={handleWithdrawalSubmit} className="space-y-4">
-                     <p className="text-gray-300 text-sm">Completa el formulario para solicitar un retiro de tu saldo. Tu saldo actual es: <span className="font-bold text-white">Bs {(currentUser.balance || 0).toFixed(2)}</span></p>
+                     <p className="text-gray-300 text-sm">Completa el formulario para solicitar un retiro de tu saldo. Tu saldo actual es: <span className="font-bold text-white">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</span></p>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Monto a Retirar</label>
                         <input 
@@ -160,8 +161,8 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                             value={withdrawalAmount}
                             onChange={(e) => setWithdrawalAmount(e.target.value)}
                             className="w-full bg-gray-700 p-2 rounded"
-                            placeholder="Ej. 100.00"
-                            min="0.01" step="0.01" max={currentUser.balance || 0} required
+                            placeholder="Ej. 100"
+                            min="1" step="1" max={currentUser.balance || 0} required
                         />
                     </div>
                     <ImageUpload 
@@ -184,7 +185,7 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
                             {withdrawalHistory.map(req => (
                                 <div key={req.id} className="bg-gray-700 p-3 rounded-md flex justify-between items-center text-sm">
                                     <div>
-                                        <p className="font-bold">Bs {req.amount.toFixed(2)}</p>
+                                        <p className="font-bold">Bs {Math.floor(req.amount).toLocaleString('es-ES')}</p>
                                         <p className="text-xs text-gray-400">{new Date(req.requestDate).toLocaleString()}</p>
                                     </div>
                                     <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStylesWithdrawal[req.status]}`}>{req.status}</span>

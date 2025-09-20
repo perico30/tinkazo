@@ -40,7 +40,7 @@ const SellerClientsTab: React.FC<SellerClientsTabProps> = ({ currentUser, config
                                     <td className="px-6 py-4 font-medium whitespace-nowrap">{user.username}</td>
                                     <td className="px-6 py-4">{user.email}</td>
                                     <td className="px-6 py-4">{getCountryName(user.country)}</td>
-                                    <td className="px-6 py-4 font-semibold">Bs {(user.balance || 0).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-semibold">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</td>
                                     <td className="px-6 py-4 text-right">
                                         <button
                                             onClick={() => onViewClientTickets(user)}

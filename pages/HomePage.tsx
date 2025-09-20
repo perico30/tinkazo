@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import type { AppConfig, JackpotConfig, CarouselImage, UserRole, LegalLink, Jornada, Team, RegisteredUser, Carton } from '../types';
 import SoccerIcon from '../components/icons/SoccerIcon';
+import StarIcon from '../components/icons/StarIcon';
 
 // --- Helper Functions ---
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -18,7 +19,6 @@ interface HomePageProps {
   userRole: UserRole;
   currentUser: RegisteredUser | null;
   userCartonCount: number;
-  resultNotificationCarton: Carton | null;
   onLoginClick: () => void;
   onRegisterClick: () => void;
   onHomeClick: () => void;
@@ -28,7 +28,6 @@ interface HomePageProps {
   onLogoutClick: () => void;
   onLegalClick: (link: LegalLink) => void;
   onPlayJornada: (jornada: Jornada) => void;
-  onResultAcknowledged: (cartonId: string) => void;
 }
 
 
@@ -55,28 +54,6 @@ const WelcomePopup: React.FC<{ config: AppConfig['welcomePopup']; onClose: () =>
   );
 };
 
-const ResultNotificationModal: React.FC<{ carton: Carton; jornada: Jornada | null; onClose: () => void; }> = ({ carton, jornada, onClose }) => {
-    const hits = carton.hits ?? 0;
-    const isWinner = hits >= 10; // Example win condition
-    
-    return (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-gray-800 rounded-2xl max-w-md w-full text-center p-8" onClick={e => e.stopPropagation()}>
-                <h2 className="text-3xl font-bold mb-3 gradient-text">{isWinner ? '¡Felicidades!' : '¡Sigue Intentando!'}</h2>
-                <p className="text-gray-300 mb-2">Resultados de la jornada:</p>
-                <p className="text-xl font-semibold text-white mb-4">{jornada?.name || 'Jornada Finalizada'}</p>
-                <p className="text-5xl font-extrabold text-cyan-400 mb-4">{hits}</p>
-                <p className="text-lg text-gray-400 mb-6">Aciertos</p>
-                <p className="text-gray-300 mb-6">{isWinner ? '¡Tuviste un excelente desempeño! Revisa la sección de ganancias para más detalles.' : 'No te desanimes, la próxima jornada podría ser la tuya. ¡La suerte favorece a los perseverantes!'}</p>
-                <button onClick={onClose} className="w-full text-white font-bold py-2.5 rounded-lg btn-gradient">
-                    Entendido
-                </button>
-            </div>
-        </div>
-    );
-};
-
-
 // --- Componentes de sección (Ahora dinámicos) ---
 const WelcomeMessage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
   <section className="text-center mb-16">
@@ -85,10 +62,23 @@ const WelcomeMessage: React.FC<{ title: string; description: string }> = ({ titl
   </section>
 );
 
-const JackpotsSection: React.FC<{ jackpots: [JackpotConfig, JackpotConfig] }> = ({ jackpots }) => {
-  return (
+const JackpotsSection: React.FC<{ gorditoJackpot: JackpotConfig; botinAmount: number; }> = ({ gorditoJackpot, botinAmount }) => {
+    
+    // Create a JackpotConfig object for the Botin so we can reuse the card component
+    const botinJackpot: JackpotConfig = {
+        title: 'POZO DEL BOTÍN',
+        detail: 'POZO DEL BOTÍN',
+        amount: `Bs ${Math.floor(botinAmount).toLocaleString('es-ES')}`,
+        backgroundType: 'color',
+        colors: { primary: '#a855f7', backgroundColor: '#1f2937' }, // purple-500, gray-800
+        backgroundImage: '',
+    };
+    
+    const jackpotsToRender = [gorditoJackpot, botinJackpot];
+
+    return (
     <section className="grid md:grid-cols-2 gap-8">
-      {jackpots.map((jackpot, index) => {
+      {jackpotsToRender.map((jackpot, index) => {
         const isImage = jackpot.backgroundType === 'image' && jackpot.backgroundImage;
         return (
           <div
@@ -157,7 +147,7 @@ const JornadasSection: React.FC<{
     currentUser: RegisteredUser | null, 
     gorditoJornadaId?: string | null;
     onPlayJornada: (jornada: Jornada) => void 
-}> = ({ jornadas, currentUser, onPlayJornada }) => {
+}> = ({ jornadas, currentUser, onPlayJornada, gorditoJornadaId }) => {
   const openJornadas = jornadas.filter(j => j.status === 'abierta');
   
   const isJornadaPlayable = (jornada: Jornada) => {
@@ -195,6 +185,9 @@ const JornadasSection: React.FC<{
       <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {openJornadas.map(jornada => {
           const playable = isJornadaPlayable(jornada);
+          const isGordito = jornada.id === gorditoJornadaId;
+          const hasBotin = !!jornada.botinMatchId;
+
           return (
             <div key={jornada.id} className="jornada-card">
               {jornada.styling.backgroundImage && (
@@ -204,6 +197,24 @@ const JornadasSection: React.FC<{
                 className="jornada-card-overlay"
                 style={{ backgroundColor: hexToRgba(jornada.styling.backgroundColor, 0.7) }}
               ></div>
+
+              {(isGordito || hasBotin) && (
+                <div className="absolute top-2 left-2 flex flex-col items-start gap-1 z-[4]">
+                    {isGordito && (
+                        <div className="flex items-center gap-1 bg-green-500/90 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
+                            <StarIcon className="h-3 w-3" />
+                            <span>Gordito Activado</span>
+                        </div>
+                    )}
+                    {hasBotin && (
+                        <div className="flex items-center gap-1 bg-yellow-400/90 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
+                            <StarIcon className="h-3 w-3" />
+                            <span>Botin Activado</span>
+                        </div>
+                    )}
+                </div>
+              )}
+
               <div className="jornada-card-content" style={{ color: jornada.styling.textColor }}>
                 <header className="jornada-card-header">
                   <div className="info">
@@ -229,7 +240,7 @@ const JornadasSection: React.FC<{
                       disabled={!currentUser || !playable}
                       className="jornada-play-button"
                       style={{ color: jornada.styling.backgroundColor }}
-                      title={!currentUser ? 'Debes iniciar sesión para jugar' : !playable ? 'La venta para esta jornada ha cerrado' : `Jugar por Bs ${jornada.cartonPrice.toFixed(2)}`}
+                      title={!currentUser ? 'Debes iniciar sesión para jugar' : !playable ? 'La venta para esta jornada ha cerrado' : `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}`}
                   >
                       {!playable ? 'Cerrado' : 'Jugar'}
                   </button>
@@ -245,9 +256,8 @@ const JornadasSection: React.FC<{
 
 
 const HomePage: React.FC<HomePageProps> = (props) => {
-  const { appConfig, userRole, currentUser, userCartonCount, resultNotificationCarton, onLoginClick, onRegisterClick, onHomeClick, onAdminClick, onSellerPanelClick, onClientPanelClick, onLogoutClick, onLegalClick, onPlayJornada, onResultAcknowledged } = props;
+  const { appConfig, userRole, currentUser, userCartonCount, onLoginClick, onRegisterClick, onHomeClick, onAdminClick, onSellerPanelClick, onClientPanelClick, onLogoutClick, onLegalClick, onPlayJornada } = props;
   const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [isNotificationVisible, setIsNotificationVisible] = useState(false);
 
   useEffect(() => {
     // Popup se muestra cada vez que se carga la página de inicio
@@ -256,25 +266,12 @@ const HomePage: React.FC<HomePageProps> = (props) => {
     }
   }, [appConfig.welcomePopup.enabled]);
 
-  useEffect(() => {
-    if (resultNotificationCarton) {
-        setIsNotificationVisible(true);
-    }
-  }, [resultNotificationCarton]);
-
   const closePopup = () => {
     setIsPopupVisible(false);
   };
-  
-  const closeNotification = () => {
-      if (resultNotificationCarton) {
-          onResultAcknowledged(resultNotificationCarton.id);
-      }
-      setIsNotificationVisible(false);
-  }
 
   const sectionComponents = {
-    jackpots: <JackpotsSection jackpots={appConfig.jackpots} />,
+    jackpots: <JackpotsSection gorditoJackpot={appConfig.gorditoJackpot} botinAmount={appConfig.botinAmount} />,
     carousel: <CarouselSection images={appConfig.carouselImages} />,
     jornadas: <JornadasSection 
                 jornadas={appConfig.jornadas} 
@@ -305,13 +302,6 @@ const HomePage: React.FC<HomePageProps> = (props) => {
       />
       
       {isPopupVisible && <WelcomePopup config={appConfig.welcomePopup} onClose={closePopup} primaryColor={appConfig.theme.primaryColor} />}
-      {isNotificationVisible && resultNotificationCarton && (
-          <ResultNotificationModal
-            carton={resultNotificationCarton}
-            jornada={appConfig.jornadas.find(j => j.id === resultNotificationCarton.jornadaId) || null}
-            onClose={closeNotification}
-          />
-      )}
 
       <main className="flex-grow pt-24">
         <div className="container mx-auto px-4 py-8">

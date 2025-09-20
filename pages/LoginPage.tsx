@@ -8,9 +8,11 @@ interface LoginPageProps {
   onUserLogin: (user: RegisteredUser) => void;
   users: RegisteredUser[];
   primaryColor: string;
+  appName: string;
+  logoUrl: string;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onUserLogin, users, primaryColor }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onUserLogin, users, primaryColor, appName, logoUrl }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -45,8 +47,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
           className="text-center mb-8 cursor-pointer"
           onClick={() => setCurrentView('home')}
         >
-          <LogoIcon className="h-16 w-16 text-cyan-300 mx-auto" style={{ filter: 'drop-shadow(0 0 10px currentColor)' }} />
-          <h1 className="text-4xl font-bold text-white mt-4">TINKAZO</h1>
+          {logoUrl ? (
+            <img src={logoUrl} alt={`${appName} Logo`} className="h-16 w-auto mx-auto" />
+          ) : (
+            <LogoIcon className="h-16 w-16 text-cyan-300 mx-auto" style={{ filter: 'drop-shadow(0 0 10px currentColor)' }} />
+          )}
+          <h1 className="text-4xl font-bold text-white mt-4">{appName}</h1>
         </div>
         <div className="gradient-border rounded-2xl shadow-2xl shadow-purple-500/10">
           <div className="glass-card p-8 rounded-2xl">

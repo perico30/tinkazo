@@ -124,9 +124,9 @@ const RechargeModal: React.FC<{
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
                             className="w-full bg-gray-700 p-2 rounded"
-                            placeholder="Ej. 100.00"
-                            min="0.01"
-                            step="0.01"
+                            placeholder="Ej. 100"
+                            min="1"
+                            step="1"
                             autoFocus
                             required
                         />
@@ -240,7 +240,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                     <td className="px-6 py-4 font-medium whitespace-nowrap">{user.username}</td>
                                     <td className="px-6 py-4">{user.email}</td>
                                     {activeSubTab === 'client' && <td className="px-6 py-4">{getSellerName(user.assignedSellerId)}</td>}
-                                    <td className="px-6 py-4 font-semibold">Bs {(user.balance || 0).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-semibold">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 text-xs font-bold rounded-full ${user.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>
                                             {user.status === 'active' ? 'Activo' : 'Pendiente'}

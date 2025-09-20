@@ -14,14 +14,20 @@ const ClientRechargesTab: React.FC<ClientRechargesTabProps> = ({ currentUser, co
         return config.users.filter(u => u.assignedSellerId === currentUser.id).map(c => c.id);
     }, [config.users, currentUser.id]);
 
-    const pendingRequests = useMemo(() => {
+    const clientRequests = useMemo(() => {
         return config.rechargeRequests
-            .filter(r => r.status === 'pending' && r.requesterRole === 'client' && myClientIds.includes(r.userId))
-            .sort((a, b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
+            .filter(r => r.requesterRole === 'client' && myClientIds.includes(r.userId))
+            .sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
     }, [config.rechargeRequests, myClientIds]);
 
     const getUser = (userId: string): RegisteredUser | undefined => {
         return config.users.find(u => u.id === userId);
+    };
+    
+    const statusStyles: { [key in RechargeRequest['status']]: string } = {
+        pending: 'bg-yellow-500/20 text-yellow-300',
+        approved: 'bg-green-500/20 text-green-300',
+        rejected: 'bg-red-500/20 text-red-400',
     };
 
     return (
@@ -35,7 +41,7 @@ const ClientRechargesTab: React.FC<ClientRechargesTabProps> = ({ currentUser, co
                 </div>
             )}
             <div className="bg-gray-800 p-4 rounded-lg">
-                <h2 className="font-semibold text-lg mb-4">Solicitudes de Recarga de Clientes ({pendingRequests.length})</h2>
+                <h2 className="font-semibold text-lg mb-4">Historial de Recargas de Clientes ({clientRequests.length})</h2>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-gray-300">
                         <thead className="text-xs text-gray-400 uppercase bg-gray-700">
@@ -44,11 +50,12 @@ const ClientRechargesTab: React.FC<ClientRechargesTabProps> = ({ currentUser, co
                                 <th scope="col" className="px-6 py-3">Cliente</th>
                                 <th scope="col" className="px-6 py-3">Monto</th>
                                 <th scope="col" className="px-6 py-3">Comprobante</th>
+                                <th scope="col" className="px-6 py-3">Estado</th>
                                 <th scope="col" className="px-6 py-3 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {pendingRequests.map(req => {
+                            {clientRequests.map(req => {
                                 const user = getUser(req.userId);
                                 return (
                                     <tr key={req.id} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
@@ -64,20 +71,29 @@ const ClientRechargesTab: React.FC<ClientRechargesTabProps> = ({ currentUser, co
                                                 Ver
                                             </button>
                                         </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStyles[req.status]}`}>{req.status}</span>
+                                        </td>
                                         <td className="px-6 py-4 text-right whitespace-nowrap space-x-2">
-                                            <button onClick={() => onProcessClientRecharge(req.id, 'approve', currentUser.id)} className="px-3 py-1 rounded bg-green-600 text-white font-bold text-xs hover:bg-green-500">
-                                                Aprobar
-                                            </button>
-                                            <button onClick={() => onProcessClientRecharge(req.id, 'reject', currentUser.id)} className="px-3 py-1 rounded bg-red-600 text-white font-bold text-xs hover:bg-red-500">
-                                                Rechazar
-                                            </button>
+                                            {req.status === 'pending' ? (
+                                                <>
+                                                    <button onClick={() => onProcessClientRecharge(req.id, 'approve', currentUser.id)} className="px-3 py-1 rounded bg-green-600 text-white font-bold text-xs hover:bg-green-500">
+                                                        Aprobar
+                                                    </button>
+                                                    <button onClick={() => onProcessClientRecharge(req.id, 'reject', currentUser.id)} className="px-3 py-1 rounded bg-red-600 text-white font-bold text-xs hover:bg-red-500">
+                                                        Rechazar
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <span className="text-xs text-gray-500">Procesado</span>
+                                            )}
                                         </td>
                                     </tr>
                                 );
                             })}
                         </tbody>
                     </table>
-                    {pendingRequests.length === 0 && <p className="text-center text-gray-500 py-8">No hay solicitudes de clientes pendientes.</p>}
+                    {clientRequests.length === 0 && <p className="text-center text-gray-500 py-8">No hay solicitudes de clientes.</p>}
                 </div>
             </div>
         </>

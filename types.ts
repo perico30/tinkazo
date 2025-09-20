@@ -89,6 +89,7 @@ export interface Jornada {
   cartonPrice: number;
   matches: Match[];
   botinMatchId?: string | null;
+  botinResult?: string; // e.g., "2-1"
   flagIconUrl?: string;
   styling: {
     textColor: string;
@@ -116,6 +117,12 @@ export interface RegisteredUser {
 
 export type Prediction = '1' | 'X' | '2';
 
+export interface PrizeDetails {
+  jornada?: { tier: 1 | 2; winnersCount: number };
+  botin?: { winnersCount: number };
+  gordito?: { winnersCount: number };
+}
+
 export interface Carton {
     id: string;
     userId: string;
@@ -125,6 +132,8 @@ export interface Carton {
     botinPrediction?: { localScore: number; visitorScore: number; } | null;
     hits?: number;
     resultNotified?: boolean;
+    prizeWon?: number;
+    prizeDetails?: PrizeDetails | null;
 }
 
 export interface WithdrawalRequest {
@@ -156,7 +165,7 @@ export interface AppConfig {
   logoUrl: string;
   welcomeMessage: WelcomeMessageConfig;
   welcomePopup: WelcomePopupConfig;
-  jackpots: [JackpotConfig, JackpotConfig];
+  gorditoJackpot: JackpotConfig;
   carouselImages: CarouselImage[];
   recharge: RechargeConfig;
   adminWhatsappNumber: string;
@@ -169,4 +178,6 @@ export interface AppConfig {
   withdrawalRequests: WithdrawalRequest[];
   rechargeRequests: RechargeRequest[];
   footer: FooterConfig;
+  botinAmount: number;
+  sellerCommissionPercentage: number;
 }

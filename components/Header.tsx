@@ -74,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({
               </span>
               {userRole === 'client' && (
                 <span className="text-sm font-bold text-cyan-300 bg-slate-700/50 px-3 py-1.5 rounded-full">
-                    Saldo: Bs {(currentUser.balance || 0).toFixed(2)}
+                    Saldo: Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}
                 </span>
               )}
               {userRole === 'client' && typeof userCartonCount !== 'undefined' && userCartonCount > 0 && (

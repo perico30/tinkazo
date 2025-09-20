@@ -57,6 +57,10 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
     { id: 'profile', label: 'Mi Perfil', icon: GearIcon },
   ];
 
+  const myCartones = config.cartones.filter(c => c.userId === currentUser.id);
+  const totalWinnings = myCartones.reduce((sum, carton) => sum + (carton.prizeWon || 0), 0);
+  const winningCartones = myCartones.filter(c => c.prizeWon && c.prizeWon > 0);
+
   const renderTabContent = () => {
     switch(activeTab) {
       case 'dashboard':
@@ -70,12 +74,12 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
                />;
       case 'tickets':
         return <ClientTicketsTab 
-                  cartones={config.cartones.filter(c => c.userId === currentUser.id)}
+                  cartones={myCartones}
                   jornadas={config.jornadas}
                   onViewCarton={handleViewCarton}
                />;
       case 'gains':
-          return <ClientGainsTab />;
+          return <ClientGainsTab winningCartones={winningCartones} jornadas={config.jornadas} />;
       case 'profile':
         return <ClientProfileTab currentUser={currentUser} onUpdateUser={onUpdateUser} />;
       default:
@@ -166,13 +170,13 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
                 <div className="flex flex-col sm:flex-row gap-4">
                     <HeaderCard 
                         title="Saldo Actual" 
-                        value={`Bs ${(currentUser.balance || 0).toFixed(2)}`}
+                        value={`Bs ${Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}`}
                         onRechargeClick={() => setActiveTab('recharge')}
                         onWithdrawClick={() => setActiveTab('recharge')}
                     />
                     <HeaderCard 
                         title="Ganancias Totales" 
-                        value="Bs 0.00"
+                        value={`Bs ${Math.floor(totalWinnings).toLocaleString('es-ES')}`}
                     />
                 </div>
 

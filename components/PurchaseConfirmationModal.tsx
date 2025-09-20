@@ -82,9 +82,9 @@ const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps> = ({
                     )}
 
                     <div className="border-t border-gray-700 pt-4 mt-4 space-y-2 text-sm">
-                        <div className="flex justify-between"><span className="text-gray-400">Costo del Cartón:</span> <span className="font-semibold">Bs {jornada.cartonPrice.toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-400">Saldo Actual:</span> <span className="font-semibold">Bs {(currentUser.balance || 0).toFixed(2)}</span></div>
-                        <div className="flex justify-between text-base"><span className="text-gray-300">Saldo Restante:</span> <span className={`font-bold ${remainingBalance < 0 ? 'text-red-500' : 'text-green-400'}`}>Bs {remainingBalance.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-400">Costo del Cartón:</span> <span className="font-semibold">Bs {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-400">Saldo Actual:</span> <span className="font-semibold">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</span></div>
+                        <div className="flex justify-between text-base"><span className="text-gray-300">Saldo Restante:</span> <span className={`font-bold ${remainingBalance < 0 ? 'text-red-500' : 'text-green-400'}`}>Bs {Math.floor(remainingBalance).toLocaleString('es-ES')}</span></div>
                     </div>
                 </div>
 

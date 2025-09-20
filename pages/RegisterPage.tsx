@@ -8,9 +8,11 @@ interface RegisterPageProps {
   primaryColor: string;
   // FIX: Updated the Omit type to also exclude 'status' and 'balance', which are handled by the parent component.
   onRegister: (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => void;
+  appName: string;
+  logoUrl: string;
 }
 
-const RegisterPage: React.FC<RegisterPageProps> = ({ setCurrentView, primaryColor, onRegister }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({ setCurrentView, primaryColor, onRegister, appName, logoUrl }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,8 +31,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ setCurrentView, primaryColo
           className="text-center mb-8 cursor-pointer"
           onClick={() => setCurrentView('home')}
         >
-          <LogoIcon className="h-16 w-16 text-cyan-300 mx-auto" style={{ filter: 'drop-shadow(0 0 10px currentColor)' }} />
-           <h1 className="text-4xl font-bold text-white mt-4">TINKAZO</h1>
+          {logoUrl ? (
+            <img src={logoUrl} alt={`${appName} Logo`} className="h-16 w-auto mx-auto" />
+          ) : (
+            <LogoIcon className="h-16 w-16 text-cyan-300 mx-auto" style={{ filter: 'drop-shadow(0 0 10px currentColor)' }} />
+          )}
+           <h1 className="text-4xl font-bold text-white mt-4">{appName}</h1>
         </div>
         <div className="gradient-border rounded-2xl shadow-2xl shadow-purple-500/10">
           <div className="glass-card p-8 rounded-2xl">

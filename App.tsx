@@ -7,7 +7,7 @@ import SellerPage from './pages/SellerPage';
 import ClientPage from './pages/ClientPage';
 import PurchaseCartonPage from './pages/PurchaseCartonPage';
 import Notification from './components/Notification';
-import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest } from './types';
+import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails } from './types';
 
 // --- Componente de Modal Legal ---
 const LegalModal: React.FC<{ content: LegalLink; onClose: () => void }> = ({ content, onClose }) => (
@@ -39,7 +39,6 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<RegisteredUser | null>(null);
   const [legalModalContent, setLegalModalContent] = useState<LegalLink | null>(null);
   const [jornadaToPlay, setJornadaToPlay] = useState<Jornada | null>(null);
-  const [resultNotificationCarton, setResultNotificationCarton] = useState<Carton | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
 
@@ -62,24 +61,14 @@ const App: React.FC = () => {
       text: 'Las jornadas de la Champions League están en su punto más álgido. ¡El tiempo se acaba! ¡Asegura tu predicción y no te quedes fuera de la gloria!',
       imageUrl: '',
     },
-    jackpots: [
-      {
+    gorditoJackpot: {
         title: 'GRAN POZO',
         detail: 'GRAN POZO',
-        amount: 'Bs 1,250,000',
+        amount: 'Bs 1.250.000',
         backgroundType: 'color',
         colors: { primary: '#22d3ee', backgroundColor: '#1f2937' }, // cyan-400, gray-800
         backgroundImage: '',
-      },
-      {
-        title: 'SUPER POZO',
-        detail: 'SUPER POZO',
-        amount: 'Bs 300,000',
-        backgroundType: 'color',
-        colors: { primary: '#a855f7', backgroundColor: '#1f2937' }, // purple-500, gray-800
-        backgroundImage: '',
-      },
-    ],
+    },
     carouselImages: [
         { id: '1', url: 'https://picsum.photos/seed/tinkazo1/920/430' },
         { id: '2', url: 'https://picsum.photos/seed/tinkazo2/920/430' },
@@ -97,6 +86,8 @@ const App: React.FC = () => {
     cartones: [],
     withdrawalRequests: [],
     rechargeRequests: [],
+    botinAmount: 10000, // Initial Botin amount
+    sellerCommissionPercentage: 10, // Default 10% commission for sellers
     footer: {
       copyright: '© 2024 TINKAZO. Todos los derechos reservados.',
       socialLinks: [
@@ -121,21 +112,6 @@ const App: React.FC = () => {
     // Apply text color
     document.body.style.color = appConfig.theme.textColor;
   }, [appConfig.theme.backgroundStyle, appConfig.theme.textColor]);
-
-  useEffect(() => {
-    if (currentUser && userRole === 'client') {
-      const cartonToNotify = appConfig.cartones.find(carton => {
-        if (carton.userId !== currentUser.id || carton.resultNotified) {
-          return false;
-        }
-        const jornada = appConfig.jornadas.find(j => j.id === carton.jornadaId);
-        return jornada && jornada.resultsProcessed;
-      });
-      setResultNotificationCarton(cartonToNotify || null);
-    } else {
-        setResultNotificationCarton(null);
-    }
-  }, [currentUser, appConfig.cartones, appConfig.jornadas, userRole]);
 
   const showNotification = useCallback((message: string) => {
     setNotification(message);
@@ -200,38 +176,134 @@ const App: React.FC = () => {
     setCurrentView('home');
   }, []);
   
-  const processJornadaResults = (config: AppConfig): AppConfig => {
-    const newConfig = JSON.parse(JSON.stringify(config)); // Deep copy to avoid mutation issues
-    
-    newConfig.jornadas.forEach((jornada: Jornada, jornadaIndex: number) => {
+const processJornadaResults = (config: AppConfig): AppConfig => {
+    const newConfig = JSON.parse(JSON.stringify(config)); // Deep copy
+    const parsePrize = (prizeStr: string) => parseInt(prizeStr.replace(/[^0-9]/g, ""), 10) || 0;
+
+    newConfig.jornadas.forEach((jornada: Jornada) => {
         const allMatchesHaveResults = jornada.matches.length > 0 && jornada.matches.every(m => m.result);
-        
+
         if (jornada.status === 'cerrada' && allMatchesHaveResults && !jornada.resultsProcessed) {
             console.log(`Processing results for jornada: ${jornada.name}`);
-            
-            // 1. Mark jornada as processed
-            newConfig.jornadas[jornadaIndex].resultsProcessed = true;
+            jornada.resultsProcessed = true;
 
-            // 2. Find and update cartones
-            newConfig.cartones = newConfig.cartones.map((carton: Carton) => {
-                if (carton.jornadaId === jornada.id) {
-                    let hits = 0;
-                    jornada.matches.forEach(match => {
-                        if (match.result && carton.predictions[match.id] === match.result) {
-                            hits++;
-                        }
-                    });
-                    return { ...carton, hits };
+            const cartonesForJornada = newConfig.cartones.filter((c: Carton) => c.jornadaId === jornada.id);
+            if (cartonesForJornada.length === 0) return;
+
+            // 1. Calculate hits, invalidating cartons with wrong "Botin" predictions
+            cartonesForJornada.forEach((carton: Carton) => {
+                carton.prizeWon = 0;
+                carton.prizeDetails = {};
+                
+                let isCartonValid = true;
+                // If user played for the Botin, their prediction MUST be correct.
+                if (carton.botinPrediction && jornada.botinResult) {
+                    const [localStr, visitorStr] = jornada.botinResult.split('-');
+                    const botinAdminResult = { local: parseInt(localStr, 10), visitor: parseInt(visitorStr, 10) };
+
+                    const predictionIsWrong = isNaN(botinAdminResult.local) || isNaN(botinAdminResult.visitor) ||
+                        carton.botinPrediction.localScore !== botinAdminResult.local ||
+                        carton.botinPrediction.visitorScore !== botinAdminResult.visitor;
+
+                    if (predictionIsWrong) {
+                        // The user played for the Botin and failed. The entire carton is lost.
+                        isCartonValid = false;
+                    }
                 }
-                return carton;
+
+                // Calculate hits only if the carton is valid
+                if (isCartonValid) {
+                    carton.hits = jornada.matches.reduce((hits, match) => 
+                        (match.result && carton.predictions[match.id] === match.result) ? hits + 1 : hits, 0);
+                } else {
+                    // If invalid, hits are 0, so it cannot win any prize.
+                    carton.hits = 0; 
+                }
             });
 
-            // TODO: Winner prize distribution logic can be added here in the future
+            // 2. Determine Prize Amounts (Handle Gordito)
+            const isGorditoJornada = jornada.id === newConfig.gorditoJornadaId;
+            const firstPrizeAmount = isGorditoJornada 
+                ? parsePrize(newConfig.gorditoJackpot.amount)
+                : parsePrize(jornada.firstPrize);
+            const secondPrizeAmount = parsePrize(jornada.secondPrize);
+
+            // 3. Distribute Jornada Prizes
+            const firstPrizeHits = jornada.matches.length;
+            const secondPrizeHits = jornada.matches.length - 1;
+
+            const firstPrizeWinners = cartonesForJornada.filter((c: Carton) => c.hits === firstPrizeHits);
+            const secondPrizeWinners = cartonesForJornada.filter((c: Carton) => c.hits === secondPrizeHits);
+
+            if (firstPrizeWinners.length > 0) {
+                const prizePerWinner = firstPrizeAmount / firstPrizeWinners.length;
+                firstPrizeWinners.forEach((carton: Carton) => {
+                    carton.prizeWon = (carton.prizeWon || 0) + prizePerWinner;
+                    const prizeDetailKey = isGorditoJornada ? 'gordito' : 'jornada';
+                    carton.prizeDetails![prizeDetailKey as 'gordito' | 'jornada'] = { tier: 1, winnersCount: firstPrizeWinners.length };
+                });
+            } else if (!isGorditoJornada) {
+                // No first prize winners, 70% of sales go to Botin
+                const totalJornadaSales = cartonesForJornada.length * jornada.cartonPrice;
+                const botinContribution = totalJornadaSales * 0.70;
+                newConfig.botinAmount = (newConfig.botinAmount || 0) + botinContribution;
+            }
+
+            if (secondPrizeWinners.length > 0) {
+                const prizePerWinner = secondPrizeAmount / secondPrizeWinners.length;
+                secondPrizeWinners.forEach((carton: Carton) => {
+                    carton.prizeWon = (carton.prizeWon || 0) + prizePerWinner;
+                    if (!carton.prizeDetails?.jornada) { // Don't overwrite if they won 1st prize
+                       carton.prizeDetails!.jornada = { tier: 2, winnersCount: secondPrizeWinners.length };
+                    }
+                });
+            }
+
+            // 4. Distribute Botin Prize
+            if (jornada.botinResult && newConfig.botinAmount > 0) {
+                const [localStr, visitorStr] = jornada.botinResult.split('-');
+                const botinResult = { local: parseInt(localStr, 10), visitor: parseInt(visitorStr, 10) };
+
+                if (!isNaN(botinResult.local) && !isNaN(botinResult.visitor)) {
+                    const botinWinners = cartonesForJornada.filter(c => 
+                        c.botinPrediction &&
+                        c.botinPrediction.localScore === botinResult.local &&
+                        c.botinPrediction.visitorScore === botinResult.visitor
+                    );
+                    
+                    if (botinWinners.length > 0) {
+                        const prizePerWinner = newConfig.botinAmount / botinWinners.length;
+                        botinWinners.forEach((carton: Carton) => {
+                            carton.prizeWon = (carton.prizeWon || 0) + prizePerWinner;
+                            carton.prizeDetails!.botin = { winnersCount: botinWinners.length };
+                        });
+                        newConfig.botinAmount = 0; // Reset botin pot after it's won
+                    }
+                }
+            }
+            
+            // 5. Update user balances based on total prizeWon
+            cartonesForJornada.forEach((carton: Carton) => {
+                if (carton.prizeWon && carton.prizeWon > 0) {
+                    const user = newConfig.users.find((u: RegisteredUser) => u.id === carton.userId);
+                    if (user) {
+                        user.balance = (user.balance || 0) + carton.prizeWon;
+                    }
+                }
+                // Cleanup empty prizeDetails object
+                if (Object.keys(carton.prizeDetails || {}).length === 0) {
+                    carton.prizeDetails = null;
+                }
+            });
+
+            // 6. Update the main cartones array in newConfig
+            newConfig.cartones = newConfig.cartones.map((originalCarton: Carton) => 
+                cartonesForJornada.find(pc => pc.id === originalCarton.id) || originalCarton);
         }
     });
 
     return newConfig;
-  };
+};
 
   const handleSaveConfig = (newConfig: AppConfig) => {
     const processedConfig = processJornadaResults(newConfig);
@@ -341,16 +413,6 @@ const App: React.FC = () => {
 
     alert('¡Cartón actualizado con éxito!');
   }, [appConfig.cartones, appConfig.jornadas]);
-
-  const handleResultAcknowledged = useCallback((cartonId: string) => {
-    setAppConfig(prev => ({
-      ...prev,
-      cartones: prev.cartones.map(c => 
-        c.id === cartonId ? { ...c, resultNotified: true } : c
-      ),
-    }));
-    setResultNotificationCarton(null);
-  }, []);
 
   const handleRequestWithdrawal = useCallback((userId: string, amount: number, userQrCodeUrl: string) => {
       const user = appConfig.users.find(u => u.id === userId);
@@ -504,7 +566,6 @@ const App: React.FC = () => {
     }
 
     setAppConfig(prev => {
-      // FIX: Explicitly type the new status to satisfy the RechargeRequest['status'] type.
       const updatedRequests = prev.rechargeRequests.map(r => {
         if (r.id === requestId) {
             const newStatus: RechargeRequest['status'] = action === 'approve' ? 'approved' : 'rejected';
@@ -514,9 +575,14 @@ const App: React.FC = () => {
       });
 
       if (action === 'approve') {
+        // Calculate commission for the seller
+        const commissionPercentage = prev.sellerCommissionPercentage || 0;
+        const commissionAmount = request.amount * (commissionPercentage / 100);
+        const totalAmountToCredit = request.amount + commissionAmount;
+
         const updatedUsers = prev.users.map(u => {
           if (u.id === request.userId) {
-            return { ...u, balance: (u.balance || 0) + request.amount };
+            return { ...u, balance: (u.balance || 0) + totalAmountToCredit };
           }
           return u;
         });
@@ -527,18 +593,18 @@ const App: React.FC = () => {
     });
 
     alert(`La solicitud del vendedor ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
-  }, [appConfig.rechargeRequests]);
+  }, [appConfig.rechargeRequests, appConfig.sellerCommissionPercentage]);
 
   const renderView = () => {
     const userCartonCount = currentUser ? appConfig.cartones.filter(c => c.userId === currentUser.id).length : 0;
     
     switch (currentView) {
       case 'login':
-        return <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
+        return <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'register':
-        return <RegisterPage setCurrentView={setCurrentView} onRegister={handleRegister} primaryColor={appConfig.theme.primaryColor} />;
+        return <RegisterPage setCurrentView={setCurrentView} onRegister={handleRegister} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'admin':
-        return userRole === 'admin' ? <AdminPage initialConfig={appConfig} onSave={handleSaveConfig} onLogout={handleLogout} onExit={navigateToHome} onProcessWithdrawal={handleProcessWithdrawal} onProcessSellerRecharge={handleProcessSellerRecharge} /> : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
+        return userRole === 'admin' ? <AdminPage initialConfig={appConfig} onSave={handleSaveConfig} onLogout={handleLogout} onExit={navigateToHome} onProcessWithdrawal={handleProcessWithdrawal} onProcessSellerRecharge={handleProcessSellerRecharge} /> : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'seller':
         return userRole === 'seller' && currentUser ? (
             <SellerPage
@@ -551,7 +617,7 @@ const App: React.FC = () => {
               onExit={navigateToHome}
               onUpdateCarton={handleUpdateCarton}
             />
-          ) : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
+          ) : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'clientPanel':
           if (userRole === 'client' && currentUser) {
               return (
@@ -567,7 +633,7 @@ const App: React.FC = () => {
                   />
               );
           }
-          return <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
+          return <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'purchaseCarton':
         return jornadaToPlay && currentUser ? (
             <PurchaseCartonPage
@@ -578,7 +644,7 @@ const App: React.FC = () => {
                 onExit={navigateToHome}
             />
         ) : <HomePage
-            appConfig={appConfig} userRole={userRole} currentUser={currentUser} userCartonCount={userCartonCount} onLoginClick={navigateToLogin} onRegisterClick={navigateToRegister} onHomeClick={navigateToHome} onAdminClick={navigateToAdmin} onSellerPanelClick={navigateToSellerPanel} onClientPanelClick={navigateToClientPanel} onLogoutClick={handleLogout} onLegalClick={handleLegalClick} onPlayJornada={handlePlayJornada} onResultAcknowledged={handleResultAcknowledged} resultNotificationCarton={resultNotificationCarton}
+            appConfig={appConfig} userRole={userRole} currentUser={currentUser} userCartonCount={userCartonCount} onLoginClick={navigateToLogin} onRegisterClick={navigateToRegister} onHomeClick={navigateToHome} onAdminClick={navigateToAdmin} onSellerPanelClick={navigateToSellerPanel} onClientPanelClick={navigateToClientPanel} onLogoutClick={handleLogout} onLegalClick={handleLegalClick} onPlayJornada={handlePlayJornada}
           />;
       case 'home':
       default:
@@ -597,8 +663,6 @@ const App: React.FC = () => {
             onLogoutClick={handleLogout}
             onLegalClick={handleLegalClick}
             onPlayJornada={handlePlayJornada}
-            onResultAcknowledged={handleResultAcknowledged}
-            resultNotificationCarton={resultNotificationCarton}
           />
         );
     }

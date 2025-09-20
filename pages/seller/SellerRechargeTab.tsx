@@ -40,6 +40,11 @@ const SellerRechargeTab: React.FC<SellerRechargeTabProps> = ({ config, currentUs
         rejected: 'bg-red-500/20 text-red-400',
     };
 
+    const getAdminWhatsappLink = (request: RechargeRequest) => {
+        const message = `Hola Admin, soy el vendedor ${currentUser.username} y he registrado una solicitud de recarga por Bs ${Math.floor(request.amount).toLocaleString('es-ES')}. A continuación adjunto mi comprobante. ¡Gracias!`;
+        return `https://wa.me/${config.adminWhatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    };
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* Solicitar Recarga */}
@@ -65,8 +70,8 @@ const SellerRechargeTab: React.FC<SellerRechargeTabProps> = ({ config, currentUs
                             value={rechargeAmount}
                             onChange={(e) => setRechargeAmount(e.target.value)}
                             className="w-full bg-gray-600 p-2 rounded border border-gray-500"
-                            placeholder="Ej. 100.00"
-                            min="0.01" step="0.01" required
+                            placeholder="Ej. 100"
+                            min="1" step="1" required
                         />
                     </div>
                      <ImageUpload 
@@ -91,10 +96,17 @@ const SellerRechargeTab: React.FC<SellerRechargeTabProps> = ({ config, currentUs
                         {rechargeHistory.map(req => (
                             <div key={req.id} className="bg-gray-700 p-3 rounded-md flex justify-between items-center text-sm">
                                 <div>
-                                    <p className="font-bold">Bs {req.amount.toFixed(2)}</p>
+                                    <p className="font-bold">Bs {Math.floor(req.amount).toLocaleString('es-ES')}</p>
                                     <p className="text-xs text-gray-400">{new Date(req.requestDate).toLocaleString()}</p>
                                 </div>
-                                <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStyles[req.status]}`}>{req.status}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`px-2 py-1 text-xs font-bold rounded-full capitalize ${statusStyles[req.status]}`}>{req.status}</span>
+                                    {req.status === 'pending' && (
+                                        <a href={getAdminWhatsappLink(req)} target="_blank" rel="noopener noreferrer" className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded hover:bg-green-500/40 font-semibold">
+                                            Notificar
+                                        </a>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Jornada, Team, RegisteredUser, Prediction } from '../types';
 import XIcon from '../components/icons/XIcon';
 import PurchaseConfirmationModal from '../components/PurchaseConfirmationModal';
@@ -33,6 +33,38 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
             [matchId]: prediction,
         }));
     };
+    
+    useEffect(() => {
+        if (playBotin && botinMatch) {
+            const local = parseInt(botinPrediction.localScore, 10);
+            const visitor = parseInt(botinPrediction.visitorScore, 10);
+
+            if (!isNaN(local) && !isNaN(visitor)) {
+                let result: Prediction;
+                if (local > visitor) {
+                    result = '1';
+                } else if (local < visitor) {
+                    result = '2';
+                } else {
+                    result = 'X';
+                }
+                // Automatically set the prediction for the botin match
+                if (predictions[botinMatch.id] !== result) {
+                    handlePredictionChange(botinMatch.id, result);
+                }
+            } else {
+                // If scores are cleared, remove the automatic prediction
+                if (predictions[botinMatch.id]) {
+                    setPredictions(prev => {
+                        const newPreds = { ...prev };
+                        delete newPreds[botinMatch.id];
+                        return newPreds;
+                    });
+                }
+            }
+        }
+    }, [playBotin, botinPrediction, botinMatch]);
+
 
     const allPredictionsMade = useMemo(() => {
         return jornada.matches.length > 0 && jornada.matches.every(match => predictions[match.id]);
@@ -143,6 +175,8 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                             {sortedMatches.map(match => {
                                 const localTeam = getTeam(match.localTeamId);
                                 const visitorTeam = getTeam(match.visitorTeamId);
+                                const isBotinMatchAndPlaying = playBotin && botinMatch && match.id === botinMatch.id;
+                                
                                 return (
                                     <div key={match.id} className="bg-gray-700/50 p-4 rounded-lg grid grid-cols-3 gap-4 items-center">
                                         {/* Teams */}
@@ -160,9 +194,20 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                                         
                                         {/* Predictions */}
                                         <div className="col-span-1 flex justify-end items-center gap-2">
-                                            <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
-                                            <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}><XIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
+                                            {isBotinMatchAndPlaying ? (
+                                                <div className="text-center">
+                                                    <p className="text-xs text-purple-300">Predicción Automática</p>
+                                                    <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-1`}>
+                                                        {predictions[match.id] === 'X' ? <XIcon className="w-5 h-5"/> : predictions[match.id]}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
+                                                    <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}><XIcon className="w-5 h-5"/></button>
+                                                    <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -172,8 +217,8 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
 
                     <div className="mt-6 bg-gray-800 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div className="text-center sm:text-left">
-                            <p className="text-lg">Costo del Cartón: <span className="font-bold text-cyan-400">Bs {jornada.cartonPrice.toFixed(2)}</span></p>
-                            <p className="text-sm">Tu saldo actual: <span className="font-semibold">Bs {(currentUser.balance || 0).toFixed(2)}</span></p>
+                            <p className="text-lg">Costo del Cartón: <span className="font-bold text-cyan-400">Bs {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span></p>
+                            <p className="text-sm">Tu saldo actual: <span className="font-semibold">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</span></p>
                         </div>
                         <button 
                             onClick={handleAttemptPurchase}

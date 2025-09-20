@@ -95,7 +95,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
   const renderTabContent = () => {
     switch(activeTab) {
       case 'dashboard':
-        return <DashboardTab />;
+        return <DashboardTab config={draftConfig} />;
       case 'config':
         return <ConfigurationTab config={draftConfig} setConfig={setDraftConfig} />;
       case 'teams':

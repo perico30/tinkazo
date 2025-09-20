@@ -100,6 +100,14 @@ const JornadaModal: React.FC<{
         onClose();
     };
 
+    const statusButtonClass = (s: Jornada['status']) => {
+        const base = 'px-4 py-2 rounded-lg font-semibold text-sm transition-colors';
+        if (status === s) {
+            return `${base} bg-cyan-500 text-gray-900`;
+        }
+        return `${base} bg-gray-600 hover:bg-gray-500`;
+    };
+
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div className="bg-gray-800 rounded-lg max-w-lg w-full" onClick={e => e.stopPropagation()}>
@@ -111,8 +119,15 @@ const JornadaModal: React.FC<{
                             <input type="text" value={firstPrize} onChange={e => setFirstPrize(e.target.value)} className="w-full bg-gray-700 p-2 rounded" placeholder="Premio 1er Lugar" />
                             <input type="text" value={secondPrize} onChange={e => setSecondPrize(e.target.value)} className="w-full bg-gray-700 p-2 rounded" placeholder="Premio 2do Lugar" />
                         </div>
-                        <input type="number" value={cartonPrice} onChange={e => setCartonPrice(e.target.value)} className="w-full bg-gray-700 p-2 rounded" placeholder="Precio del Cartón" min="0" step="0.01" />
-                        <div className="flex items-center gap-4"><label>Estado</label><select value={status} onChange={e => setStatus(e.target.value as any)} className="bg-gray-700 p-2 rounded"><option value="abierta">Abierta</option><option value="cerrada">Cerrada</option><option value="cancelada">Cancelada</option></select></div>
+                        <input type="number" value={cartonPrice} onChange={e => setCartonPrice(e.target.value)} className="w-full bg-gray-700 p-2 rounded" placeholder="Precio del Cartón" min="0" step="1" />
+                        <div className="flex items-center gap-4">
+                            <label>Estado</label>
+                            <div className="flex items-center gap-2">
+                                <button type="button" onClick={() => setStatus('abierta')} className={statusButtonClass('abierta')}>Abierta</button>
+                                <button type="button" onClick={() => setStatus('cerrada')} className={statusButtonClass('cerrada')}>Cerrada</button>
+                                <button type="button" onClick={() => setStatus('cancelada')} className={statusButtonClass('cancelada')}>Cancelada</button>
+                            </div>
+                        </div>
                         <h3 className="font-semibold pt-2">Estilos de la Tarjeta</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="flex items-center justify-between"><label>Color Texto</label><input type="color" value={styling.textColor} onChange={e => setStyling(s => ({...s, textColor: e.target.value}))} className="w-12 h-10 rounded bg-gray-700"/></div>
@@ -254,7 +269,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
         }));
     };
 
-    const handleSaveResults = (jornadaId: string, results: { [matchId: string]: Prediction }) => {
+    const handleSaveResults = (jornadaId: string, results: { [matchId: string]: Prediction }, botinResult?: string) => {
         setConfig(prev => {
             const newJornadas = prev.jornadas.map(j => {
                 if (j.id === jornadaId) {
@@ -262,7 +277,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                         ...m,
                         result: results[m.id] || m.result, // Update result
                     }));
-                    return { ...j, matches: newMatches };
+                    return { ...j, matches: newMatches, botinResult: botinResult || j.botinResult };
                 }
                 return j;
             });
@@ -296,7 +311,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
 
             <div className="flex justify-between items-center mb-6">
                 <h2 className="font-semibold text-xl">Gestión de Jornadas</h2>
-                <button onClick={() => setJornadaModal({})} className="flex items-center gap-2 bg-cyan-500 text-gray-900 font-bold px-3 py-2 rounded-lg hover:bg-cyan-400">
+                <button onClick={() => setJornadaModal({ status: 'abierta' })} className="flex items-center gap-2 bg-cyan-500 text-gray-900 font-bold px-3 py-2 rounded-lg hover:bg-cyan-400">
                     <PlusIcon className="h-5 w-5" />
                     Crear Jornada
                 </button>
@@ -346,7 +361,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div><p className="text-gray-400">1er Premio</p><p className="font-bold text-lg">{jornada.firstPrize}</p></div>
                                 <div><p className="text-gray-400">2do Premio</p><p className="font-bold text-lg">{jornada.secondPrize}</p></div>
-                                <div className="col-span-2"><p className="text-gray-400">Precio Cartón</p><p className="font-bold text-lg">Bs {(jornada.cartonPrice || 0).toFixed(2)}</p></div>
+                                <div className="col-span-2"><p className="text-gray-400">Precio Cartón</p><p className="font-bold text-lg">Bs {Math.floor(jornada.cartonPrice || 0).toLocaleString('es-ES')}</p></div>
                             </div>
                         </div>
 
