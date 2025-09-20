@@ -32,17 +32,7 @@ const LegalModal: React.FC<{ content: LegalLink; onClose: () => void }> = ({ con
   </div>
 );
 
-
-const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<View>('home');
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [currentUser, setCurrentUser] = useState<RegisteredUser | null>(null);
-  const [legalModalContent, setLegalModalContent] = useState<LegalLink | null>(null);
-  const [jornadaToPlay, setJornadaToPlay] = useState<Jornada | null>(null);
-  const [notification, setNotification] = useState<string | null>(null);
-
-
-  const [appConfig, setAppConfig] = useState<AppConfig>({
+const initialAppConfig: AppConfig = {
     appName: 'TINKAZO',
     theme: {
       backgroundColor: '#020617',
@@ -103,7 +93,32 @@ const App: React.FC = () => {
         { title: 'Política de Privacidad', content: 'Aquí va el contenido completo de la política de privacidad de la aplicación...' },
       ],
     },
+};
+
+
+const App: React.FC = () => {
+  const [currentView, setCurrentView] = useState<View>('home');
+  const [userRole, setUserRole] = useState<UserRole>(null);
+  const [currentUser, setCurrentUser] = useState<RegisteredUser | null>(null);
+  const [legalModalContent, setLegalModalContent] = useState<LegalLink | null>(null);
+  const [jornadaToPlay, setJornadaToPlay] = useState<Jornada | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const [appConfig, setAppConfig] = useState<AppConfig>(() => {
+    const savedConfigJSON = localStorage.getItem('tinkazoAppConfig');
+    if (savedConfigJSON) {
+      try {
+        return JSON.parse(savedConfigJSON);
+      } catch (e) {
+        console.error('Error parsing appConfig from localStorage', e);
+      }
+    }
+    return initialAppConfig;
   });
+
+  useEffect(() => {
+    localStorage.setItem('tinkazoAppConfig', JSON.stringify(appConfig));
+  }, [appConfig]);
 
   useEffect(() => {
     // Apply the correct background class to the body
