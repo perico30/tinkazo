@@ -184,36 +184,6 @@ const App: React.FC = () => {
     alert('¡Datos actualizados!');
   }, [currentUser]);
 
-  const handleAdminRechargeUser = useCallback((userId: string, amount: number) => {
-      if (amount <= 0) {
-          alert('El monto de la recarga debe ser positivo.');
-          return;
-      }
-      setAppConfig(prev => ({
-        ...prev,
-        users: prev.users.map(u => {
-          if (u.id === userId) {
-            const currentBalance = u.balance || 0;
-            return { ...u, balance: currentBalance + amount };
-          }
-          return u;
-        }),
-      }));
-  
-      if (currentUser?.id === userId) {
-          setCurrentUser(prevUser => prevUser ? { ...prevUser, balance: (prevUser.balance || 0) + amount } : null);
-      }
-      alert('¡Recarga exitosa!');
-  }, [currentUser]);
-
-  const handleActivateUser = useCallback((userId: string) => {
-      setAppConfig(prev => ({
-          ...prev,
-          users: prev.users.map(u => u.id === userId ? { ...u, status: 'active' } : u)
-      }));
-      alert('¡Usuario activado exitosamente!');
-  }, []);
-
   const handlePlayJornada = useCallback((jornada: Jornada) => {
     if (!currentUser) {
       alert('Debes iniciar sesión para poder jugar.');
@@ -471,7 +441,7 @@ const App: React.FC = () => {
       case 'register':
         return <RegisterPage setCurrentView={setCurrentView} onRegister={handleRegister} primaryColor={appConfig.theme.primaryColor} />;
       case 'admin':
-        return userRole === 'admin' ? <AdminPage initialConfig={appConfig} onSave={handleSaveConfig} onLogout={handleLogout} onExit={navigateToHome} onActivateUser={handleActivateUser} onRechargeUser={handleAdminRechargeUser} onProcessWithdrawal={handleProcessWithdrawal} onProcessSellerRecharge={handleProcessSellerRecharge} /> : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
+        return userRole === 'admin' ? <AdminPage initialConfig={appConfig} onSave={handleSaveConfig} onLogout={handleLogout} onExit={navigateToHome} onProcessWithdrawal={handleProcessWithdrawal} onProcessSellerRecharge={handleProcessSellerRecharge} /> : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
       case 'seller':
         return userRole === 'seller' && currentUser ? (
             <SellerPage

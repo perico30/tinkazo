@@ -23,15 +23,13 @@ interface AdminPageProps {
   onSave: (newConfig: AppConfig) => void;
   onLogout: () => void;
   onExit: () => void;
-  onActivateUser: (userId: string) => void;
-  onRechargeUser: (userId: string, amount: number) => void;
   onProcessWithdrawal: (requestId: string, action: 'approve' | 'reject') => void;
   onProcessSellerRecharge: (requestId: string, action: 'approve' | 'reject') => void;
 }
 
 type AdminTab = 'dashboard' | 'config' | 'teams' | 'jornadas' | 'users' | 'withdrawals' | 'recharges';
 
-const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, onExit, onActivateUser, onRechargeUser, onProcessWithdrawal, onProcessSellerRecharge }) => {
+const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, onExit, onProcessWithdrawal, onProcessSellerRecharge }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [draftConfig, setDraftConfig] = useState<AppConfig>(initialConfig);
   
@@ -41,6 +39,32 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
   
   const handleSave = () => {
     onSave(draftConfig);
+  };
+
+  const handleDraftActivateUser = (userId: string) => {
+    setDraftConfig(prev => ({
+        ...prev,
+        users: prev.users.map(u => u.id === userId ? { ...u, status: 'active' } : u)
+    }));
+    alert('¡Usuario activado! Recuerda guardar los cambios para que sea permanente.');
+  };
+
+  const handleDraftRechargeUser = (userId: string, amount: number) => {
+    if (amount <= 0) {
+        alert('El monto de la recarga debe ser positivo.');
+        return;
+    }
+    setDraftConfig(prev => ({
+        ...prev,
+        users: prev.users.map(u => {
+            if (u.id === userId) {
+                const currentBalance = u.balance || 0;
+                return { ...u, balance: currentBalance + amount };
+            }
+            return u;
+        }),
+    }));
+    alert('¡Recarga exitosa! Recuerda guardar los cambios.');
   };
 
   const tabs: { id: AdminTab; label: string; icon: React.FC<{className?: string}> }[] = [
@@ -64,7 +88,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
        case 'jornadas':
         return <JornadasTab config={draftConfig} setConfig={setDraftConfig} />;
       case 'users':
-        return <UsersTab config={draftConfig} setConfig={setDraftConfig} onActivateUser={onActivateUser} onRechargeUser={onRechargeUser} />;
+        return <UsersTab config={draftConfig} setConfig={setDraftConfig} onActivateUser={handleDraftActivateUser} onRechargeUser={handleDraftRechargeUser} />;
       case 'recharges':
         return <RechargesTab config={draftConfig} onProcessSellerRecharge={onProcessSellerRecharge} />;
       case 'withdrawals':
