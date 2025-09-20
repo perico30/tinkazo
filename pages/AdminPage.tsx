@@ -24,7 +24,7 @@ import CloseIcon from '../components/icons/CloseIcon';
 
 interface AdminPageProps {
   initialConfig: AppConfig;
-  onSave: (newConfig: AppConfig) => void;
+  onSave: (newConfig: AppConfig) => Promise<void>;
   onLogout: () => void;
   onExit: () => void;
   onProcessWithdrawal: (requestId: string, action: 'approve' | 'reject') => void;
@@ -39,13 +39,22 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
   const [viewingClientTickets, setViewingClientTickets] = useState<RegisteredUser | null>(null);
   const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
     setDraftConfig(initialConfig);
   }, [initialConfig]);
   
-  const handleSave = () => {
-    onSave(draftConfig);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(draftConfig);
+    } catch (e) {
+      console.error("Failed to save configuration:", e);
+      // Notification is handled upstream in App.tsx's onSave prop
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDraftActivateUser = (userId: string) => {
@@ -207,10 +216,23 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
             {isConfigTabActive && (
                 <button 
                   onClick={handleSave}
-                  className="flex items-center gap-2 text-white font-bold px-4 py-2 rounded-lg btn-gradient"
+                  disabled={isSaving}
+                  className="flex items-center justify-center gap-2 text-white font-bold px-4 py-2 rounded-lg btn-gradient disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <SaveIcon />
-                  <span className="hidden sm:inline">Guardar Cambios</span>
+                  {isSaving ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="hidden sm:inline">Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <SaveIcon />
+                      <span className="hidden sm:inline">Guardar Cambios</span>
+                    </>
+                  )}
                 </button>
             )}
           </header>

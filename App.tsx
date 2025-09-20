@@ -354,7 +354,8 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     } catch (error) {
         console.error("Error saving config to Firestore:", error);
         showNotification('Error al guardar los cambios. Por favor, inténtalo de nuevo.');
-        // Optional: Could revert state here, but for now, an error message is sufficient
+        // Propagate the error to the caller to handle UI states
+        throw error;
     }
   }
   
