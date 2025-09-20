@@ -6,6 +6,7 @@ import AdminPage from './pages/AdminPage';
 import SellerPage from './pages/SellerPage';
 import ClientPage from './pages/ClientPage';
 import PurchaseCartonPage from './pages/PurchaseCartonPage';
+import Notification from './components/Notification';
 import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest } from './types';
 
 // --- Componente de Modal Legal ---
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const [legalModalContent, setLegalModalContent] = useState<LegalLink | null>(null);
   const [jornadaToPlay, setJornadaToPlay] = useState<Jornada | null>(null);
   const [resultNotificationCarton, setResultNotificationCarton] = useState<Carton | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
 
 
   const [appConfig, setAppConfig] = useState<AppConfig>({
@@ -135,6 +137,9 @@ const App: React.FC = () => {
     }
   }, [currentUser, appConfig.cartones, appConfig.jornadas, userRole]);
 
+  const showNotification = useCallback((message: string) => {
+    setNotification(message);
+  }, []);
 
   const navigateToLogin = useCallback(() => setCurrentView('login'), []);
   const navigateToRegister = useCallback(() => setCurrentView('register'), []);
@@ -231,8 +236,7 @@ const App: React.FC = () => {
   const handleSaveConfig = (newConfig: AppConfig) => {
     const processedConfig = processJornadaResults(newConfig);
     setAppConfig(processedConfig);
-    alert('¡Configuración guardada y resultados procesados!');
-    setCurrentView('home');
+    showNotification('¡Configuración guardada y resultados procesados!');
   }
   
   const handleLegalClick = (link: LegalLink) => {
@@ -247,8 +251,8 @@ const App: React.FC = () => {
     if (currentUser?.id === updatedUser.id) {
       setCurrentUser(updatedUser);
     }
-    alert('¡Datos actualizados!');
-  }, [currentUser]);
+    showNotification('¡Datos actualizados!');
+  }, [currentUser, showNotification]);
 
   const handlePlayJornada = useCallback((jornada: Jornada) => {
     if (!currentUser) {
@@ -277,11 +281,11 @@ const App: React.FC = () => {
 
   const handlePurchaseCarton = useCallback((jornadaId: string, predictions: { [matchId: string]: Prediction }, price: number, botinPrediction: { localScore: number; visitorScore: number; } | null) => {
     if (!currentUser) {
-      alert('Error: No se encontró el usuario.');
+      showNotification('Error: No se encontró el usuario.');
       return;
     }
     if ((currentUser.balance || 0) < price) {
-      alert('Saldo insuficiente. Por favor, recarga tu cuenta.');
+      showNotification('Saldo insuficiente. Por favor, recarga tu cuenta.');
       return;
     }
 
@@ -303,9 +307,9 @@ const App: React.FC = () => {
     }));
     
     setCurrentUser(updatedUser);
-    alert('¡Cartón comprado con éxito!');
+    showNotification('¡Cartón comprado con éxito!');
     navigateToHome();
-  }, [currentUser, navigateToHome]);
+  }, [currentUser, navigateToHome, showNotification]);
 
   const handleUpdateCarton = useCallback((cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number } | null) => {
     const carton = appConfig.cartones.find(c => c.id === cartonId);
@@ -542,6 +546,7 @@ const App: React.FC = () => {
               onProcessClientRecharge={handleProcessClientRecharge}
               onLogout={handleLogout}
               onExit={navigateToHome}
+              onUpdateCarton={handleUpdateCarton}
             />
           ) : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} />;
       case 'clientPanel':
@@ -600,6 +605,7 @@ const App: React.FC = () => {
     <>
       <div className="min-h-screen">{renderView()}</div>
       {legalModalContent && <LegalModal content={legalModalContent} onClose={() => setLegalModalContent(null)} />}
+      {notification && <Notification message={notification} onClose={() => setNotification(null)} />}
     </>
   );
 };

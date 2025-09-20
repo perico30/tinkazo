@@ -161,10 +161,16 @@ const JornadasSection: React.FC<{
   const openJornadas = jornadas.filter(j => j.status === 'abierta');
   
   const isJornadaPlayable = (jornada: Jornada) => {
-    if (jornada.matches.length === 0) return true; // No matches, can't be too late
+    // Filter out matches that don't have a valid date. This makes the check more robust
+    // against malformed data (e.g., a match saved without a date).
+    const scheduledMatches = jornada.matches
+      .filter(match => match.dateTime && !isNaN(new Date(match.dateTime).getTime()))
+      .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  
+    // If there are no valid, scheduled matches, the jornada is considered open for play.
+    if (scheduledMatches.length === 0) return true;
     
-    const sortedMatches = [...jornada.matches].sort((a,b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
-    const firstMatchDate = new Date(sortedMatches[0].dateTime);
+    const firstMatchDate = new Date(scheduledMatches[0].dateTime);
     const now = new Date();
 
     // Disable if less than 10 minutes (600,000 milliseconds) before the first match

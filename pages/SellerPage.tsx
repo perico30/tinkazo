@@ -13,6 +13,10 @@ import ClientRechargesTab from './seller/ClientRechargesTab';
 import CheckCircleIcon from '../components/icons/CheckCircleIcon';
 import ClientTicketsModal from './seller/ClientTicketsModal';
 import CartonModal from '../components/CartonModal';
+import TicketIcon from '../components/icons/TicketIcon';
+import SellerTicketsTab from './seller/SellerTicketsTab';
+import MenuIcon from '../components/icons/MenuIcon';
+import CloseIcon from '../components/icons/CloseIcon';
 
 
 interface SellerPageProps {
@@ -23,9 +27,10 @@ interface SellerPageProps {
   onProcessClientRecharge: (requestId: string, action: 'approve' | 'reject', sellerId: string) => void;
   onLogout: () => void;
   onExit: () => void;
+  onUpdateCarton: (cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number; } | null) => void;
 }
 
-type SellerTab = 'dashboard' | 'clients' | 'client-recharges' | 'recharge' | 'settings';
+type SellerTab = 'dashboard' | 'clients' | 'my-tickets' | 'client-recharges' | 'recharge' | 'settings';
 
 const HeaderCard: React.FC<{ title: string; value: string; onRechargeClick?: () => void; onWithdrawClick?: () => void }> = ({ title, value, onRechargeClick, onWithdrawClick }) => (
     <div className="bg-gray-800 p-4 rounded-lg flex-1">
@@ -41,10 +46,11 @@ const HeaderCard: React.FC<{ title: string; value: string; onRechargeClick?: () 
 );
 
 
-const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUser, onRequestRecharge, onProcessClientRecharge, onLogout, onExit }) => {
+const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUser, onRequestRecharge, onProcessClientRecharge, onLogout, onExit, onUpdateCarton }) => {
   const [activeTab, setActiveTab] = useState<SellerTab>('dashboard');
   const [viewingClientTickets, setViewingClientTickets] = useState<RegisteredUser | null>(null);
   const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleViewClientTickets = (client: RegisteredUser) => {
     setViewingClientTickets(client);
@@ -57,6 +63,7 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
   const tabs: { id: SellerTab; label: string; icon: React.FC<{className?: string}> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'clients', label: 'Mis Clientes', icon: UsersIcon },
+    { id: 'my-tickets', label: 'Mis Cartones', icon: TicketIcon },
     { id: 'client-recharges', label: 'Solicitudes de Clientes', icon: CheckCircleIcon },
     { id: 'recharge', label: 'Recargar Mi Saldo', icon: WalletIcon },
     { id: 'settings', label: 'Configuración', icon: GearIcon },
@@ -72,6 +79,12 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
                   config={config} 
                   onViewClientTickets={handleViewClientTickets}
                 />;
+      case 'my-tickets':
+        return <SellerTicketsTab
+            cartones={config.cartones.filter(c => c.userId === currentUser.id)}
+            jornadas={config.jornadas}
+            onViewCarton={handleViewCarton}
+        />;
       case 'client-recharges':
         return <ClientRechargesTab currentUser={currentUser} config={config} onProcessClientRecharge={onProcessClientRecharge} />;
       case 'recharge':
@@ -102,16 +115,30 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
               appName={config.appName}
               logoUrl={config.logoUrl}
               onClose={() => setViewingCarton(null)}
-              onSave={() => { /* Sellers can't edit client tickets */ }}
-              isReadOnly={true}
+              onSave={onUpdateCarton}
+              isReadOnly={viewingCarton.userId !== currentUser.id}
           />
       )}
-      <div className="flex h-screen bg-gray-900 text-white">
+      <div className="relative flex h-screen bg-gray-900 text-white">
+        {/* Overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-20 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-hidden="true"
+          ></div>
+        )}
+
         {/* Sidebar */}
-        <aside className="w-64 sidebar-bg p-4 flex flex-col">
-          <div className="text-center mb-10">
-            <h1 className="text-2xl font-bold text-cyan-400">Panel Vendedor</h1>
-            <p className="text-sm text-gray-400">{currentUser.username}</p>
+        <aside className={`fixed inset-y-0 left-0 z-30 w-64 sidebar-bg p-4 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="flex justify-between items-start mb-10">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-cyan-400">Panel Vendedor</h1>
+              <p className="text-sm text-gray-400">{currentUser.username}</p>
+            </div>
+            <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 text-gray-400 hover:text-white" aria-label="Cerrar menú">
+                <CloseIcon className="h-6 w-6"/>
+            </button>
           </div>
           <nav className="flex-grow">
             <ul>
@@ -151,7 +178,13 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="p-6 space-y-6">
+             <header className="bg-gray-800 shadow-md p-4 flex items-center gap-4 lg:hidden">
+              <button onClick={() => setIsSidebarOpen(true)} className="text-gray-300 hover:text-white" aria-label="Abrir menú">
+                  <MenuIcon className="h-6 w-6" />
+              </button>
+              <h2 className="text-xl font-semibold capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
+            </header>
+          <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto">
               {/* Header with metrics */}
               <div className="flex flex-col sm:flex-row gap-4">
                   <HeaderCard 
@@ -166,8 +199,8 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
               </div>
 
               {/* Tab content */}
-              <div className="bg-gray-800/50 p-6 rounded-lg">
-                  <h2 className="text-xl font-bold mb-4 capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
+              <div className="bg-gray-800/50 p-4 sm:p-6 rounded-lg">
+                  <h2 className="text-xl font-bold mb-4 capitalize hidden lg:block">{tabs.find(t => t.id === activeTab)?.label}</h2>
                   {renderTabContent()}
               </div>
           </div>

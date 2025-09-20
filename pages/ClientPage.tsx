@@ -12,6 +12,8 @@ import ClientTicketsTab from './client/ClientTicketsTab';
 import ClientGainsTab from './client/ClientGainsTab';
 import ClientProfileTab from './client/ClientProfileTab';
 import CartonModal from '../components/CartonModal';
+import MenuIcon from '../components/icons/MenuIcon';
+import CloseIcon from '../components/icons/CloseIcon';
 
 interface ClientPageProps {
   currentUser: RegisteredUser;
@@ -42,6 +44,7 @@ const HeaderCard: React.FC<{ title: string; value: string; onRechargeClick?: () 
 const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUser, onUpdateCarton, onRequestWithdrawal, onRequestRecharge, onLogout, onExit }) => {
   const [activeTab, setActiveTab] = useState<ClientTab>('dashboard');
   const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleViewCarton = (carton: Carton) => setViewingCarton(carton);
   const handleCloseCartonModal = () => setViewingCarton(null);
@@ -93,12 +96,25 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
           logoUrl={config.logoUrl}
         />
       )}
-      <div className="flex h-screen bg-gray-900 text-white">
+      <div className="relative flex h-screen bg-gray-900 text-white">
+        {/* Overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-20 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-hidden="true"
+          ></div>
+        )}
         {/* Sidebar */}
-        <aside className="w-64 sidebar-bg p-4 flex flex-col">
-          <div className="text-center mb-10">
-            <h1 className="text-2xl font-bold text-cyan-400">Mi Cuenta</h1>
-            <p className="text-sm text-gray-400">{currentUser.username}</p>
+        <aside className={`fixed inset-y-0 left-0 z-30 w-64 sidebar-bg p-4 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+           <div className="flex justify-between items-start mb-10">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-cyan-400">Mi Cuenta</h1>
+              <p className="text-sm text-gray-400">{currentUser.username}</p>
+            </div>
+             <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 text-gray-400 hover:text-white" aria-label="Cerrar menú">
+                <CloseIcon className="h-6 w-6"/>
+            </button>
           </div>
           <nav className="flex-grow">
             <ul>
@@ -137,8 +153,15 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-y-auto">
-             <div className="p-6 space-y-6">
+        <main className="flex-1 flex flex-col overflow-hidden">
+            <header className="bg-gray-800 shadow-md p-4 flex items-center gap-4 lg:hidden">
+              <button onClick={() => setIsSidebarOpen(true)} className="text-gray-300 hover:text-white" aria-label="Abrir menú">
+                  <MenuIcon className="h-6 w-6" />
+              </button>
+              <h2 className="text-xl font-semibold capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
+            </header>
+
+            <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto">
                  {/* Header with metrics */}
                 <div className="flex flex-col sm:flex-row gap-4">
                     <HeaderCard 
@@ -154,8 +177,8 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
                 </div>
 
                 {/* Tab content */}
-                <div className="bg-gray-800/50 p-6 rounded-lg">
-                    <h2 className="text-xl font-bold mb-4 capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
+                <div className="bg-gray-800/50 p-4 sm:p-6 rounded-lg">
+                    <h2 className="text-xl font-bold mb-4 capitalize hidden lg:block">{tabs.find(t => t.id === activeTab)?.label}</h2>
                     {renderTabContent()}
                 </div>
             </div>
