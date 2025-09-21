@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -16,7 +16,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Enable offline persistence
+// NOTE: La persistencia offline ha sido deshabilitada para diagnosticar problemas de guardado.
+// Ahora los errores de escritura (ej. reglas de seguridad) se mostrarán inmediatamente.
+// Para reactivar, descomenta este bloque y añade 'enableIndexedDbPersistence' a la importación de 'firebase/firestore'.
+/*
+import { enableIndexedDbPersistence } from "firebase/firestore";
 enableIndexedDbPersistence(db)
   .catch((err) => {
     if (err.code == 'failed-precondition') {
@@ -29,6 +33,7 @@ enableIndexedDbPersistence(db)
       console.warn('Firebase persistence is not available in this browser.');
     }
   });
+*/
 
 
 export { db };

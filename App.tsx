@@ -518,9 +518,11 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
           return;
       }
 
+      // FIX: Explicitly type the new status to prevent TypeScript from widening it to 'string'.
+      const newStatus: WithdrawalRequest['status'] = action === 'approve' ? 'completed' : 'rejected';
       const updatedRequests = appConfig.withdrawalRequests.map(r => 
         r.id === requestId 
-          ? { ...r, status: action === 'approve' ? 'completed' : 'rejected', processedDate: new Date().toISOString() } 
+          ? { ...r, status: newStatus, processedDate: new Date().toISOString() } 
           : r
       );
       
@@ -595,9 +597,11 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       return;
     }
     
+    // FIX: Explicitly type the new status to prevent TypeScript from widening it to 'string'.
+    const newStatus: RechargeRequest['status'] = action === 'approve' ? 'approved' : 'rejected';
     const updatedRequests = appConfig.rechargeRequests.map(r => 
       r.id === requestId
-        ? { ...r, status: action === 'approve' ? 'approved' : 'rejected', processedDate: new Date().toISOString(), processedBy: sellerId }
+        ? { ...r, status: newStatus, processedDate: new Date().toISOString(), processedBy: sellerId }
         : r
     );
 
@@ -641,9 +645,11 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       return;
     }
 
+    // FIX: Explicitly type the new status to prevent TypeScript from widening it to 'string'.
+    const newStatus: RechargeRequest['status'] = action === 'approve' ? 'approved' : 'rejected';
     const updatedRequests = appConfig.rechargeRequests.map(r => 
         r.id === requestId 
-        ? { ...r, status: action === 'approve' ? 'approved' : 'rejected', processedDate: new Date().toISOString(), processedBy: 'admin' }
+        ? { ...r, status: newStatus, processedDate: new Date().toISOString(), processedBy: 'admin' }
         : r
     );
 
