@@ -1,5 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+// FIX: Updated Firebase initialization to use the v8 compat libraries. This resolves the 'initializeApp' export error by ensuring the v8 namespaced API is available.
+import firebase from "firebase/compat/app";
+import "firebase/compat/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -12,9 +13,9 @@ const firebaseConfig = {
   measurementId: "G-D1Z3373707"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Initialize Firebase, checking if it's already initialized.
+const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+const db = app.firestore();
 
 // NOTE: La persistencia offline ha sido deshabilitada para diagnosticar problemas de guardado.
 // Ahora los errores de escritura (ej. reglas de seguridad) se mostrarán inmediatamente.

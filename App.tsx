@@ -9,7 +9,8 @@ import PurchaseCartonPage from './pages/PurchaseCartonPage';
 import Notification from './components/Notification';
 import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails } from './types';
 import { db } from './firebase';
-import { doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+// FIX: Removed Firebase v9 imports as logic is being switched to v8 syntax.
+// import { doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 
 
 // --- Componente de Modal Legal ---
@@ -106,6 +107,33 @@ const initialAppConfig: AppConfig = {
     },
 };
 
+const getFirebaseErrorMessage = (error: any): string => {
+    let message = 'Ocurrió un error desconocido. Revisa la consola para más detalles.';
+    if (error && typeof error === 'object' && 'code' in error) {
+        const firebaseError = error as { code: string; message: string };
+        console.error(`Firebase Error (${firebaseError.code}): ${firebaseError.message}`);
+        switch (firebaseError.code) {
+            case 'permission-denied':
+                message = 'Error: Permiso denegado. Revisa tus Reglas de Seguridad en Firebase.';
+                break;
+            case 'unauthenticated':
+                message = 'Error: No estás autenticado. Inicia sesión de nuevo.';
+                break;
+            case 'not-found':
+                message = 'Error: El dato que intentas modificar no fue encontrado.';
+                break;
+            case 'invalid-argument':
+                message = 'Error: Los datos enviados no son válidos. Revisa la consola.';
+                break;
+            default:
+                message = `Error de Firebase: ${firebaseError.code}. Revisa la consola para detalles.`;
+        }
+    } else {
+        console.error("Unknown error:", error);
+    }
+    return message;
+};
+
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -116,12 +144,14 @@ const App: React.FC = () => {
   const [notification, setNotification] = useState<string | null>(null);
   const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
-  const configDocRef = useRef(doc(db, "tinkazoConfig", "main")).current;
+  // FIX: Using Firebase v8 syntax.
+  const configDocRef = useRef(db.collection("tinkazoConfig").doc("main")).current;
 
   // Effect to listen for real-time config changes from Firestore
   useEffect(() => {
-      const unsubscribe = onSnapshot(configDocRef, (docSnap) => {
-          if (docSnap.exists()) {
+      // FIX: Using Firebase v8 syntax.
+      const unsubscribe = configDocRef.onSnapshot((docSnap) => {
+          if (docSnap.exists) {
               const loadedConfig = docSnap.data() as AppConfig;
               // Sanitize and merge with defaults to avoid errors if some fields are missing
               const sanitizedConfig = JSON.parse(JSON.stringify(loadedConfig));
@@ -129,7 +159,8 @@ const App: React.FC = () => {
           } else {
               // Config doesn't exist, create it with initial values
               console.log("No config found, creating one.");
-              setDoc(configDocRef, initialAppConfig).catch(error => {
+              // FIX: Using Firebase v8 syntax.
+              configDocRef.set(initialAppConfig).catch(error => {
                   console.error("Error creating initial config:", error);
               });
           }
@@ -201,18 +232,17 @@ const App: React.FC = () => {
       assignedSellerId: null,
       balance: 0,
     };
-
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, {
+        await configDocRef.update({
             users: [...appConfig.users, newUser]
         });
         alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
         setCurrentView('login');
     } catch (error) {
-        console.error("Error registering user: ", error);
-        alert('Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.');
+        showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.users, configDocRef]);
+  }, [appConfig.users, configDocRef, showNotification]);
 
   const handleLogout = useCallback(() => {
     setUserRole(null);
@@ -353,13 +383,12 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     const processedConfig = processJornadaResults(newConfig);
     setCurrentView('admin');
     
+    // FIX: Using Firebase v8 syntax.
     try {
-        await setDoc(configDocRef, processedConfig);
+        await configDocRef.set(processedConfig);
         showNotification('¡Cambios guardados con éxito!');
     } catch (error) {
-        console.error("Error saving config to Firestore:", error);
-        showNotification('Error al guardar los cambios. Por favor, inténtalo de nuevo.');
-        throw error;
+        showNotification(getFirebaseErrorMessage(error));
     }
   }
   
@@ -371,15 +400,15 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     const sanitizedUser = JSON.parse(JSON.stringify(updatedUser));
     const updatedUsers = appConfig.users.map(u => u.id === sanitizedUser.id ? sanitizedUser : u);
     
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, { users: updatedUsers });
+        await configDocRef.update({ users: updatedUsers });
         if (currentUser?.id === sanitizedUser.id) {
             setCurrentUser(sanitizedUser);
         }
         showNotification('¡Datos actualizados!');
     } catch (error) {
-        console.error("Error updating user:", error);
-        showNotification('Error al actualizar los datos.');
+        showNotification(getFirebaseErrorMessage(error));
     }
   }, [appConfig.users, currentUser?.id, showNotification, configDocRef]);
 
@@ -431,8 +460,9 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     const updatedCartones = [...appConfig.cartones, newCarton];
     const updatedUsers = appConfig.users.map(u => u.id === currentUser.id ? updatedUser : u);
     
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, {
+        await configDocRef.update({
             cartones: updatedCartones,
             users: updatedUsers
         });
@@ -440,8 +470,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         showNotification('¡Cartón comprado con éxito!');
         navigateToHome();
     } catch (error) {
-        console.error("Error purchasing carton:", error);
-        showNotification('Error al comprar el cartón.');
+        showNotification(getFirebaseErrorMessage(error));
     }
   }, [currentUser, appConfig.cartones, appConfig.users, navigateToHome, showNotification, configDocRef]);
 
@@ -467,14 +496,14 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     
     const updatedCartones = appConfig.cartones.map(c => c.id === cartonId ? { ...c, predictions: newPredictions, botinPrediction: newBotinPrediction } : c);
     
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, { cartones: updatedCartones });
-        alert('¡Cartón actualizado con éxito!');
+        await configDocRef.update({ cartones: updatedCartones });
+        showNotification('¡Cartón actualizado con éxito!');
     } catch (error) {
-        console.error("Error updating carton:", error);
-        alert('Error al actualizar el cartón.');
+        showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.cartones, appConfig.jornadas, configDocRef]);
+  }, [appConfig.cartones, appConfig.jornadas, configDocRef, showNotification]);
 
   const handleRequestWithdrawal = useCallback(async (userId: string, amount: number, userQrCodeUrl: string) => {
       const user = appConfig.users.find(u => u.id === userId);
@@ -496,16 +525,16 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
           requestDate: new Date().toISOString(),
       };
       
+      // FIX: Using Firebase v8 syntax.
       try {
-          await updateDoc(configDocRef, {
+          await configDocRef.update({
               withdrawalRequests: [...appConfig.withdrawalRequests, newRequest]
           });
-          alert('Tu solicitud de retiro ha sido enviada. Será procesada por un administrador a la brevedad.');
+          showNotification('Tu solicitud de retiro ha sido enviada.');
       } catch (error) {
-          console.error("Error requesting withdrawal:", error);
-          alert('Error al enviar la solicitud de retiro.');
+          showNotification(getFirebaseErrorMessage(error));
       }
-  }, [appConfig.users, appConfig.withdrawalRequests, configDocRef]);
+  }, [appConfig.users, appConfig.withdrawalRequests, configDocRef, showNotification]);
 
   const handleProcessWithdrawal = useCallback(async (requestId: string, action: 'approve' | 'reject') => {
       const request = appConfig.withdrawalRequests.find(r => r.id === requestId);
@@ -537,14 +566,14 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
           updatePayload.users = updatedUsers;
       }
       
+      // FIX: Using Firebase v8 syntax.
       try {
-          await updateDoc(configDocRef, updatePayload);
-          alert(`La solicitud ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
+          await configDocRef.update(updatePayload);
+          showNotification(`La solicitud ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
       } catch(error) {
-          console.error("Error processing withdrawal:", error);
-          alert('Error al procesar la solicitud.');
+          showNotification(getFirebaseErrorMessage(error));
       }
-  }, [appConfig.withdrawalRequests, appConfig.users, configDocRef]);
+  }, [appConfig.withdrawalRequests, appConfig.users, configDocRef, showNotification]);
 
   // --- New Recharge Request Logic ---
 
@@ -558,16 +587,16 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       requestDate: new Date().toISOString(),
       proofOfPaymentUrl: proofOfPaymentUrl,
     };
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, {
+        await configDocRef.update({
             rechargeRequests: [...appConfig.rechargeRequests, newRequest]
         });
-        alert('Solicitud de recarga enviada. Tu vendedor la revisará a la brevedad.');
+        showNotification('Solicitud de recarga enviada.');
     } catch (error) {
-        console.error("Error requesting client recharge:", error);
-        alert('Error al enviar la solicitud de recarga.');
+        showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, configDocRef]);
+  }, [appConfig.rechargeRequests, configDocRef, showNotification]);
 
   const handleRequestSellerRecharge = useCallback(async (userId: string, amount: number, proofOfPaymentUrl: string) => {
     const newRequest: RechargeRequest = {
@@ -579,16 +608,16 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       proofOfPaymentUrl,
       requestDate: new Date().toISOString(),
     };
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, {
+        await configDocRef.update({
             rechargeRequests: [...appConfig.rechargeRequests, newRequest]
         });
-        alert('Solicitud de recarga enviada al administrador. Será procesada a la brevedad.');
+        showNotification('Solicitud de recarga enviada al administrador.');
     } catch (error) {
-        console.error("Error requesting seller recharge:", error);
-        alert('Error al enviar la solicitud de recarga.');
+        showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, configDocRef]);
+  }, [appConfig.rechargeRequests, configDocRef, showNotification]);
 
   const handleProcessClientRecharge = useCallback(async (requestId: string, action: 'approve' | 'reject', sellerId: string) => {
     const request = appConfig.rechargeRequests.find(r => r.id === requestId);
@@ -626,17 +655,17 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         updatePayload.users = updatedUsers;
     }
     
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, updatePayload);
+        await configDocRef.update(updatePayload);
         if (action === 'approve' && currentUser?.id === sellerId && typeof newSellerBalance === 'number') {
             setCurrentUser(prevUser => prevUser ? { ...prevUser, balance: newSellerBalance } : null);
         }
-        alert(`La solicitud del cliente ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
+        showNotification(`La solicitud del cliente ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
     } catch (error) {
-        console.error("Error processing client recharge:", error);
-        alert('Error al procesar la solicitud.');
+        showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, appConfig.users, currentUser, configDocRef]);
+  }, [appConfig.rechargeRequests, appConfig.users, currentUser, configDocRef, showNotification]);
 
   const handleProcessSellerRecharge = useCallback(async (requestId: string, action: 'approve' | 'reject') => {
     const request = appConfig.rechargeRequests.find(r => r.id === requestId);
@@ -668,14 +697,14 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       updatePayload.users = updatedUsers;
     }
     
+    // FIX: Using Firebase v8 syntax.
     try {
-        await updateDoc(configDocRef, updatePayload);
-        alert(`La solicitud del vendedor ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
+        await configDocRef.update(updatePayload);
+        showNotification(`La solicitud del vendedor ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
     } catch (error) {
-        console.error("Error processing seller recharge:", error);
-        alert('Error al procesar la solicitud.');
+        showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, appConfig.users, appConfig.sellerCommissionPercentage, configDocRef]);
+  }, [appConfig.rechargeRequests, appConfig.users, appConfig.sellerCommissionPercentage, configDocRef, showNotification]);
 
   const renderView = () => {
     const userCartonCount = currentUser ? appConfig.cartones.filter(c => c.userId === currentUser.id).length : 0;
