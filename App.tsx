@@ -9,7 +9,7 @@ import PurchaseCartonPage from './pages/PurchaseCartonPage';
 import Notification from './components/Notification';
 import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails } from './types';
 import { db } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 
 
 // --- Componente de Modal Legal ---
@@ -116,29 +116,34 @@ const App: React.FC = () => {
   const [notification, setNotification] = useState<string | null>(null);
   const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+  const configDocRef = useRef(doc(db, "tinkazoConfig", "main")).current;
 
-  // Effect to load config from Firestore on startup
+  // Effect to listen for real-time config changes from Firestore
   useEffect(() => {
-    const loadConfig = async () => {
-        const configDocRef = doc(db, "tinkazoConfig", "main");
-        try {
-            const docSnap = await getDoc(configDocRef);
-            if (docSnap.exists()) {
-                const loadedConfig = docSnap.data();
-                // Merge with initial config to ensure new properties are added
-                setAppConfig(prev => ({...initialAppConfig, ...loadedConfig}));
-            } else {
-                // Config doesn't exist, create it with initial values
-                await setDoc(configDocRef, initialAppConfig);
-            }
-        } catch (error) {
-            console.error("Error loading config from Firestore:", error);
-        } finally {
-            setIsConfigLoaded(true);
-        }
-    };
-    loadConfig();
-  }, []);
+      const unsubscribe = onSnapshot(configDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+              const loadedConfig = docSnap.data() as AppConfig;
+              // Sanitize and merge with defaults to avoid errors if some fields are missing
+              const sanitizedConfig = JSON.parse(JSON.stringify(loadedConfig));
+              setAppConfig({ ...initialAppConfig, ...sanitizedConfig });
+          } else {
+              // Config doesn't exist, create it with initial values
+              console.log("No config found, creating one.");
+              setDoc(configDocRef, initialAppConfig).catch(error => {
+                  console.error("Error creating initial config:", error);
+              });
+          }
+          setIsConfigLoaded(true);
+      }, (error) => {
+          console.error("Error listening to config changes:", error);
+          // Fallback to initial config if listener fails
+          setAppConfig(initialAppConfig);
+          setIsConfigLoaded(true);
+      });
+
+      // Cleanup subscription on component unmount
+      return () => unsubscribe();
+  }, [configDocRef]);
 
 
   useEffect(() => {
@@ -176,8 +181,9 @@ const App: React.FC = () => {
   }, []);
   
   const handleUserLogin = useCallback((user: RegisteredUser) => {
-    setCurrentUser(user);
-    if (user.role === 'seller') {
+    const sanitizedUser = JSON.parse(JSON.stringify(user));
+    setCurrentUser(sanitizedUser);
+    if (sanitizedUser.role === 'seller') {
       setUserRole('seller');
       setCurrentView('seller');
     } else {
@@ -186,7 +192,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleRegister = useCallback((userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => {
+  const handleRegister = useCallback(async (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => {
     const newUser: RegisteredUser = {
       ...userData,
       id: new Date().toISOString(),
@@ -196,15 +202,17 @@ const App: React.FC = () => {
       balance: 0,
     };
 
-    setAppConfig(prev => ({
-      ...prev,
-      users: [...prev.users, newUser],
-    }));
-    
-    alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
-    setCurrentView('login');
-
-  }, []);
+    try {
+        await updateDoc(configDocRef, {
+            users: [...appConfig.users, newUser]
+        });
+        alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
+        setCurrentView('login');
+    } catch (error) {
+        console.error("Error registering user: ", error);
+        alert('Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.');
+    }
+  }, [appConfig.users, configDocRef]);
 
   const handleLogout = useCallback(() => {
     setUserRole(null);
@@ -343,18 +351,14 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
 
   const handleSaveConfig = async (newConfig: AppConfig) => {
     const processedConfig = processJornadaResults(newConfig);
-    // Update local state immediately for a responsive UI
-    setAppConfig(processedConfig);
     setCurrentView('admin');
     
     try {
-        // Save the updated config to Firestore and wait for it to complete
-        await setDoc(doc(db, "tinkazoConfig", "main"), processedConfig);
+        await setDoc(configDocRef, processedConfig);
         showNotification('¡Cambios guardados con éxito!');
     } catch (error) {
         console.error("Error saving config to Firestore:", error);
         showNotification('Error al guardar los cambios. Por favor, inténtalo de nuevo.');
-        // Propagate the error to the caller to handle UI states
         throw error;
     }
   }
@@ -363,16 +367,21 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     setLegalModalContent(link);
   };
   
-  const handleUpdateUser = useCallback((updatedUser: RegisteredUser) => {
-    setAppConfig(prev => ({
-      ...prev,
-      users: prev.users.map(u => u.id === updatedUser.id ? updatedUser : u),
-    }));
-    if (currentUser?.id === updatedUser.id) {
-      setCurrentUser(updatedUser);
+  const handleUpdateUser = useCallback(async (updatedUser: RegisteredUser) => {
+    const sanitizedUser = JSON.parse(JSON.stringify(updatedUser));
+    const updatedUsers = appConfig.users.map(u => u.id === sanitizedUser.id ? sanitizedUser : u);
+    
+    try {
+        await updateDoc(configDocRef, { users: updatedUsers });
+        if (currentUser?.id === sanitizedUser.id) {
+            setCurrentUser(sanitizedUser);
+        }
+        showNotification('¡Datos actualizados!');
+    } catch (error) {
+        console.error("Error updating user:", error);
+        showNotification('Error al actualizar los datos.');
     }
-    showNotification('¡Datos actualizados!');
-  }, [currentUser, showNotification]);
+  }, [appConfig.users, currentUser?.id, showNotification, configDocRef]);
 
   const handlePlayJornada = useCallback((jornada: Jornada) => {
     if (!currentUser) {
@@ -399,7 +408,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     setCurrentView('purchaseCarton');
   }, [currentUser]);
 
-  const handlePurchaseCarton = useCallback((jornadaId: string, predictions: { [matchId: string]: Prediction }, price: number, botinPrediction: { localScore: number; visitorScore: number; } | null) => {
+  const handlePurchaseCarton = useCallback(async (jornadaId: string, predictions: { [matchId: string]: Prediction }, price: number, botinPrediction: { localScore: number; visitorScore: number; } | null) => {
     if (!currentUser) {
       showNotification('Error: No se encontró el usuario.');
       return;
@@ -419,19 +428,24 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     };
     
     const updatedUser = { ...currentUser, balance: (currentUser.balance || 0) - price };
-
-    setAppConfig(prev => ({
-      ...prev,
-      cartones: [...prev.cartones, newCarton],
-      users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
-    }));
+    const updatedCartones = [...appConfig.cartones, newCarton];
+    const updatedUsers = appConfig.users.map(u => u.id === currentUser.id ? updatedUser : u);
     
-    setCurrentUser(updatedUser);
-    showNotification('¡Cartón comprado con éxito!');
-    navigateToHome();
-  }, [currentUser, navigateToHome, showNotification]);
+    try {
+        await updateDoc(configDocRef, {
+            cartones: updatedCartones,
+            users: updatedUsers
+        });
+        setCurrentUser(updatedUser);
+        showNotification('¡Cartón comprado con éxito!');
+        navigateToHome();
+    } catch (error) {
+        console.error("Error purchasing carton:", error);
+        showNotification('Error al comprar el cartón.');
+    }
+  }, [currentUser, appConfig.cartones, appConfig.users, navigateToHome, showNotification, configDocRef]);
 
-  const handleUpdateCarton = useCallback((cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number } | null) => {
+  const handleUpdateCarton = useCallback(async (cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number } | null) => {
     const carton = appConfig.cartones.find(c => c.id === cartonId);
     if (!carton) {
         alert('No se encontró el cartón.');
@@ -450,16 +464,19 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         alert('El tiempo para editar este cartón ha expirado.');
         return;
     }
+    
+    const updatedCartones = appConfig.cartones.map(c => c.id === cartonId ? { ...c, predictions: newPredictions, botinPrediction: newBotinPrediction } : c);
+    
+    try {
+        await updateDoc(configDocRef, { cartones: updatedCartones });
+        alert('¡Cartón actualizado con éxito!');
+    } catch (error) {
+        console.error("Error updating carton:", error);
+        alert('Error al actualizar el cartón.');
+    }
+  }, [appConfig.cartones, appConfig.jornadas, configDocRef]);
 
-    setAppConfig(prev => ({
-        ...prev,
-        cartones: prev.cartones.map(c => c.id === cartonId ? { ...c, predictions: newPredictions, botinPrediction: newBotinPrediction } : c),
-    }));
-
-    alert('¡Cartón actualizado con éxito!');
-  }, [appConfig.cartones, appConfig.jornadas]);
-
-  const handleRequestWithdrawal = useCallback((userId: string, amount: number, userQrCodeUrl: string) => {
+  const handleRequestWithdrawal = useCallback(async (userId: string, amount: number, userQrCodeUrl: string) => {
       const user = appConfig.users.find(u => u.id === userId);
       if (!user) {
           alert('Error: Usuario no encontrado.');
@@ -478,16 +495,19 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
           status: 'pending',
           requestDate: new Date().toISOString(),
       };
+      
+      try {
+          await updateDoc(configDocRef, {
+              withdrawalRequests: [...appConfig.withdrawalRequests, newRequest]
+          });
+          alert('Tu solicitud de retiro ha sido enviada. Será procesada por un administrador a la brevedad.');
+      } catch (error) {
+          console.error("Error requesting withdrawal:", error);
+          alert('Error al enviar la solicitud de retiro.');
+      }
+  }, [appConfig.users, appConfig.withdrawalRequests, configDocRef]);
 
-      setAppConfig(prev => ({
-          ...prev,
-          withdrawalRequests: [...prev.withdrawalRequests, newRequest],
-      }));
-
-      alert('Tu solicitud de retiro ha sido enviada. Será procesada por un administrador a la brevedad.');
-  }, [appConfig.users]);
-
-  const handleProcessWithdrawal = useCallback((requestId: string, action: 'approve' | 'reject') => {
+  const handleProcessWithdrawal = useCallback(async (requestId: string, action: 'approve' | 'reject') => {
       const request = appConfig.withdrawalRequests.find(r => r.id === requestId);
       if (!request) {
           alert('Error: Solicitud no encontrada.');
@@ -498,35 +518,35 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
           return;
       }
 
-      setAppConfig(prev => {
-          const updatedRequests = prev.withdrawalRequests.map(r => {
-              if (r.id === requestId) {
-                const newStatus: WithdrawalRequest['status'] = action === 'approve' ? 'completed' : 'rejected';
-                return { ...r, status: newStatus, processedDate: new Date().toISOString() };
-              }
-              return r;
-            }
+      const updatedRequests = appConfig.withdrawalRequests.map(r => 
+        r.id === requestId 
+          ? { ...r, status: action === 'approve' ? 'completed' : 'rejected', processedDate: new Date().toISOString() } 
+          : r
+      );
+      
+      let updatePayload: Partial<AppConfig> = { withdrawalRequests: updatedRequests };
+
+      if (action === 'approve') {
+          const updatedUsers = appConfig.users.map(u => 
+            u.id === request.userId 
+              ? { ...u, balance: (u.balance || 0) - request.amount } 
+              : u
           );
-
-          if (action === 'approve') {
-              const updatedUsers = prev.users.map(u => {
-                  if (u.id === request.userId) {
-                      return { ...u, balance: (u.balance || 0) - request.amount };
-                  }
-                  return u;
-              });
-              return { ...prev, users: updatedUsers, withdrawalRequests: updatedRequests };
-          }
-
-          return { ...prev, withdrawalRequests: updatedRequests };
-      });
-
-      alert(`La solicitud ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
-  }, [appConfig.withdrawalRequests]);
+          updatePayload.users = updatedUsers;
+      }
+      
+      try {
+          await updateDoc(configDocRef, updatePayload);
+          alert(`La solicitud ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
+      } catch(error) {
+          console.error("Error processing withdrawal:", error);
+          alert('Error al procesar la solicitud.');
+      }
+  }, [appConfig.withdrawalRequests, appConfig.users, configDocRef]);
 
   // --- New Recharge Request Logic ---
 
-  const handleRequestClientRecharge = useCallback((userId: string, amount: number, proofOfPaymentUrl: string) => {
+  const handleRequestClientRecharge = useCallback(async (userId: string, amount: number, proofOfPaymentUrl: string) => {
     const newRequest: RechargeRequest = {
       id: new Date().toISOString(),
       userId,
@@ -536,14 +556,18 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       requestDate: new Date().toISOString(),
       proofOfPaymentUrl: proofOfPaymentUrl,
     };
-    setAppConfig(prev => ({
-      ...prev,
-      rechargeRequests: [...prev.rechargeRequests, newRequest],
-    }));
-    alert('Solicitud de recarga enviada. Tu vendedor la revisará a la brevedad.');
-  }, []);
+    try {
+        await updateDoc(configDocRef, {
+            rechargeRequests: [...appConfig.rechargeRequests, newRequest]
+        });
+        alert('Solicitud de recarga enviada. Tu vendedor la revisará a la brevedad.');
+    } catch (error) {
+        console.error("Error requesting client recharge:", error);
+        alert('Error al enviar la solicitud de recarga.');
+    }
+  }, [appConfig.rechargeRequests, configDocRef]);
 
-  const handleRequestSellerRecharge = useCallback((userId: string, amount: number, proofOfPaymentUrl: string) => {
+  const handleRequestSellerRecharge = useCallback(async (userId: string, amount: number, proofOfPaymentUrl: string) => {
     const newRequest: RechargeRequest = {
       id: new Date().toISOString(),
       userId,
@@ -553,92 +577,99 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       proofOfPaymentUrl,
       requestDate: new Date().toISOString(),
     };
-    setAppConfig(prev => ({
-      ...prev,
-      rechargeRequests: [...prev.rechargeRequests, newRequest],
-    }));
-    alert('Solicitud de recarga enviada al administrador. Será procesada a la brevedad.');
-  }, []);
+    try {
+        await updateDoc(configDocRef, {
+            rechargeRequests: [...appConfig.rechargeRequests, newRequest]
+        });
+        alert('Solicitud de recarga enviada al administrador. Será procesada a la brevedad.');
+    } catch (error) {
+        console.error("Error requesting seller recharge:", error);
+        alert('Error al enviar la solicitud de recarga.');
+    }
+  }, [appConfig.rechargeRequests, configDocRef]);
 
-  const handleProcessClientRecharge = useCallback((requestId: string, action: 'approve' | 'reject', sellerId: string) => {
+  const handleProcessClientRecharge = useCallback(async (requestId: string, action: 'approve' | 'reject', sellerId: string) => {
     const request = appConfig.rechargeRequests.find(r => r.id === requestId);
     if (!request || request.status !== 'pending') {
       alert('Error: La solicitud no es válida o ya fue procesada.');
       return;
     }
+    
+    const updatedRequests = appConfig.rechargeRequests.map(r => 
+      r.id === requestId
+        ? { ...r, status: action === 'approve' ? 'approved' : 'rejected', processedDate: new Date().toISOString(), processedBy: sellerId }
+        : r
+    );
 
-    setAppConfig(prev => {
-      // FIX: Explicitly type the new status to satisfy the RechargeRequest['status'] type.
-      const updatedRequests = prev.rechargeRequests.map(r => {
-        if (r.id === requestId) {
-            const newStatus: RechargeRequest['status'] = action === 'approve' ? 'approved' : 'rejected';
-            return { ...r, status: newStatus, processedDate: new Date().toISOString(), processedBy: sellerId };
-        }
-        return r;
-      });
+    let updatePayload: Partial<AppConfig> = { rechargeRequests: updatedRequests };
+    let newSellerBalance = currentUser?.balance;
 
-      if (action === 'approve') {
-        const seller = prev.users.find(u => u.id === sellerId);
+    if (action === 'approve') {
+        const seller = appConfig.users.find(u => u.id === sellerId);
         if (!seller || (seller.balance || 0) < request.amount) {
           alert('Error: Como vendedor, no tienes saldo suficiente para esta operación.');
-          return prev;
+          return;
         }
 
-        const updatedUsers = prev.users.map(u => {
-          if (u.id === sellerId) return { ...u, balance: (u.balance || 0) - request.amount };
+        const updatedUsers = appConfig.users.map(u => {
+          if (u.id === sellerId) {
+            newSellerBalance = (u.balance || 0) - request.amount;
+            return { ...u, balance: newSellerBalance };
+          }
           if (u.id === request.userId) return { ...u, balance: (u.balance || 0) + request.amount };
           return u;
         });
-
-        return { ...prev, users: updatedUsers, rechargeRequests: updatedRequests };
-      }
-      
-      return { ...prev, rechargeRequests: updatedRequests };
-    });
-
-    if (currentUser?.id === sellerId) {
-       setCurrentUser(prevUser => prevUser ? { ...prevUser, balance: (prevUser.balance || 0) - request.amount } : null);
+        updatePayload.users = updatedUsers;
     }
     
-    alert(`La solicitud del cliente ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
-  }, [appConfig.rechargeRequests, currentUser]);
+    try {
+        await updateDoc(configDocRef, updatePayload);
+        if (action === 'approve' && currentUser?.id === sellerId && typeof newSellerBalance === 'number') {
+            setCurrentUser(prevUser => prevUser ? { ...prevUser, balance: newSellerBalance } : null);
+        }
+        alert(`La solicitud del cliente ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
+    } catch (error) {
+        console.error("Error processing client recharge:", error);
+        alert('Error al procesar la solicitud.');
+    }
+  }, [appConfig.rechargeRequests, appConfig.users, currentUser, configDocRef]);
 
-  const handleProcessSellerRecharge = useCallback((requestId: string, action: 'approve' | 'reject') => {
+  const handleProcessSellerRecharge = useCallback(async (requestId: string, action: 'approve' | 'reject') => {
     const request = appConfig.rechargeRequests.find(r => r.id === requestId);
      if (!request || request.status !== 'pending') {
       alert('Error: La solicitud no es válida o ya fue procesada.');
       return;
     }
 
-    setAppConfig(prev => {
-      const updatedRequests = prev.rechargeRequests.map(r => {
-        if (r.id === requestId) {
-            const newStatus: RechargeRequest['status'] = action === 'approve' ? 'approved' : 'rejected';
-            return { ...r, status: newStatus, processedDate: new Date().toISOString(), processedBy: 'admin' };
-        }
-        return r;
-      });
+    const updatedRequests = appConfig.rechargeRequests.map(r => 
+        r.id === requestId 
+        ? { ...r, status: action === 'approve' ? 'approved' : 'rejected', processedDate: new Date().toISOString(), processedBy: 'admin' }
+        : r
+    );
 
-      if (action === 'approve') {
-        // Calculate commission for the seller
-        const commissionPercentage = prev.sellerCommissionPercentage || 0;
-        const commissionAmount = request.amount * (commissionPercentage / 100);
-        const totalAmountToCredit = request.amount + commissionAmount;
+    let updatePayload: Partial<AppConfig> = { rechargeRequests: updatedRequests };
 
-        const updatedUsers = prev.users.map(u => {
-          if (u.id === request.userId) {
-            return { ...u, balance: (u.balance || 0) + totalAmountToCredit };
-          }
-          return u;
-        });
-        return { ...prev, users: updatedUsers, rechargeRequests: updatedRequests };
-      }
-      
-      return { ...prev, rechargeRequests: updatedRequests };
-    });
+    if (action === 'approve') {
+      const commissionPercentage = appConfig.sellerCommissionPercentage || 0;
+      const commissionAmount = request.amount * (commissionPercentage / 100);
+      const totalAmountToCredit = request.amount + commissionAmount;
 
-    alert(`La solicitud del vendedor ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
-  }, [appConfig.rechargeRequests, appConfig.sellerCommissionPercentage]);
+      const updatedUsers = appConfig.users.map(u => 
+        u.id === request.userId
+          ? { ...u, balance: (u.balance || 0) + totalAmountToCredit }
+          : u
+      );
+      updatePayload.users = updatedUsers;
+    }
+    
+    try {
+        await updateDoc(configDocRef, updatePayload);
+        alert(`La solicitud del vendedor ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
+    } catch (error) {
+        console.error("Error processing seller recharge:", error);
+        alert('Error al procesar la solicitud.');
+    }
+  }, [appConfig.rechargeRequests, appConfig.users, appConfig.sellerCommissionPercentage, configDocRef]);
 
   const renderView = () => {
     const userCartonCount = currentUser ? appConfig.cartones.filter(c => c.userId === currentUser.id).length : 0;
