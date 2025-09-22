@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { AppConfig, Jornada, Match, Team, Prediction } from '../../types';
 import ImageUpload from '../../components/admin/ImageUpload';
 import PlusIcon from '../../components/icons/PlusIcon';
@@ -158,6 +158,7 @@ const MatchModal: React.FC<{
     const [localTeamId, setLocalTeamId] = useState(match?.localTeamId || '');
     const [visitorTeamId, setVisitorTeamId] = useState(match?.visitorTeamId || '');
     const [dateTime, setDateTime] = useState(match?.dateTime ? new Date(match.dateTime).toISOString().slice(0, 16) : '');
+    const [searchQuery, setSearchQuery] = useState('');
     
     if (!match) return null;
 
@@ -179,15 +180,32 @@ const MatchModal: React.FC<{
         onClose();
     };
 
+    const filteredAndSortedTeams = useMemo(() => {
+        return teams
+            .filter(team => team.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [teams, searchQuery]);
+
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div className="bg-gray-800 rounded-lg max-w-lg w-full" onClick={e => e.stopPropagation()}>
                  <div className="p-6">
                     <h2 className="text-xl font-bold mb-4">{match.id ? 'Editar Partido' : 'Añadir Partido'}</h2>
                     <div className="space-y-4">
+                        <div>
+                            <label className="block mb-1 text-sm">Buscar Equipo</label>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full bg-gray-700 p-2 rounded"
+                                placeholder="Escribe para filtrar..."
+                                autoFocus
+                            />
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
-                            <div><label className="block mb-1">Equipo Local</label><select value={localTeamId} onChange={e => setLocalTeamId(e.target.value)} className="w-full bg-gray-700 p-2 rounded"><option value="">Seleccionar...</option>{teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
-                            <div><label className="block mb-1">Equipo Visitante</label><select value={visitorTeamId} onChange={e => setVisitorTeamId(e.target.value)} className="w-full bg-gray-700 p-2 rounded"><option value="">Seleccionar...</option>{teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+                            <div><label className="block mb-1">Equipo Local</label><select value={localTeamId} onChange={e => setLocalTeamId(e.target.value)} className="w-full bg-gray-700 p-2 rounded"><option value="">Seleccionar...</option>{filteredAndSortedTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+                            <div><label className="block mb-1">Equipo Visitante</label><select value={visitorTeamId} onChange={e => setVisitorTeamId(e.target.value)} className="w-full bg-gray-700 p-2 rounded"><option value="">Seleccionar...</option>{filteredAndSortedTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
                         </div>
                         <div><label className="block mb-1">Fecha y Hora</label><input type="datetime-local" value={dateTime} onChange={e => setDateTime(e.target.value)} className="w-full bg-gray-700 p-2 rounded"/></div>
                     </div>
@@ -212,7 +230,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
             if (exists) {
                 return { ...prev, jornadas: prev.jornadas.map(j => j.id === jornada.id ? jornada : j) };
             }
-            return { ...prev, jornadas: [...prev.jornadas, jornada] };
+            return { ...prev, jornadas: [jornada, ...prev.jornadas] };
         });
     };
 
@@ -287,6 +305,13 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
         alert('Resultados guardados. Presiona "Guardar Cambios" en la cabecera para procesar los ganadores.');
     };
 
+    const sortedJornadas = useMemo(() => {
+        return [...config.jornadas].sort((a, b) => {
+            const statusOrder = { 'abierta': 1, 'cerrada': 2, 'cancelada': 3 };
+            return statusOrder[a.status] - statusOrder[b.status];
+        });
+    }, [config.jornadas]);
+
     const getTeam = (teamId: string) => config.teams.find(t => t.id === teamId);
 
     const statusStyles: { [key in Jornada['status']]: string } = {
@@ -337,7 +362,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {config.jornadas.map(jornada => (
+                {sortedJornadas.map(jornada => (
                     <div key={jornada.id} className="bg-gray-800 rounded-lg shadow-lg flex flex-col">
                         <div className="p-4 bg-gray-900/30">
                             <JornadaAdminPreviewCard jornada={jornada} />

@@ -178,36 +178,43 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                                 const isBotinMatchAndPlaying = playBotin && botinMatch && match.id === botinMatch.id;
                                 
                                 return (
-                                    <div key={match.id} className="bg-gray-700/50 p-4 rounded-lg grid grid-cols-3 gap-4 items-center">
-                                        {/* Teams */}
-                                        <div className="col-span-2 flex items-center justify-between text-center">
-                                            <div className="flex flex-col items-center gap-2 w-1/3">
-                                                {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="h-10 w-10 object-contain" />}
-                                                <span className="text-sm font-semibold">{localTeam?.name || 'N/A'}</span>
-                                            </div>
-                                            <span className="text-gray-400 font-bold">VS</span>
-                                            <div className="flex flex-col items-center gap-2 w-1/3">
-                                                {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="h-10 w-10 object-contain" />}
-                                                <span className="text-sm font-semibold">{visitorTeam?.name || 'N/A'}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Predictions */}
-                                        <div className="col-span-1 flex justify-end items-center gap-2">
-                                            {isBotinMatchAndPlaying ? (
-                                                <div className="text-center">
-                                                    <p className="text-xs text-purple-300">Predicción Automática</p>
-                                                    <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-1`}>
-                                                        {predictions[match.id] === 'X' ? <XIcon className="w-5 h-5"/> : predictions[match.id]}
-                                                    </div>
+                                    <div key={match.id} className="bg-gray-700/50 p-4 rounded-lg">
+                                        <div className="grid grid-cols-3 gap-4 items-center">
+                                            {/* Teams */}
+                                            <div className="col-span-2 flex items-center justify-between text-center">
+                                                <div className="flex flex-col items-center gap-2 w-1/3">
+                                                    {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="h-10 w-10 object-contain" />}
+                                                    <span className="text-sm font-semibold">{localTeam?.name || 'N/A'}</span>
                                                 </div>
-                                            ) : (
-                                                <>
-                                                    <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
-                                                    <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}><XIcon className="w-5 h-5"/></button>
-                                                    <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
-                                                </>
-                                            )}
+                                                <span className="text-gray-400 font-bold">VS</span>
+                                                <div className="flex flex-col items-center gap-2 w-1/3">
+                                                    {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="h-10 w-10 object-contain" />}
+                                                    <span className="text-sm font-semibold">{visitorTeam?.name || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Predictions */}
+                                            <div className="col-span-1 flex justify-end items-center gap-2">
+                                                {isBotinMatchAndPlaying ? (
+                                                    <div className="text-center">
+                                                        <p className="text-xs text-purple-300">Predicción Automática</p>
+                                                        <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-1`}>
+                                                            {predictions[match.id] === 'X' ? <XIcon className="w-5 h-5"/> : predictions[match.id]}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
+                                                        <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}><XIcon className="w-5 h-5"/></button>
+                                                        <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {/* Match Date */}
+                                            <div className="col-span-3 text-center text-xs text-gray-400 mt-2 pt-2 border-t border-gray-600/50">
+                                                {new Date(match.dateTime).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </div>
                                         </div>
                                     </div>
                                 );

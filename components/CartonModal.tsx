@@ -152,7 +152,7 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
                                 </div>
                                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-600/50">
                                     <div className="text-xs text-gray-400">
-                                        {new Date(match.dateTime).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
+                                        {new Date(match.dateTime).toLocaleString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {showResult && (
