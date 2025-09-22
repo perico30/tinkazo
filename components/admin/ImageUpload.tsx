@@ -64,7 +64,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, imageUrl, onImageSelec
                 ctx.drawImage(img, 0, 0, width, height);
                 
                 canvas.toBlob(
-                    async (blob) => {
+                    (blob) => {
                         if (!blob) {
                            setUploadState('idle');
                            alert("Error al crear la imagen para subir.");
@@ -73,30 +73,52 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, imageUrl, onImageSelec
                         
                         const filePath = `images/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`;
                         const storageRef = storage.ref(filePath);
+                        const uploadTask = storageRef.put(blob);
 
-                        try {
-                            setUploadState('uploading');
-                            setUploadProgress(0);
+                        setUploadState('uploading');
+                        setUploadProgress(0);
 
-                            const uploadTask = storageRef.put(blob);
-
-                            uploadTask.on('state_changed', (snapshot) => {
+                        uploadTask.on('state_changed',
+                            (snapshot) => {
+                                // Progress function
                                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                                 setUploadProgress(Math.round(progress));
-                            });
-
-                            await uploadTask;
-
-                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                            onImageSelect(downloadURL);
-
-                        } catch (error) {
-                            console.error("Upload failed:", error);
-                            alert("Error al subir la imagen. Revisa las reglas de seguridad de Firebase Storage o la configuración CORS del bucket.");
-                        } finally {
-                            setUploadState('idle');
-                            setUploadProgress(0);
-                        }
+                            },
+                            (error) => {
+                                // Error function
+                                console.error("Upload failed:", error);
+                                let errorMessage = "Error al subir la imagen. ";
+                                switch (error.code) {
+                                    case 'storage/unauthorized':
+                                        errorMessage += "No tienes permiso para subir archivos. Revisa las reglas de seguridad de Firebase Storage.";
+                                        break;
+                                    case 'storage/canceled':
+                                        errorMessage += "La subida fue cancelada.";
+                                        break;
+                                    case 'storage/unknown':
+                                        errorMessage += "Ocurrió un error desconocido, posiblemente relacionado con la configuración CORS del bucket de Firebase.";
+                                        break;
+                                    default:
+                                        errorMessage += "Revisa la consola para más detalles.";
+                                }
+                                alert(errorMessage);
+                                setUploadState('idle');
+                                setUploadProgress(0);
+                            },
+                            async () => {
+                                // Complete function
+                                try {
+                                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                                    onImageSelect(downloadURL);
+                                } catch (error) {
+                                    console.error("Failed to get download URL:", error);
+                                    alert("La imagen se subió pero no se pudo obtener el enlace.");
+                                } finally {
+                                    setUploadState('idle');
+                                    setUploadProgress(0);
+                                }
+                            }
+                        );
                     },
                     'image/webp',
                     0.9
