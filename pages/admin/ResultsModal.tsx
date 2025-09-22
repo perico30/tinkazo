@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Jornada, Team, Prediction } from '../../types';
 import XIcon from '../../components/icons/XIcon';
 
@@ -27,6 +27,34 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ jornada, teams, onClose, on
         }
         return { local: '', visitor: '' };
     });
+
+    useEffect(() => {
+        const botinMatchId = jornada.botinMatchId;
+        if (!botinMatchId) {
+            return;
+        }
+
+        const localScore = parseInt(botinScores.local, 10);
+        const visitorScore = parseInt(botinScores.visitor, 10);
+
+        if (!isNaN(localScore) && !isNaN(visitorScore)) {
+            let result: Prediction;
+            if (localScore > visitorScore) {
+                result = '1';
+            } else if (visitorScore > localScore) {
+                result = '2';
+            } else {
+                result = 'X';
+            }
+            
+            setResults(prevResults => {
+                if (prevResults[botinMatchId] !== result) {
+                    return { ...prevResults, [botinMatchId]: result };
+                }
+                return prevResults;
+            });
+        }
+    }, [botinScores, jornada.botinMatchId, setResults]);
 
     const sortedMatches = useMemo(() => 
         [...jornada.matches].sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()),
