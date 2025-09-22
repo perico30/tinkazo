@@ -20,6 +20,7 @@ import AdminClientTicketsModal from './admin/AdminClientTicketsModal';
 import CartonModal from '../components/CartonModal';
 import MenuIcon from '../components/icons/MenuIcon';
 import CloseIcon from '../components/icons/CloseIcon';
+import CheckCircleIcon from '../components/icons/CheckCircleIcon';
 
 
 interface AdminPageProps {
@@ -33,28 +34,33 @@ interface AdminPageProps {
 
 type AdminTab = 'dashboard' | 'config' | 'teams' | 'jornadas' | 'users' | 'withdrawals' | 'recharges';
 
+type SaveState = 'idle' | 'saving' | 'success';
+
 const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, onExit, onProcessWithdrawal, onProcessSellerRecharge }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [draftConfig, setDraftConfig] = useState<AppConfig>(initialConfig);
   const [viewingClientTickets, setViewingClientTickets] = useState<RegisteredUser | null>(null);
   const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
   
   useEffect(() => {
     setDraftConfig(initialConfig);
   }, [initialConfig]);
   
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(draftConfig);
-    } catch (e) {
-      console.error("Failed to save configuration:", e);
-      // Notification is handled upstream in App.tsx's onSave prop
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSave = () => {
+    setSaveState('saving');
+    onSave(draftConfig)
+      .then(() => {
+        setSaveState('success');
+        setTimeout(() => setSaveState('idle'), 2000); // Revert button to idle after 2 seconds
+      })
+      .catch((e) => {
+        console.error("Failed to save configuration:", e);
+        // On error, the notification is shown by the parent component.
+        // We just need to reset the button state.
+        setSaveState('idle');
+      });
   };
 
   const handleDraftActivateUser = (userId: string) => {
@@ -121,6 +127,36 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
         return null;
     }
   }
+  
+  const renderSaveButtonContent = () => {
+    switch (saveState) {
+        case 'saving':
+            return (
+                <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="hidden sm:inline">Guardando...</span>
+                </>
+            );
+        case 'success':
+            return (
+                <>
+                    <CheckCircleIcon className="h-5 w-5" />
+                    <span className="hidden sm:inline">¡Guardado!</span>
+                </>
+            );
+        case 'idle':
+        default:
+            return (
+                <>
+                    <SaveIcon />
+                    <span className="hidden sm:inline">Guardar Cambios</span>
+                </>
+            );
+    }
+  };
 
   const isConfigTabActive = ['config', 'teams', 'jornadas', 'users'].includes(activeTab);
 
@@ -216,23 +252,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
             {isConfigTabActive && (
                 <button 
                   onClick={handleSave}
-                  disabled={isSaving}
-                  className="flex items-center justify-center gap-2 text-white font-bold px-4 py-2 rounded-lg btn-gradient disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={saveState !== 'idle'}
+                  className={`flex items-center justify-center gap-2 text-white font-bold px-4 py-2 rounded-lg transition-colors w-44
+                    ${saveState === 'success' ? 'bg-green-600' : 'btn-gradient'}
+                    disabled:opacity-70 disabled:cursor-not-allowed`}
                 >
-                  {isSaving ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span className="hidden sm:inline">Guardando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <SaveIcon />
-                      <span className="hidden sm:inline">Guardar Cambios</span>
-                    </>
-                  )}
+                  {renderSaveButtonContent()}
                 </button>
             )}
           </header>
