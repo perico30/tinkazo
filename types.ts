@@ -69,7 +69,7 @@ export interface FooterConfig {
 export interface Team {
   id: string;
   name: string;
-  logo: string; // URL to the team logo in Firebase Storage
+  logo: string; // base64 data URL
 }
 
 export interface Match {

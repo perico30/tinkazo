@@ -71,52 +71,25 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, imageUrl, onImageSelec
                            return;
                         }
                         
+                        setUploadState('uploading');
                         const filePath = `images/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`;
                         const storageRef = storage.ref(filePath);
                         const uploadTask = storageRef.put(blob);
 
-                        setUploadState('uploading');
-                        setUploadProgress(0);
-
                         uploadTask.on('state_changed',
                             (snapshot) => {
-                                // Progress function
                                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                                 setUploadProgress(Math.round(progress));
                             },
                             (error) => {
-                                // Error function
                                 console.error("Upload failed:", error);
-                                let errorMessage = "Error al subir la imagen. ";
-                                switch (error.code) {
-                                    case 'storage/unauthorized':
-                                        errorMessage += "No tienes permiso para subir archivos. Revisa las reglas de seguridad de Firebase Storage.";
-                                        break;
-                                    case 'storage/canceled':
-                                        errorMessage += "La subida fue cancelada.";
-                                        break;
-                                    case 'storage/unknown':
-                                        errorMessage += "Ocurrió un error desconocido, posiblemente relacionado con la configuración CORS del bucket de Firebase.";
-                                        break;
-                                    default:
-                                        errorMessage += "Revisa la consola para más detalles.";
-                                }
-                                alert(errorMessage);
+                                alert("Error al subir la imagen. Revisa las reglas de seguridad de Firebase Storage.");
                                 setUploadState('idle');
-                                setUploadProgress(0);
                             },
                             async () => {
-                                // Complete function
-                                try {
-                                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                                    onImageSelect(downloadURL);
-                                } catch (error) {
-                                    console.error("Failed to get download URL:", error);
-                                    alert("La imagen se subió pero no se pudo obtener el enlace.");
-                                } finally {
-                                    setUploadState('idle');
-                                    setUploadProgress(0);
-                                }
+                                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                                onImageSelect(downloadURL);
+                                setUploadState('idle');
                             }
                         );
                     },
