@@ -1,15 +1,14 @@
 import React from 'react';
 
 const YoutubeIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
-  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="yt-gradient" x1="0" y1="0" x2="32" y2="32">
-        <stop stopColor="#FF0000"/>
-        <stop offset="1" stopColor="#FF4D4D"/>
-      </linearGradient>
-    </defs>
-    <circle cx="16" cy="16" r="16" fill="url(#yt-gradient)"/>
-    <path d="M22 13.5566C23.3333 14.3094 23.3333 16.1906 22 16.9434L14.5 21.2391C13.1667 21.9919 11.5 21.0513 11.5 19.5457V10.9543C11.5 9.44871 13.1667 8.50811 14.5 9.26091L22 13.5566Z" fill="white"/>
+  <svg 
+    className={className} 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path>
   </svg>
 );
 

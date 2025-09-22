@@ -1,20 +1,14 @@
 import React from 'react';
 
 const InstagramIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
-  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="ig-gradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(28.5 3.5) rotate(135) scale(38.8907)">
-        <stop stopColor="#FEDC75" />
-        <stop offset="0.281" stopColor="#F58529" />
-        <stop offset="0.516" stopColor="#DD2A7B" />
-        <stop offset="0.76" stopColor="#8134AF" />
-        <stop offset="1" stopColor="#4C63D2" />
-      </radialGradient>
-    </defs>
-    <circle cx="16" cy="16" r="16" fill="url(#ig-gradient)" />
-    <path d="M22 7H10C8.34315 7 7 8.34315 7 10V22C7 23.6569 8.34315 25 10 25H22C23.6569 25 25 23.6569 25 22V10C25 8.34315 23.6569 7 22 7Z" stroke="white" strokeWidth="2" strokeLinejoin="round"/>
-    <path d="M16 20C18.2091 20 20 18.2091 20 16C20 13.7909 18.2091 12 16 12C13.7909 12 12 13.7909 12 16C12 18.2091 13.7909 20 16 20Z" stroke="white" strokeWidth="2"/>
-    <circle cx="21.5" cy="10.5" r="1" fill="white"/>
+ <svg 
+    className={className} 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664-4.771 4.919-4.919 1.266-.057 1.644-.069 4.85-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98C23.986 15.667 24 15.259 24 12s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98C15.667.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"></path>
   </svg>
 );
 

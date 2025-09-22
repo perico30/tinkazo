@@ -1,18 +1,14 @@
 import React from 'react';
 
 const DribbbleIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
-  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="db-gradient" x1="0" y1="0" x2="32" y2="32">
-        <stop stopColor="#EA4C89"/>
-        <stop offset="1" stopColor="#E52E71"/>
-      </linearGradient>
-    </defs>
-    <circle cx="16" cy="16" r="16" fill="url(#db-gradient)"/>
-    <path fillRule="evenodd" clipRule="evenodd" d="M16 24C20.4183 24 24 20.4183 24 16C24 11.5817 20.4183 8 16 8C11.5817 8 8 11.5817 8 16C8 20.4183 11.5817 24 16 24ZM16 22C19.3137 22 22 19.3137 22 16C22 12.6863 19.3137 10 16 10C12.6863 10 10 12.6863 10 16C10 19.3137 12.6863 22 16 22Z" fill="white" fillOpacity="0.8"/>
-    <path d="M24.5 16C24.5 17.5 23.5 20.5 20.5 21.5" stroke="white" strokeOpacity="0.8" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M7.5 16C7.5 14.5 8.5 11.5 11.5 10.5" stroke="white" strokeOpacity="0.8" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M9 20L23 12" stroke="white" strokeOpacity="0.8" strokeWidth="2" strokeLinecap="round"/>
+  <svg 
+    className={className} 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm6.36 14.82c-.39.04-1.28.18-1.72.28-2.08-1.76-4.12-3.56-6.1-5.32.96-1.52 2-3 2.92-4.32 3.84 1.28 6.28 4.4 6.92 7.36zM12 20c-1.6 0-3.12-.4-4.44-1.12.92-2.16 2.16-4.24 3.4-6.12 1.4 1.16 2.84 2.36 4.28 3.52C14.28 18.16 12.68 19.28 12 20zm-7.92-3.4c-.04-.32-.08-.64-.08-1 0-2.04 1-3.92 2.68-5.12-1.2 1.48-2.4 2.96-3.56 4.44.44.4.88.76 1.36 1.08.16.12.32.2.48.28l-.04.32zm-.6-5.88c.04-.36.08-.68.16-.96.08-.6.24-1.2.4-1.72C5.16 5.6 7.28 4.2 9.8 3.44c-.92 1.4-1.88 2.84-2.84 4.28-1.6.2-3.12.92-4.48 2z"></path>
   </svg>
 );
 

@@ -1,9 +1,14 @@
 import React from 'react';
 
 const TwitterIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
-  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="16" cy="16" r="16" fill="#000" />
-    <path d="M10.25 24L16.5 15.375L10 8H11.5L16.875 13.925L21.5 8H24L17.5 16.875L24.25 24H22.75L17.125 17.825L12.25 24H10.25ZM12 9L21.25 23H22.5L13.25 9H12Z" fill="white" />
+  <svg 
+    className={className} 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
   </svg>
 );
 

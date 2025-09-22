@@ -1,16 +1,14 @@
 import React from 'react';
 
 const TelegramIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
-  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="tg-gradient" x1="0" y1="0" x2="32" y2="32">
-        <stop stopColor="#2AABEE"/>
-        <stop offset="1" stopColor="#0088CC"/>
-      </linearGradient>
-    </defs>
-    <circle cx="16" cy="16" r="16" fill="url(#tg-gradient)"/>
-    <path d="M8 15.3333L25 9L21.6667 22.3333L16.3333 19L14.3333 24.3333L13 19.6667L8 15.3333Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M25 9L14.3333 18.3333" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg 
+    className={className} 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M21.8,3.3c-0.2-0.2-0.5-0.3-0.8-0.2L2.3,10.5c-0.6,0.2-0.6,1,0,1.2l3.8,1.2l1.2,3.8c0.2,0.6,1,0.6,1.2,0L18.3,4c0.2-0.2,0-0.6-0.2-0.7L12.4,9L9.8,7.8L21.2,4C21.6,3.9,21.9,3.5,21.8,3.3z M8.9,13.1l-1,3.1c-0.1,0.4,0.4,0.7,0.7,0.5l2.5-1.7l-2.2-1.9H8.9z"></path>
   </svg>
 );
 

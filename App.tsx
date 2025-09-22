@@ -97,8 +97,17 @@ const initialAppConfig: AppConfig = {
         { platform: 'twitter', url: '#' },
         { platform: 'instagram', url: '#' },
         { platform: 'tiktok', url: '#' },
-        { platform: 'youtube', url: '#' },
         { platform: 'discord', url: '#' },
+        { platform: 'snapchat', url: '#' },
+        { platform: 'youtube', url: '#' },
+        { platform: 'whatsapp', url: '#' },
+        { platform: 'behance', url: '#' },
+        { platform: 'threads', url: '#' },
+        { platform: 'linkedin', url: '#' },
+        { platform: 'dribbble', url: '#' },
+        { platform: 'pinterest', url: '#' },
+        { platform: 'twitch', url: '#' },
+        { platform: 'telegram', url: '#' },
       ],
       legalLinks: [
         { title: 'Términos y Condiciones', content: 'Aquí va el contenido completo de los términos y condiciones del servicio...' },
@@ -145,12 +154,12 @@ const App: React.FC = () => {
   const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
   // FIX: Using Firebase v8 syntax.
-  const configDocRef = useRef(db.collection("tinkazoConfig").doc("main")).current;
+  const configDocRef = useRef(db.collection("tinkazoConfig").doc("main"));
 
   // Effect to listen for real-time config changes from Firestore
   useEffect(() => {
       // FIX: Using Firebase v8 syntax.
-      const unsubscribe = configDocRef.onSnapshot((docSnap) => {
+      const unsubscribe = configDocRef.current.onSnapshot((docSnap) => {
           if (docSnap.exists) {
               const loadedConfig = docSnap.data() as AppConfig;
               // Sanitize and merge with defaults to avoid errors if some fields are missing
@@ -160,7 +169,7 @@ const App: React.FC = () => {
               // Config doesn't exist, create it with initial values
               console.log("No config found, creating one.");
               // FIX: Using Firebase v8 syntax.
-              configDocRef.set(initialAppConfig).catch(error => {
+              configDocRef.current.set(initialAppConfig).catch(error => {
                   console.error("Error creating initial config:", error);
               });
           }
@@ -174,7 +183,7 @@ const App: React.FC = () => {
 
       // Cleanup subscription on component unmount
       return () => unsubscribe();
-  }, [configDocRef]);
+  }, []);
 
 
   useEffect(() => {
@@ -234,7 +243,7 @@ const App: React.FC = () => {
     };
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update({
+        await configDocRef.current.update({
             users: [...appConfig.users, newUser]
         });
         alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
@@ -242,7 +251,7 @@ const App: React.FC = () => {
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.users, configDocRef, showNotification]);
+  }, [appConfig.users, showNotification]);
 
   const handleLogout = useCallback(() => {
     setUserRole(null);
@@ -380,12 +389,9 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
 };
 
   const handleSaveConfig = async (newConfig: AppConfig) => {
-    const processedConfig = processJornadaResults(newConfig);
-    setCurrentView('admin');
-    
-    // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.set(processedConfig);
+        const processedConfig = processJornadaResults(newConfig);
+        await configDocRef.current.set(processedConfig);
         showNotification('¡Cambios guardados con éxito!');
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
@@ -402,7 +408,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update({ users: updatedUsers });
+        await configDocRef.current.update({ users: updatedUsers });
         if (currentUser?.id === sanitizedUser.id) {
             setCurrentUser(sanitizedUser);
         }
@@ -410,7 +416,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.users, currentUser?.id, showNotification, configDocRef]);
+  }, [appConfig.users, currentUser?.id, showNotification]);
 
   const handlePlayJornada = useCallback((jornada: Jornada) => {
     if (!currentUser) {
@@ -462,7 +468,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update({
+        await configDocRef.current.update({
             cartones: updatedCartones,
             users: updatedUsers
         });
@@ -472,7 +478,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [currentUser, appConfig.cartones, appConfig.users, navigateToHome, showNotification, configDocRef]);
+  }, [currentUser, appConfig.cartones, appConfig.users, navigateToHome, showNotification]);
 
   const handleUpdateCarton = useCallback(async (cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number } | null) => {
     const carton = appConfig.cartones.find(c => c.id === cartonId);
@@ -498,12 +504,12 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update({ cartones: updatedCartones });
+        await configDocRef.current.update({ cartones: updatedCartones });
         showNotification('¡Cartón actualizado con éxito!');
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.cartones, appConfig.jornadas, configDocRef, showNotification]);
+  }, [appConfig.cartones, appConfig.jornadas, showNotification]);
 
   const handleRequestWithdrawal = useCallback(async (userId: string, amount: number, userQrCodeUrl: string) => {
       const user = appConfig.users.find(u => u.id === userId);
@@ -527,14 +533,14 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       
       // FIX: Using Firebase v8 syntax.
       try {
-          await configDocRef.update({
+          await configDocRef.current.update({
               withdrawalRequests: [...appConfig.withdrawalRequests, newRequest]
           });
           showNotification('Tu solicitud de retiro ha sido enviada.');
       } catch (error) {
           showNotification(getFirebaseErrorMessage(error));
       }
-  }, [appConfig.users, appConfig.withdrawalRequests, configDocRef, showNotification]);
+  }, [appConfig.users, appConfig.withdrawalRequests, showNotification]);
 
   const handleProcessWithdrawal = useCallback(async (requestId: string, action: 'approve' | 'reject') => {
       const request = appConfig.withdrawalRequests.find(r => r.id === requestId);
@@ -568,12 +574,12 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       
       // FIX: Using Firebase v8 syntax.
       try {
-          await configDocRef.update(updatePayload);
+          await configDocRef.current.update(updatePayload);
           showNotification(`La solicitud ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
       } catch(error) {
           showNotification(getFirebaseErrorMessage(error));
       }
-  }, [appConfig.withdrawalRequests, appConfig.users, configDocRef, showNotification]);
+  }, [appConfig.withdrawalRequests, appConfig.users, showNotification]);
 
   // --- New Recharge Request Logic ---
 
@@ -589,14 +595,14 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     };
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update({
+        await configDocRef.current.update({
             rechargeRequests: [...appConfig.rechargeRequests, newRequest]
         });
         showNotification('Solicitud de recarga enviada.');
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, configDocRef, showNotification]);
+  }, [appConfig.rechargeRequests, showNotification]);
 
   const handleRequestSellerRecharge = useCallback(async (userId: string, amount: number, proofOfPaymentUrl: string) => {
     const newRequest: RechargeRequest = {
@@ -610,14 +616,14 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     };
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update({
+        await configDocRef.current.update({
             rechargeRequests: [...appConfig.rechargeRequests, newRequest]
         });
         showNotification('Solicitud de recarga enviada al administrador.');
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, configDocRef, showNotification]);
+  }, [appConfig.rechargeRequests, showNotification]);
 
   const handleProcessClientRecharge = useCallback(async (requestId: string, action: 'approve' | 'reject', sellerId: string) => {
     const request = appConfig.rechargeRequests.find(r => r.id === requestId);
@@ -657,7 +663,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update(updatePayload);
+        await configDocRef.current.update(updatePayload);
         if (action === 'approve' && currentUser?.id === sellerId && typeof newSellerBalance === 'number') {
             setCurrentUser(prevUser => prevUser ? { ...prevUser, balance: newSellerBalance } : null);
         }
@@ -665,7 +671,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, appConfig.users, currentUser, configDocRef, showNotification]);
+  }, [appConfig.rechargeRequests, appConfig.users, currentUser, showNotification]);
 
   const handleProcessSellerRecharge = useCallback(async (requestId: string, action: 'approve' | 'reject') => {
     const request = appConfig.rechargeRequests.find(r => r.id === requestId);
@@ -699,12 +705,12 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     
     // FIX: Using Firebase v8 syntax.
     try {
-        await configDocRef.update(updatePayload);
+        await configDocRef.current.update(updatePayload);
         showNotification(`La solicitud del vendedor ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
     }
-  }, [appConfig.rechargeRequests, appConfig.users, appConfig.sellerCommissionPercentage, configDocRef, showNotification]);
+  }, [appConfig.rechargeRequests, appConfig.users, appConfig.sellerCommissionPercentage, showNotification]);
 
   const renderView = () => {
     const userCartonCount = currentUser ? appConfig.cartones.filter(c => c.userId === currentUser.id).length : 0;

@@ -303,6 +303,17 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
         <summary className="font-semibold text-lg cursor-pointer">Recargas y Bonos</summary>
         <div className="mt-4 grid md:grid-cols-1 gap-6 items-start">
             <ImageUpload label="Imagen QR para Recargas (Admin)" imageUrl={config.recharge.qrCodeUrl} onImageSelect={url => handleNestedChange('recharge', 'qrCodeUrl', url)} />
+            <div>
+                <label className="block mb-1 text-sm font-medium text-gray-300">Número de WhatsApp del Administrador</label>
+                <input 
+                    type="text" 
+                    value={config.adminWhatsappNumber || ''} 
+                    onChange={e => handleValueChange('adminWhatsappNumber', e.target.value)} 
+                    className="w-full bg-gray-700 p-2 rounded"
+                    placeholder="Ej. +51987654321"
+                />
+                <p className="text-xs text-gray-400 mt-1">Este número se usará como contacto de respaldo cuando un cliente no tenga un vendedor asignado.</p>
+            </div>
              <div>
                 <label className="block mb-1 text-sm font-medium text-gray-300">Comisión de Vendedor (%)</label>
                 <input 

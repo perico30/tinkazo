@@ -1,15 +1,14 @@
 import React from 'react';
 
 const FacebookIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
-  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="fb-gradient" x1="0" y1="0" x2="32" y2="32">
-        <stop stopColor="#0062E0" />
-        <stop offset="1" stopColor="#19AFFF" />
-      </linearGradient>
-    </defs>
-    <circle cx="16" cy="16" r="16" fill="url(#fb-gradient)" />
-    <path d="M21.5 10.5H19.5C18.3954 10.5 17.5 11.3954 17.5 12.5V14.5H21.5L20.5 18.5H17.5V27.5H12.5V18.5H9.5V14.5H12.5V12.5C12.5 9.18629 15.1863 6.5 18.5 6.5H21.5V10.5Z" fill="white" />
+  <svg 
+    className={className} 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"></path>
   </svg>
 );
 
