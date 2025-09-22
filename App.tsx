@@ -156,6 +156,38 @@ const App: React.FC = () => {
   // FIX: Using Firebase v8 syntax.
   const configDocRef = useRef(db.collection("tinkazoConfig").doc("main"));
 
+  // Effect to rehydrate session from localStorage on initial app load
+  useEffect(() => {
+    try {
+      const savedRole = localStorage.getItem('tinkazoUserRole') as UserRole;
+      const savedUserJSON = localStorage.getItem('tinkazoCurrentUser');
+      const savedView = localStorage.getItem('tinkazoCurrentView') as View;
+
+      if (savedRole) {
+        setUserRole(savedRole);
+        
+        if (savedUserJSON) {
+          setCurrentUser(JSON.parse(savedUserJSON));
+        }
+
+        if (savedView) {
+            // Restore view, ensuring it's valid for the user's role
+            if ((savedRole === 'admin' && savedView === 'admin') ||
+                (savedRole === 'seller' && savedView === 'seller') ||
+                (savedRole === 'client' && ['clientPanel', 'purchaseCarton', 'home'].includes(savedView))) {
+              setCurrentView(savedView);
+            }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to rehydrate session from localStorage:", error);
+      // Clear potentially corrupt data on error
+      localStorage.removeItem('tinkazoUserRole');
+      localStorage.removeItem('tinkazoCurrentUser');
+      localStorage.removeItem('tinkazoCurrentView');
+    }
+  }, []);
+
   // Effect to listen for real-time config changes from Firestore
   useEffect(() => {
       // FIX: Using Firebase v8 syntax.
@@ -194,6 +226,13 @@ const App: React.FC = () => {
     document.body.style.color = appConfig.theme.textColor;
   }, [appConfig.theme.backgroundStyle, appConfig.theme.textColor]);
 
+  // Effect to save the current view to localStorage when it changes for a logged-in user
+  useEffect(() => {
+    if (userRole) {
+      localStorage.setItem('tinkazoCurrentView', currentView);
+    }
+  }, [currentView, userRole]);
+
   const showNotification = useCallback((message: string) => {
     setNotification(message);
   }, []);
@@ -215,20 +254,35 @@ const App: React.FC = () => {
   }, [currentUser]);
 
   const handleAdminLogin = useCallback(() => {
-    setUserRole('admin');
+    const role: UserRole = 'admin';
+    const view: View = 'admin';
+    setUserRole(role);
     setCurrentUser(null);
-    setCurrentView('admin');
+    setCurrentView(view);
+    localStorage.setItem('tinkazoUserRole', role);
+    localStorage.setItem('tinkazoCurrentView', view);
+    localStorage.removeItem('tinkazoCurrentUser');
   }, []);
   
   const handleUserLogin = useCallback((user: RegisteredUser) => {
     const sanitizedUser = JSON.parse(JSON.stringify(user));
     setCurrentUser(sanitizedUser);
+    localStorage.setItem('tinkazoCurrentUser', JSON.stringify(sanitizedUser));
+    
     if (sanitizedUser.role === 'seller') {
-      setUserRole('seller');
-      setCurrentView('seller');
+      const role: UserRole = 'seller';
+      const view: View = 'seller';
+      setUserRole(role);
+      setCurrentView(view);
+      localStorage.setItem('tinkazoUserRole', role);
+      localStorage.setItem('tinkazoCurrentView', view);
     } else {
-      setUserRole('client');
-      setCurrentView('home');
+      const role: UserRole = 'client';
+      const view: View = 'home';
+      setUserRole(role);
+      setCurrentView(view);
+      localStorage.setItem('tinkazoUserRole', role);
+      localStorage.setItem('tinkazoCurrentView', view);
     }
   }, []);
 
@@ -257,6 +311,9 @@ const App: React.FC = () => {
     setUserRole(null);
     setCurrentUser(null);
     setCurrentView('home');
+    localStorage.removeItem('tinkazoUserRole');
+    localStorage.removeItem('tinkazoCurrentUser');
+    localStorage.removeItem('tinkazoCurrentView');
   }, []);
   
 const processJornadaResults = (config: AppConfig): AppConfig => {

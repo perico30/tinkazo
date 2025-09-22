@@ -123,11 +123,11 @@ const CarouselSection: React.FC<{ images: CarouselImage[] }> = ({ images }) => {
                 style={{ '--animation-duration': animationDuration } as React.CSSProperties}
             >
                 {[...images, ...images].map((img, index) => (
-                    <div key={`${img.id}-${index}`} className="h-full flex-shrink-0 mx-4">
+                    <div key={`${img.id}-${index}`} className="h-full flex-shrink-0 mx-4 w-[80vw] sm:w-[45vw] md:w-[30vw] xl:w-[450px]">
                         <img 
                             src={img.url} 
                             alt={`Slide ${index + 1}`} 
-                            className="h-full w-auto object-cover rounded-lg aspect-[920/430]" 
+                            className="h-full w-full object-cover rounded-lg" 
                         />
                     </div>
                 ))}
