@@ -7,7 +7,7 @@ import SellerPage from './pages/SellerPage';
 import ClientPage from './pages/ClientPage';
 import PurchaseCartonPage from './pages/PurchaseCartonPage';
 import Notification from './components/Notification';
-import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails } from './types';
+import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails, Team } from './types';
 import { db } from './firebase';
 // FIX: Removed Firebase v9 imports as logic is being switched to v8 syntax.
 // import { doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -153,37 +153,74 @@ const App: React.FC = () => {
   const [notification, setNotification] = useState<string | null>(null);
   const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
-  // FIX: Using Firebase v8 syntax.
   const configDocRef = useRef(db.collection("tinkazoConfig").doc("main"));
+  const teamsCollectionRef = useRef(db.collection("teams"));
+
 
   // Effect to listen for real-time config changes from Firestore
-  useEffect(() => {
-      // FIX: Using Firebase v8 syntax.
-      const unsubscribe = configDocRef.current.onSnapshot((docSnap) => {
-          if (docSnap.exists) {
-              const loadedConfig = docSnap.data() as AppConfig;
-              // Sanitize and merge with defaults to avoid errors if some fields are missing
-              const sanitizedConfig = JSON.parse(JSON.stringify(loadedConfig));
-              setAppConfig({ ...initialAppConfig, ...sanitizedConfig });
-          } else {
-              // Config doesn't exist, create it with initial values
-              console.log("No config found, creating one.");
-              // FIX: Using Firebase v8 syntax.
-              configDocRef.current.set(initialAppConfig).catch(error => {
-                  console.error("Error creating initial config:", error);
-              });
-          }
-          setIsConfigLoaded(true);
-      }, (error) => {
-          console.error("Error listening to config changes:", error);
-          // Fallback to initial config if listener fails
-          setAppConfig(initialAppConfig);
-          setIsConfigLoaded(true);
-      });
+ useEffect(() => {
+    let latestConfigData: Omit<AppConfig, 'teams'> | null = null;
+    let latestTeamsData: Team[] | null = null;
+    let configLoaded = false;
+    let teamsLoaded = false;
 
-      // Cleanup subscription on component unmount
-      return () => unsubscribe();
-  }, []);
+    const reconstructAndSetState = () => {
+      // Proceed only when both data sources have been loaded at least once
+      if (configLoaded && teamsLoaded) {
+        const fullConfig = { ...(latestConfigData as object), teams: latestTeamsData || [] } as AppConfig;
+        
+        // Sanitize and merge with defaults to avoid errors if some fields are missing
+        const sanitizedConfig = JSON.parse(JSON.stringify(fullConfig));
+        setAppConfig({ ...initialAppConfig, ...sanitizedConfig });
+
+        if (!isConfigLoaded) {
+          setIsConfigLoaded(true);
+        }
+      }
+    };
+
+    const unsubscribeConfig = configDocRef.current.onSnapshot((docSnap) => {
+      if (docSnap.exists) {
+        latestConfigData = docSnap.data() as Omit<AppConfig, 'teams'>;
+      } else {
+        console.log("No config found, creating one.");
+        // Create initial config, but without the 'teams' array
+        const { teams, ...restConfig } = initialAppConfig;
+        latestConfigData = restConfig;
+        configDocRef.current.set(restConfig).catch(error => {
+            console.error("Error creating initial config:", error);
+        });
+      }
+      configLoaded = true;
+      reconstructAndSetState();
+    }, (error) => {
+      console.error("Error listening to config changes:", error);
+      const { teams, ...restConfig } = initialAppConfig;
+      latestConfigData = restConfig;
+      configLoaded = true;
+      reconstructAndSetState();
+    });
+
+    const unsubscribeTeams = teamsCollectionRef.current.onSnapshot((querySnapshot) => {
+      const teamsData: Team[] = [];
+      querySnapshot.forEach((doc) => {
+        teamsData.push(doc.data() as Team);
+      });
+      latestTeamsData = teamsData;
+      teamsLoaded = true;
+      reconstructAndSetState();
+    }, (error) => {
+      console.error("Error listening to teams collection:", error);
+      latestTeamsData = []; // Fallback to empty array on error
+      teamsLoaded = true;
+      reconstructAndSetState();
+    });
+
+    return () => {
+      unsubscribeConfig();
+      unsubscribeTeams();
+    };
+  }, [isConfigLoaded]);
 
 
   useEffect(() => {
@@ -391,7 +428,42 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
   const handleSaveConfig = async (newConfig: AppConfig) => {
     try {
         const processedConfig = processJornadaResults(newConfig);
-        await configDocRef.current.set(processedConfig);
+        const { teams: newTeams, ...restConfig } = processedConfig;
+
+        // --- Save non-team config parts ---
+        // Using set to overwrite the entire document with the new state
+        await configDocRef.current.set(restConfig);
+
+        // --- Sync the teams collection ---
+        const currentTeamsSnapshot = await teamsCollectionRef.current.get();
+        const currentTeams: Team[] = [];
+        currentTeamsSnapshot.forEach(doc => currentTeams.push(doc.data() as Team));
+
+        const batch = db.batch();
+        const newTeamIds = new Set(newTeams.map(t => t.id));
+        const currentTeamIds = new Set(currentTeams.map(t => t.id));
+
+        // Add or update teams
+        newTeams.forEach(newTeam => {
+            const currentTeam = currentTeams.find(t => t.id === newTeam.id);
+            // We write if the team is new or if it has been changed.
+            // A simple JSON.stringify is a good enough check for changes.
+            if (!currentTeam || JSON.stringify(currentTeam) !== JSON.stringify(newTeam)) {
+                const teamRef = teamsCollectionRef.current.doc(newTeam.id);
+                batch.set(teamRef, newTeam);
+            }
+        });
+
+        // Delete teams that are no longer in the new config
+        currentTeams.forEach(currentTeam => {
+            if (!newTeamIds.has(currentTeam.id)) {
+                const teamRef = teamsCollectionRef.current.doc(currentTeam.id);
+                batch.delete(teamRef);
+            }
+        });
+
+        await batch.commit();
+        
         showNotification('¡Cambios guardados con éxito!');
     } catch (error) {
         showNotification(getFirebaseErrorMessage(error));
@@ -561,7 +633,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
           : r
       );
       
-      let updatePayload: Partial<AppConfig> = { withdrawalRequests: updatedRequests };
+      let updatePayload: Partial<Omit<AppConfig, 'teams'>> = { withdrawalRequests: updatedRequests };
 
       if (action === 'approve') {
           const updatedUsers = appConfig.users.map(u => 
@@ -640,7 +712,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         : r
     );
 
-    let updatePayload: Partial<AppConfig> = { rechargeRequests: updatedRequests };
+    let updatePayload: Partial<Omit<AppConfig, 'teams'>> = { rechargeRequests: updatedRequests };
     let newSellerBalance = currentUser?.balance;
 
     if (action === 'approve') {
@@ -688,7 +760,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         : r
     );
 
-    let updatePayload: Partial<AppConfig> = { rechargeRequests: updatedRequests };
+    let updatePayload: Partial<Omit<AppConfig, 'teams'>> = { rechargeRequests: updatedRequests };
 
     if (action === 'approve') {
       const commissionPercentage = appConfig.sellerCommissionPercentage || 0;
