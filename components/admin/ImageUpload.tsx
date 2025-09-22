@@ -64,34 +64,39 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, imageUrl, onImageSelec
                 ctx.drawImage(img, 0, 0, width, height);
                 
                 canvas.toBlob(
-                    (blob) => {
+                    async (blob) => {
                         if (!blob) {
                            setUploadState('idle');
                            alert("Error al crear la imagen para subir.");
                            return;
                         }
                         
-                        setUploadState('uploading');
                         const filePath = `images/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`;
                         const storageRef = storage.ref(filePath);
-                        const uploadTask = storageRef.put(blob);
 
-                        uploadTask.on('state_changed',
-                            (snapshot) => {
+                        try {
+                            setUploadState('uploading');
+                            setUploadProgress(0);
+
+                            const uploadTask = storageRef.put(blob);
+
+                            uploadTask.on('state_changed', (snapshot) => {
                                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                                 setUploadProgress(Math.round(progress));
-                            },
-                            (error) => {
-                                console.error("Upload failed:", error);
-                                alert("Error al subir la imagen. Revisa las reglas de seguridad de Firebase Storage.");
-                                setUploadState('idle');
-                            },
-                            async () => {
-                                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                                onImageSelect(downloadURL);
-                                setUploadState('idle');
-                            }
-                        );
+                            });
+
+                            await uploadTask;
+
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            onImageSelect(downloadURL);
+
+                        } catch (error) {
+                            console.error("Upload failed:", error);
+                            alert("Error al subir la imagen. Revisa las reglas de seguridad de Firebase Storage o la configuración CORS del bucket.");
+                        } finally {
+                            setUploadState('idle');
+                            setUploadProgress(0);
+                        }
                     },
                     'image/webp',
                     0.9
