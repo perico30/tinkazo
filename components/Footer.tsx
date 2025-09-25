@@ -13,7 +13,7 @@ const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
           <p className="text-sm order-3 md:order-1">{config.copyright}</p>
-          <div className="flex space-x-6 order-1 md:order-2">
+          <div className="flex flex-wrap justify-center gap-6 order-1 md:order-2">
             {config.socialLinks.map((link) => (
               <a 
                 key={link.platform}
@@ -23,7 +23,11 @@ const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <SocialIcon platform={link.platform} className="h-8 w-8" />
+                {link.logoUrl ? (
+                  <img src={link.logoUrl} alt={link.platform} className="h-8 w-8 object-contain" />
+                ) : (
+                  <SocialIcon platform={link.platform} className="h-8 w-8" />
+                )}
               </a>
             ))}
           </div>

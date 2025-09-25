@@ -128,7 +128,7 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
     newLinks[index] = { ...newLinks[index], [key]: value };
     handleNestedChange('footer', 'socialLinks', newLinks);
   };
-  const addSocialLink = () => handleNestedChange('footer', 'socialLinks', [...config.footer.socialLinks, { platform: '', url: '' }]);
+  const addSocialLink = () => handleNestedChange('footer', 'socialLinks', [...config.footer.socialLinks, { platform: '', url: '', logoUrl: '' }]);
   const removeSocialLink = (index: number) => handleNestedChange('footer', 'socialLinks', config.footer.socialLinks.filter((_, i) => i !== index));
   const handleLegalChange = (index: 0 | 1, key: keyof LegalLink, value: string) => {
     const newLinks = [...config.footer.legalLinks] as [LegalLink, LegalLink];
@@ -337,10 +337,17 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
             <div>
                 <h4 className="font-semibold mb-2">Redes Sociales</h4>
                 {config.footer.socialLinks.map((link, i) => (
-                    <div key={i} className="flex items-center gap-2 mb-2 p-2 bg-gray-700/50 rounded">
-                        <input type="text" placeholder="Plataforma (ej. facebook)" value={link.platform} onChange={e => handleSocialChange(i, 'platform', e.target.value)} className="w-1/3 bg-gray-600 p-1 rounded" />
-                        <input type="text" placeholder="URL" value={link.url} onChange={e => handleSocialChange(i, 'url', e.target.value)} className="w-2/3 bg-gray-600 p-1 rounded" />
-                        <button onClick={() => removeSocialLink(i)} className="text-red-400 p-1"><TrashIcon className="h-5 w-5"/></button>
+                    <div key={i} className="bg-gray-700/50 p-4 rounded-lg mb-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <input type="text" placeholder="Plataforma (ej. facebook)" value={link.platform} onChange={e => handleSocialChange(i, 'platform', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
+                            <input type="text" placeholder="URL" value={link.url} onChange={e => handleSocialChange(i, 'url', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
+                            <button onClick={() => removeSocialLink(i)} className="p-2 text-red-400 hover:text-red-300 rounded-full hover:bg-red-500/20"><TrashIcon className="h-5 w-5"/></button>
+                        </div>
+                        <ImageUpload
+                            label="Logo de Red Social (Opcional)"
+                            imageUrl={link.logoUrl || ''}
+                            onImageSelect={url => handleSocialChange(i, 'logoUrl', url)}
+                        />
                     </div>
                 ))}
                 <button onClick={addSocialLink} className="text-cyan-400 mt-2">Añadir Red Social</button>

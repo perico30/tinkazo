@@ -53,6 +53,7 @@ export type SocialPlatform = 'facebook' | 'twitter' | 'instagram' | 'youtube' | 
 export interface SocialLink {
   platform: SocialPlatform | string;
   url: string;
+  logoUrl?: string;
 }
 
 export interface LegalLink {
