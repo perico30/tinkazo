@@ -200,9 +200,28 @@ const App: React.FC = () => {
       const unsubscribe = configDocRef.current.onSnapshot((docSnap) => {
           if (docSnap.exists) {
               const loadedConfig = docSnap.data() as AppConfig;
-              // Sanitize and merge with defaults to avoid errors if some fields are missing
-              const sanitizedConfig = JSON.parse(JSON.stringify(loadedConfig));
-              setAppConfig({ ...initialAppConfig, ...sanitizedConfig });
+              // Perform an intelligent merge to handle new sections added in code updates.
+              const finalConfig = { ...initialAppConfig, ...loadedConfig };
+
+              // Ensure the sectionsOrder from the loaded config contains all default sections,
+              // preventing new sections from being hidden on existing installations.
+              const defaultSections = new Set(initialAppConfig.sectionsOrder);
+              if (finalConfig.sectionsOrder) {
+                  const loadedSections = new Set(finalConfig.sectionsOrder);
+                  for (const section of defaultSections) {
+                      if (!loadedSections.has(section)) {
+                          // Add new sections to the end if they don't exist.
+                          finalConfig.sectionsOrder.push(section);
+                      }
+                  }
+                  // Also, remove any sections that are no longer in the default config to keep it clean.
+                  finalConfig.sectionsOrder = finalConfig.sectionsOrder.filter(section => defaultSections.has(section));
+              } else {
+                  // If the loaded config has no sectionsOrder array, use the default one.
+                  finalConfig.sectionsOrder = initialAppConfig.sectionsOrder;
+              }
+              
+              setAppConfig(finalConfig);
           } else {
               // Config doesn't exist, create it with initial values
               console.log("No config found, creating one.");
