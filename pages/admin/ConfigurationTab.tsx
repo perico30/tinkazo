@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import type { AppConfig, SocialLink, LegalLink, CarouselImage, JackpotConfig } from '../../types';
+import type { AppConfig, SocialLink, LegalLink, CarouselImage, JackpotConfig, VideoTutorial } from '../../types';
 import ImageUpload from '../../components/admin/ImageUpload';
 import PlusIcon from '../../components/icons/PlusIcon';
 import TrashIcon from '../../components/icons/TrashIcon';
@@ -136,10 +136,19 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
     handleNestedChange('footer', 'legalLinks', newLinks);
   };
 
+    const handleVideoChange = (index: number, key: keyof VideoTutorial, value: string) => {
+    const newVideos = [...config.videoTutorials];
+    newVideos[index] = { ...newVideos[index], [key]: value };
+    handleValueChange('videoTutorials', newVideos);
+  };
+  const addVideoTutorial = () => handleValueChange('videoTutorials', [...config.videoTutorials, { id: new Date().toISOString(), title: '', videoUrl: '' }]);
+  const removeVideoTutorial = (id: string) => handleValueChange('videoTutorials', config.videoTutorials.filter(v => v.id !== id));
+
   const sectionNames: { [key in AppConfig['sectionsOrder'][0]]: string } = {
     jackpots: 'Pozos Acumulados',
     carousel: 'Carrusel de Imágenes',
     jornadas: 'Jornadas Deportivas',
+    tutorials: 'Videos Tutoriales',
   };
 
 
@@ -328,6 +337,51 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
             </div>
         </div>
       </details>
+
+        {/* Videos Tutoriales */}
+        <details className="bg-gray-800 p-4 rounded-lg">
+        <summary className="font-semibold text-lg cursor-pointer">Videos Tutoriales</summary>
+        <div className="mt-4 space-y-4">
+            <div>
+              <label className="block mb-1 font-medium">Título de la Sección</label>
+              <input
+                type="text"
+                value={config.tutorialsSectionTitle}
+                onChange={e => handleValueChange('tutorialsSectionTitle', e.target.value)}
+                className="w-full bg-gray-700 p-2 rounded"
+                placeholder="Ej. Aprende a Jugar"
+              />
+            </div>
+            <p className="text-sm text-gray-400">Añade URLs de videos (ej. YouTube) para mostrar tutoriales en la página de inicio.</p>
+            {config.videoTutorials.map((video, index) => (
+            <div key={video.id} className="bg-gray-700/50 p-4 rounded-lg flex items-start gap-4">
+                <div className="flex-grow space-y-2">
+                <input
+                    type="text"
+                    placeholder="Título del Video"
+                    value={video.title}
+                    onChange={e => handleVideoChange(index, 'title', e.target.value)}
+                    className="w-full bg-gray-600 p-2 rounded"
+                />
+                <input
+                    type="text"
+                    placeholder="URL del Video (ej. https://www.youtube.com/watch?v=...)"
+                    value={video.videoUrl}
+                    onChange={e => handleVideoChange(index, 'videoUrl', e.target.value)}
+                    className="w-full bg-gray-600 p-2 rounded"
+                />
+                </div>
+                <button onClick={() => removeVideoTutorial(video.id)} className="p-2 text-red-400 hover:text-red-300 rounded-full hover:bg-red-500/20 mt-2">
+                <TrashIcon className="h-5 w-5"/>
+                </button>
+            </div>
+            ))}
+            <button onClick={addVideoTutorial} className="text-cyan-400 mt-2 flex items-center gap-2">
+            <PlusIcon className="h-5 w-5" />
+            Añadir Video Tutorial
+            </button>
+        </div>
+        </details>
 
       {/* Pie de Página */}
       <details className="bg-gray-800 p-4 rounded-lg">

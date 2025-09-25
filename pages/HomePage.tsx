@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import type { AppConfig, JackpotConfig, CarouselImage, UserRole, LegalLink, Jornada, Team, RegisteredUser, Carton } from '../types';
+import type { AppConfig, JackpotConfig, CarouselImage, UserRole, LegalLink, Jornada, Team, RegisteredUser, Carton, VideoTutorial } from '../types';
 import SoccerIcon from '../components/icons/SoccerIcon';
 import StarIcon from '../components/icons/StarIcon';
+import PlayIcon from '../components/icons/PlayIcon';
 
 // --- Helper Functions ---
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -13,6 +14,41 @@ const hexToRgba = (hex: string, alpha: number): string => {
     const b = parseInt(hex.slice(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
+
+const getYouTubeEmbedUrl = (url: string): string | null => {
+    let videoId: string | null = null;
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') {
+            videoId = urlObj.pathname.slice(1);
+        } else if (urlObj.hostname.includes('youtube.com')) {
+            videoId = urlObj.searchParams.get('v');
+        }
+    } catch (error) {
+        console.error("Invalid video URL:", url, error);
+        return null;
+    }
+    
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0` : null;
+};
+
+const getYouTubeThumbnailUrl = (url: string): string | null => {
+    let videoId: string | null = null;
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') {
+            videoId = urlObj.pathname.slice(1);
+        } else if (urlObj.hostname.includes('youtube.com')) {
+            videoId = urlObj.searchParams.get('v');
+        }
+    } catch (error) {
+        // Not a valid URL, so no thumbnail can be extracted.
+        return null;
+    }
+
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+};
+
 
 interface HomePageProps {
   appConfig: AppConfig;
@@ -53,6 +89,33 @@ const WelcomePopup: React.FC<{ config: AppConfig['welcomePopup']; onClose: () =>
     </div>
   );
 };
+
+// --- Video Modal Component ---
+const VideoModal: React.FC<{ videoUrl: string; onClose: () => void; }> = ({ videoUrl, onClose }) => {
+    const embedUrl = getYouTubeEmbedUrl(videoUrl);
+
+    if (!embedUrl) {
+        onClose();
+        return null;
+    }
+    
+    return (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="relative w-full max-w-4xl aspect-video" onClick={(e) => e.stopPropagation()}>
+                <iframe
+                    className="w-full h-full rounded-lg shadow-2xl"
+                    src={embedUrl}
+                    title="Video Player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                ></iframe>
+                <button onClick={onClose} className="absolute -top-10 right-0 bg-gray-900/50 text-white rounded-full p-2 text-2xl leading-none hover:bg-gray-700">&times;</button>
+            </div>
+        </div>
+    );
+};
+
 
 // --- Componentes de sección (Ahora dinámicos) ---
 const WelcomeMessage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
@@ -250,6 +313,50 @@ const JornadasSection: React.FC<{
   );
 };
 
+const TutorialsSection: React.FC<{ videos: VideoTutorial[]; title: string; }> = ({ videos, title }) => {
+    const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+
+    if (!videos || videos.length === 0) {
+        return null; // Don't render the section if there are no videos
+    }
+
+    return (
+        <>
+            {selectedVideoUrl && <VideoModal videoUrl={selectedVideoUrl} onClose={() => setSelectedVideoUrl(null)} />}
+            <section>
+                <h2 className="text-4xl font-bold mb-8 text-center gradient-text">{title}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                    {videos.map(video => {
+                        const thumbnailUrl = getYouTubeThumbnailUrl(video.videoUrl);
+                        return (
+                            <div 
+                                key={video.id}
+                                className="relative group cursor-pointer aspect-video bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105"
+                                onClick={() => setSelectedVideoUrl(video.videoUrl)}
+                                title={`Ver: ${video.title}`}
+                            >
+                                {thumbnailUrl ? (
+                                    <img src={thumbnailUrl} alt={video.title} className="w-full h-full object-cover"/>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <SoccerIcon className="w-16 h-16 text-gray-600" />
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                                    <PlayIcon className="h-16 w-16 text-white/80 drop-shadow-lg" />
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                                    <h3 className="font-bold text-white truncate">{video.title}</h3>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+        </>
+    );
+};
+
 
 const HomePage: React.FC<HomePageProps> = (props) => {
   const { appConfig, userRole, currentUser, userCartonCount, onLoginClick, onRegisterClick, onHomeClick, onAdminClick, onSellerPanelClick, onClientPanelClick, onLogoutClick, onLegalClick, onPlayJornada } = props;
@@ -277,6 +384,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
                 onPlayJornada={onPlayJornada}
                 gorditoJornadaId={appConfig.gorditoJornadaId}
               />,
+    tutorials: <TutorialsSection videos={appConfig.videoTutorials} title={appConfig.tutorialsSectionTitle} />,
   };
   
   return (

@@ -159,6 +159,12 @@ export interface RechargeRequest {
   processedBy?: string; // ID of seller/admin who processed
 }
 
+export interface VideoTutorial {
+  id: string;
+  title: string;
+  videoUrl: string; // Expecting a YouTube/Vimeo URL
+}
+
 
 export interface AppConfig {
   appName: string;
@@ -171,7 +177,9 @@ export interface AppConfig {
   carouselImages: CarouselImage[];
   recharge: RechargeConfig;
   adminWhatsappNumber: string;
-  sectionsOrder: ('jackpots' | 'carousel' | 'jornadas')[];
+  sectionsOrder: ('jackpots' | 'carousel' | 'jornadas' | 'tutorials')[];
+  videoTutorials: VideoTutorial[];
+  tutorialsSectionTitle: string;
   teams: Team[];
   jornadas: Jornada[];
   gorditoJornadaId?: string | null;
