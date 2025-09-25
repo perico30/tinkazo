@@ -8,6 +8,17 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
+  const formatUrl = (url: string): string => {
+    if (!url || url.trim() === '#') return '#';
+    const trimmedUrl = url.trim();
+    // If it already has a protocol, or is an internal/anchor link, leave it as is.
+    if (/^(https?:\/\/|mailto:|tel:|\/|#)/.test(trimmedUrl)) {
+      return trimmedUrl;
+    }
+    // Otherwise, assume it's an external link and prepend https://
+    return `https://${trimmedUrl}`;
+  };
+
   return (
     <footer className="bg-slate-950/30 text-gray-400 py-8 px-4 sm:px-6 lg:px-8 mt-16 border-t border-slate-800">
       <div className="container mx-auto">
@@ -17,7 +28,7 @@ const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
             {config.socialLinks.map((link) => (
               <a 
                 key={link.platform}
-                href={link.url} 
+                href={formatUrl(link.url)} 
                 aria-label={link.platform} 
                 className="hover:opacity-80 transition-transform duration-200 hover:scale-110"
                 target="_blank"

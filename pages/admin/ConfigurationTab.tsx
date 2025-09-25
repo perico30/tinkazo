@@ -339,8 +339,8 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
                 {config.footer.socialLinks.map((link, i) => (
                     <div key={i} className="bg-gray-700/50 p-4 rounded-lg mb-4 space-y-3">
                         <div className="flex items-center gap-2">
-                            <input type="text" placeholder="Plataforma (ej. facebook)" value={link.platform} onChange={e => handleSocialChange(i, 'platform', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
-                            <input type="text" placeholder="URL" value={link.url} onChange={e => handleSocialChange(i, 'url', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
+                            <input type="text" placeholder="Plataforma (ej. WhatsApp)" value={link.platform} onChange={e => handleSocialChange(i, 'platform', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
+                            <input type="text" placeholder="https://ejemplo.com" value={link.url} onChange={e => handleSocialChange(i, 'url', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
                             <button onClick={() => removeSocialLink(i)} className="p-2 text-red-400 hover:text-red-300 rounded-full hover:bg-red-500/20"><TrashIcon className="h-5 w-5"/></button>
                         </div>
                         <ImageUpload
