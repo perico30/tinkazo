@@ -1,0 +1,5 @@
+{
+  "name": "TINKAZO",
+  "description": "A sports betting pool application with roles for Super Admin, Seller, and User. This is the initial user registration and login interface.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,276 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import type { Jornada, Team, RegisteredUser, Prediction } from '../types';
+import XIcon from '../components/icons/XIcon';
+import PurchaseConfirmationModal from '../components/PurchaseConfirmationModal';
+
+interface PurchaseCartonPageProps {
+    jornada: Jornada;
+    teams: Team[];
+    currentUser: RegisteredUser;
+    onPurchase: (jornadaId: string, predictions: { [matchId: string]: Prediction }, price: number, botinPrediction: { localScore: number; visitorScore: number; } | null) => void;
+    onExit: () => void;
+}
+
+const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams, currentUser, onPurchase, onExit }) => {
+    const [predictions, setPredictions] = useState<{ [matchId: string]: Prediction }>({});
+    const [playBotin, setPlayBotin] = useState(false);
+    const [botinPrediction, setBotinPrediction] = useState({ localScore: '', visitorScore: '' });
+    const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
+
+    const getTeam = (teamId: string) => teams.find(t => t.id === teamId);
+    
+    const sortedMatches = useMemo(() => 
+        [...jornada.matches].sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()),
+    [jornada.matches]);
+
+    const botinMatch = useMemo(() => 
+        jornada.botinMatchId ? jornada.matches.find(m => m.id === jornada.botinMatchId) : null
+    , [jornada.botinMatchId, jornada.matches]);
+
+    const handlePredictionChange = (matchId: string, prediction: Prediction) => {
+        setPredictions(prev => ({
+            ...prev,
+            [matchId]: prediction,
+        }));
+    };
+    
+    useEffect(() => {
+        if (playBotin && botinMatch) {
+            const local = parseInt(botinPrediction.localScore, 10);
+            const visitor = parseInt(botinPrediction.visitorScore, 10);
+
+            if (!isNaN(local) && !isNaN(visitor)) {
+                let result: Prediction;
+                if (local > visitor) {
+                    result = '1';
+                } else if (local < visitor) {
+                    result = '2';
+                } else {
+                    result = 'X';
+                }
+                // Automatically set the prediction for the botin match
+                if (predictions[botinMatch.id] !== result) {
+                    handlePredictionChange(botinMatch.id, result);
+                }
+            } else {
+                // If scores are cleared, remove the automatic prediction
+                if (predictions[botinMatch.id]) {
+                    setPredictions(prev => {
+                        const newPreds = { ...prev };
+                        delete newPreds[botinMatch.id];
+                        return newPreds;
+                    });
+                }
+            }
+        }
+    }, [playBotin, botinPrediction, botinMatch]);
+
+
+    const allPredictionsMade = useMemo(() => {
+        return jornada.matches.length > 0 && jornada.matches.every(match => predictions[match.id]);
+    }, [jornada.matches, predictions]);
+
+    const handleAttemptPurchase = () => {
+        if (!allPredictionsMade) {
+            alert('Debes realizar un pronóstico para todos los partidos.');
+            return;
+        }
+        setIsConfirmationModalVisible(true);
+    };
+    
+    const handleConfirmPurchase = () => {
+        const finalBotinPrediction = playBotin && botinMatch && botinPrediction.localScore !== '' && botinPrediction.visitorScore !== ''
+            ? {
+                localScore: parseInt(botinPrediction.localScore, 10),
+                visitorScore: parseInt(botinPrediction.visitorScore, 10),
+              }
+            : null;
+        onPurchase(jornada.id, predictions, jornada.cartonPrice, finalBotinPrediction);
+        setIsConfirmationModalVisible(false);
+    };
+
+
+    const getPredictionButtonClass = (matchId: string, prediction: Prediction) => {
+        const base = 'w-12 h-12 md:w-10 md:h-10 flex items-center justify-center font-bold text-xl md:text-lg rounded-md transition-all';
+        const isSelected = predictions[matchId] === prediction;
+
+        if (isSelected) {
+            switch(prediction) {
+                case '1': return `${base} bg-green-500 text-white ring-2 ring-white`;
+                case 'X': return `${base} bg-yellow-500 text-gray-900 ring-2 ring-white`;
+                case '2': return `${base} bg-red-500 text-white ring-2 ring-white`;
+            }
+        }
+        return `${base} bg-gray-600 hover:bg-gray-500`;
+    };
+
+    return (
+        <>
+            <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h1 className="text-3xl font-bold text-cyan-400">{jornada.name}</h1>
+                            <p className="text-gray-400">Realiza tus pronósticos</p>
+                        </div>
+                        <button onClick={onExit} className="text-gray-400 hover:text-white">&times; Salir</button>
+                    </div>
+                    
+                    {/* Tarjetas de Premios Rediseñadas */}
+                    <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Box 1: Premio Mayor */}
+                        <div className="bg-gradient-to-br from-cyan-900/60 to-blue-900/40 border border-cyan-500/40 rounded-xl p-5 flex flex-col items-center justify-center shadow-lg relative overflow-hidden text-center">
+                             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-cyan-500/20 blur-2xl rounded-full"></div>
+                             <p className="relative z-10 text-cyan-300 font-bold uppercase tracking-widest text-xs mb-2">Premio Mayor</p>
+                             <p className="relative z-10 text-3xl sm:text-4xl font-black text-white drop-shadow-md mb-2">{jornada.firstPrize}</p>
+                             <p className="relative z-10 text-cyan-200/80 font-medium text-sm">a todos los aciertos</p>
+                        </div>
+                        
+                        {/* Box 2: Premio Consuelo */}
+                        <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/40 border border-indigo-500/40 rounded-xl p-5 flex flex-col items-center justify-center shadow-lg relative overflow-hidden text-center">
+                             <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-indigo-500/20 blur-2xl rounded-full"></div>
+                             <p className="relative z-10 text-indigo-300 font-bold uppercase tracking-widest text-xs mb-2">Premio Consuelo</p>
+                             <p className="relative z-10 text-2xl sm:text-3xl font-bold text-white drop-shadow-md mb-2">{jornada.secondPrize}</p>
+                             <p className="relative z-10 text-indigo-200/80 font-medium text-sm">- 1 acierto</p>
+                        </div>
+                    </div>
+                    
+                    {botinMatch && (
+                        <div className="mb-6 bg-purple-900/50 border border-purple-600 rounded-lg shadow-lg p-6">
+                            <h3 className="text-2xl font-bold text-center text-purple-300 mb-4">🌟 ¡Partido del Botín! 🌟</h3>
+                            <p className="text-center text-gray-300 mb-4">
+                                Acierta el resultado exacto de este partido para ganar un premio especial.
+                                ¡No tiene costo extra!
+                            </p>
+                            <div className="bg-gray-700/50 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between text-center">
+                                <div className="flex items-center gap-2">
+                                    {getTeam(botinMatch.localTeamId) && <img src={getTeam(botinMatch.localTeamId)?.logo} alt="" className="h-8 w-8 object-contain" />}
+                                    <span className="font-semibold">{getTeam(botinMatch.localTeamId)?.name}</span>
+                                </div>
+                                <span className="text-gray-400 font-bold my-2 sm:my-0">VS</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold">{getTeam(botinMatch.visitorTeamId)?.name}</span>
+                                    {getTeam(botinMatch.visitorTeamId) && <img src={getTeam(botinMatch.visitorTeamId)?.logo} alt="" className="h-8 w-8 object-contain" />}
+                                </div>
+                            </div>
+                            <div className="mt-4 flex flex-col items-center">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <input
+                                        id="playBotin"
+                                        type="checkbox"
+                                        checked={playBotin}
+                                        onChange={e => setPlayBotin(e.target.checked)}
+                                        className="h-5 w-5 rounded text-purple-500 focus:ring-purple-500"
+                                    />
+                                    <label htmlFor="playBotin" className="font-semibold text-white">¡Quiero participar por el Botín!</label>
+                                </div>
+                                {playBotin && (
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={botinPrediction.localScore}
+                                            onChange={e => setBotinPrediction(p => ({...p, localScore: e.target.value}))}
+                                            className="w-20 text-center bg-gray-700 p-2 rounded text-xl font-bold"
+                                            placeholder="L"
+                                        />
+                                        <span className="text-xl font-bold text-gray-400">-</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={botinPrediction.visitorScore}
+                                            onChange={e => setBotinPrediction(p => ({...p, visitorScore: e.target.value}))}
+                                            className="w-20 text-center bg-gray-700 p-2 rounded text-xl font-bold"
+                                            placeholder="V"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="bg-gray-800 rounded-lg shadow-lg p-6">
+                        <div className="space-y-4">
+                            {sortedMatches.map(match => {
+                                const localTeam = getTeam(match.localTeamId);
+                                const visitorTeam = getTeam(match.visitorTeamId);
+                                const isBotinMatchAndPlaying = playBotin && botinMatch && match.id === botinMatch.id;
+                                
+                                return (
+                                    <div key={match.id} className="bg-gray-700/50 p-4 rounded-lg">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                                            {/* Teams */}
+                                            <div className="md:col-span-2 flex items-center justify-between text-center">
+                                                <div className="flex flex-col items-center gap-2 w-1/3">
+                                                    {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="h-10 w-10 object-contain" />}
+                                                    <span className="text-sm font-semibold">{localTeam?.name || 'N/A'}</span>
+                                                </div>
+                                                <div className="flex flex-col items-center justify-center">
+                                                    <span className="text-gray-400 font-bold">VS</span>
+                                                    <span className="text-[10px] text-gray-400 mt-1 whitespace-nowrap">
+                                                        {new Date(match.dateTime).toLocaleString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-col items-center gap-2 w-1/3">
+                                                    {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="h-10 w-10 object-contain" />}
+                                                    <span className="text-sm font-semibold">{visitorTeam?.name || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Predictions */}
+                                            <div className="md:col-span-1 flex justify-center md:justify-end items-center gap-4 md:gap-2 mt-2 md:mt-0">
+                                                {isBotinMatchAndPlaying ? (
+                                                    <div className="text-center">
+                                                        <p className="text-xs text-purple-300">Predicción Automática</p>
+                                                        <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-1`}>
+                                                            {predictions[match.id] === 'X' ? <XIcon className="w-5 h-5"/> : predictions[match.id]}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
+                                                        <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}><XIcon className="w-5 h-5"/></button>
+                                                        <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
+                                                    </>
+                                                )}
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="mt-6 bg-gray-800 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="text-center sm:text-left">
+                            <p className="text-lg">Costo del Cartón: <span className="font-bold text-cyan-400">Bs {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span></p>
+                            <p className="text-sm">Tu saldo actual: <span className="font-semibold">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</span></p>
+                        </div>
+                        <button 
+                            onClick={handleAttemptPurchase}
+                            disabled={!allPredictionsMade || (currentUser.balance || 0) < jornada.cartonPrice}
+                            className="w-full sm:w-auto text-white font-bold px-8 py-3 rounded-lg text-lg btn-gradient disabled:bg-none disabled:bg-gray-600 disabled:cursor-not-allowed disabled:text-gray-400 disabled:transform-none disabled:filter-none disabled:shadow-none"
+                        >
+                            { (currentUser.balance || 0) < jornada.cartonPrice ? 'Saldo Insuficiente' : 'Comprar Cartón' }
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <PurchaseConfirmationModal
+                isOpen={isConfirmationModalVisible}
+                onClose={() => setIsConfirmationModalVisible(false)}
+                onConfirm={handleConfirmPurchase}
+                jornada={jornada}
+                teams={teams}
+                currentUser={currentUser}
+                predictions={predictions}
+                botinPrediction={botinPrediction}
+                playBotin={playBotin}
+            />
+        </>
+    );
+};
+
+export default PurchaseCartonPage;
