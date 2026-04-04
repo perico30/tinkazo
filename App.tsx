@@ -693,6 +693,38 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         
         if (rpcError) throw rpcError;
 
+        // --- ACTUALIZACIÓN OPTIMISTA ---
+        const newBalance = (currentUser.balance || 0) - price;
+        const newTicketId = ticketId || `temp-ticket-${Date.now()}`;
+        
+        setCurrentUser(prev => prev ? { ...prev, balance: newBalance } : null);
+        
+        const newCarton = {
+             id: newTicketId,
+             userId: currentUser.id,
+             jornadaId: jornadaId,
+             predictions: predictions,
+             botinPrediction: botinPrediction,
+             purchaseDate: new Date().toISOString()
+        };
+        
+        const newTx = {
+            id: `temp-tx-${Date.now()}`,
+            userId: currentUser.id,
+            amount: -price,
+            type: 'ticket_purchase' as const,
+            description: 'Compra de cartón para la jornada',
+            createdAt: new Date().toISOString()
+        };
+
+        updateConfig({
+            ...appConfig,
+            users: appConfig.users.map(u => u.id === currentUser.id ? { ...u, balance: newBalance } : u),
+            cartones: [newCarton, ...appConfig.cartones],
+            transactions: [newTx, ...appConfig.transactions]
+        });
+        // --------------------------------
+
         showNotification('¡Cartón comprado con éxito!');
         navigateToHome();
     } catch (error: any) {
