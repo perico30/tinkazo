@@ -45,7 +45,7 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                         if (!resultsProcessed && !finalResult) {
                             const localTeam = teams.find(t => t.id === match.localTeamId);
                             const visitorTeam = teams.find(t => t.id === match.visitorTeamId);
-                            const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name));
+                            const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name, e.startDate, match.dateTime));
                             if (liveMatch && (liveMatch.status === 'FT' || liveMatch.status === 'AET' || liveMatch.status === 'AP')) {
                                 if (liveMatch.score1! > liveMatch.score2!) finalResult = '1';
                                 else if (liveMatch.score1! < liveMatch.score2!) finalResult = '2';

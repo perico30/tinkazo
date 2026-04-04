@@ -18,10 +18,19 @@ export const normalizeTeamName = (s: string) => s.toLowerCase().normalize("NFD")
 
 export const isMatchMatch = (
     apiId: string, apiLocalNm: string, apiVisitorNm: string, 
-    myId: string, myLocalNm?: string, myVisitorNm?: string
+    myId: string, myLocalNm?: string, myVisitorNm?: string,
+    apiDate?: string, myDate?: string
 ) => {
     if (apiId === myId) return true;
     if (!myLocalNm || !myVisitorNm) return false;
+    
+    if (apiDate && myDate) {
+        const t1 = new Date(apiDate).getTime();
+        const t2 = new Date(myDate).getTime();
+        // Diferencia mayor a 48 horas significa que no es el mismo partido
+        if (Math.abs(t1 - t2) > 48 * 60 * 60 * 1000) return false;
+    }
+
     const aLocal = normalizeTeamName(apiLocalNm);
     const aVisitor = normalizeTeamName(apiVisitorNm);
     const mLocal = normalizeTeamName(myLocalNm);

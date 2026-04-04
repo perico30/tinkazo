@@ -465,7 +465,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                                   .map(match => {
                                     const localTeam = getTeam(match.localTeamId);
                                     const visitorTeam = getTeam(match.visitorTeamId);
-                                    const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name));
+                                    const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name, e.startDate, match.dateTime));
                                     const isFinished = liveMatch && (liveMatch.status === 'FT' || liveMatch.status === 'AET' || liveMatch.status === 'AP');
                                     
                                     return (

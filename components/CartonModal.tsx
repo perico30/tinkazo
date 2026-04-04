@@ -160,7 +160,7 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
                         let liveMatchInfo = null;
 
                         if (!jornada.resultsProcessed && !finalResult) {
-                             const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name));
+                             const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name, e.startDate, match.dateTime));
                              if (liveMatch && (liveMatch.status === 'FT' || liveMatch.status === 'AET' || liveMatch.status === 'AP')) {
                                  liveMatchInfo = liveMatch;
                                  if (liveMatch.score1! > liveMatch.score2!) finalResult = '1';
