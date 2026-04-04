@@ -35,6 +35,8 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                 let liveHits = 0;
                 let earlyLost = false;
                 
+                let misses = 0;
+                
                 // Calculate live hits and early lost
                 if (jornada) {
                     jornada.matches.forEach(match => {
@@ -55,10 +57,15 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                             if (carton.predictions[match.id] === finalResult) {
                                 liveHits++;
                             } else {
-                                earlyLost = true;
+                                misses++;
                             }
                         }
                     });
+
+                    const maxAllowedMisses = parseFloat(jornada.secondPrize || '0') > 0 ? 1 : 0;
+                    if (misses > maxAllowedMisses) {
+                        earlyLost = true;
+                    }
                 }
 
                 if (resultsProcessed || earlyLost) {

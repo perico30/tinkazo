@@ -87,6 +87,7 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
         return <SellerTicketsTab
             cartones={config.cartones.filter(c => c.userId === currentUser.id)}
             jornadas={config.jornadas}
+            teams={config.teams}
             onViewCarton={handleViewCarton}
         />;
       case 'client-recharges':
@@ -129,93 +130,54 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
               onSave={onUpdateCarton}
               isReadOnly={viewingCarton.userId !== currentUser.id}
           />
-      )}
-      <div className="relative flex h-screen bg-gray-900 text-white">
-        {/* Overlay for mobile */}
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/60 z-20 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-            aria-hidden="true"
-          ></div>
-        )}
-
-        {/* Sidebar */}
-        <aside className={`fixed inset-y-0 left-0 z-30 w-64 sidebar-bg p-4 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="flex justify-between items-start mb-10">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-cyan-400">Panel Vendedor</h1>
-              <p className="text-sm text-gray-400">{currentUser.username}</p>
-            </div>
-            <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 text-gray-400 hover:text-white" aria-label="Cerrar menú">
-                <CloseIcon className="h-6 w-6"/>
-            </button>
-          </div>
-          <nav className="flex-grow">
-            <ul>
-              {tabs.map(tab => (
-                <li key={tab.id} className="mt-2">
-                  <button
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg text-sm ${
-                      activeTab === tab.id
-                        ? 'active-tab-gradient'
-                        : 'inactive-tab'
-                    }`}
-                  >
-                    <tab.icon className="h-5 w-5" />
-                    {tab.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="space-y-2">
-            <button
-              onClick={onExit}
-              className="w-full text-left px-4 py-2 rounded-lg transition-colors hover:bg-gray-700"
-              >
-                Ver Página
-            </button>
-            <button
-              onClick={onLogout}
-              className="w-full flex items-center gap-2 text-left px-4 py-2 rounded-lg transition-colors hover:bg-red-500/20 text-red-400"
-              >
-              <LogoutIcon className="h-5 w-5"/>
-              Cerrar Sesión
-            </button>
-          </div>
-        </aside>
-
+      )}      <div className="relative flex flex-col h-full bg-gray-900 text-white overflow-hidden">
         {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden">
-             <header className="bg-gray-800 shadow-md p-4 flex items-center gap-4 lg:hidden">
-              <button onClick={() => setIsSidebarOpen(true)} className="text-gray-300 hover:text-white" aria-label="Abrir menú">
-                  <MenuIcon className="h-6 w-6" />
+        <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
+             <header className="bg-gray-800/80 backdrop-blur-md sticky top-0 z-10 p-4 border-b border-gray-800 flex items-center justify-between gap-4">
+              <h2 className="text-lg font-bold text-cyan-400 capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-full active:scale-90 transition-transform bg-gray-800/80 text-gray-400 border border-gray-700"
+                >
+                <LogoutIcon className="h-4 w-4"/>
               </button>
-              <h2 className="text-xl font-semibold capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
             </header>
-          <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto">
+          <div className="p-4 space-y-4">
               {/* Header with metrics */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex gap-2">
                   <HeaderCard 
                       title="Mi Saldo" 
                       value={`Bs ${Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}`}
                       onRechargeClick={() => setActiveTab('recharge')}
                   />
                   <HeaderCard 
-                      title="Ganancias (Comisiones)" 
+                      title="Comisiones" 
                       value={`Bs ${Math.floor(config.transactions.filter(t => t.userId === currentUser.id && t.type === 'commission').reduce((sum, tx) => sum + tx.amount, 0)).toLocaleString('es-ES')}`}
                   />
               </div>
 
               {/* Tab content */}
-              <div className="bg-gray-800/50 p-4 sm:p-6 rounded-lg">
-                  <h2 className="text-xl font-bold mb-4 capitalize hidden lg:block">{tabs.find(t => t.id === activeTab)?.label}</h2>
+              <div className="bg-transparent rounded-lg">
                   {renderTabContent()}
               </div>
           </div>
         </main>
+        
+        {/* Bottom Nav */}
+        <nav className="absolute bottom-0 w-full bg-[#020617]/90 backdrop-blur-xl border-t border-slate-800 pb-safe z-40">
+           <div className="flex justify-around items-center h-16 px-2 overflow-x-auto no-scrollbar">
+              {tabs.map(tab => (
+                 <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex flex-col items-center justify-center min-w-[60px] h-full space-y-1 active:scale-95 transition-transform ${activeTab === tab.id ? 'text-cyan-400' : 'text-slate-500'}`}
+                 >
+                    <tab.icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="text-[10px] font-medium leading-none truncate w-full text-center">{tab.label.split(' ')[0]}</span>
+                 </button>
+              ))}
+           </div>
+        </nav>
       </div>
     </>
   );

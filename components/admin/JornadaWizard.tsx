@@ -59,6 +59,8 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
     } else {
         data = await fetchLiveScoreEvents(startDate, endDate);
     }
+    // Filtrar para que solo aparezcan partidos que NO han empezado (NS = Not Started)
+    data = data.filter(match => match.status === 'NS');
     setExternalMatches(data);
     setLoading(false);
   };

@@ -205,7 +205,7 @@ const JornadasSection: React.FC<{
     gorditoJornadaId?: string | null;
     onPlayJornada: (jornada: Jornada) => void 
 }> = ({ jornadas, currentUser, onPlayJornada, gorditoJornadaId }) => {
-  const openJornadas = jornadas.filter(j => j.status === 'abierta');
+  const visibleJornadas = jornadas.filter(j => j.status !== 'cancelada');
   
   const isJornadaPlayable = (jornada: Jornada) => {
     // Filter out matches that don't have a valid date. This makes the check more robust
@@ -225,12 +225,12 @@ const JornadasSection: React.FC<{
   };
 
 
-  if (openJornadas.length === 0) {
+  if (visibleJornadas.length === 0) {
     return (
       <section>
         <h2 className="text-4xl font-bold mb-8 text-center">Jornadas Disponibles</h2>
         <div className="bg-gray-800 rounded-lg p-8 text-center">
-          <p className="text-gray-400">No hay jornadas abiertas en este momento. ¡Vuelve pronto!</p>
+          <p className="text-gray-400">No hay jornadas disponibles en este momento. ¡Vuelve pronto!</p>
         </div>
       </section>
     );
@@ -240,7 +240,7 @@ const JornadasSection: React.FC<{
     <section>
       <h2 className="text-4xl font-bold mb-8 text-center gradient-text">Jornadas Disponibles</h2>
       <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {openJornadas.map(jornada => {
+        {visibleJornadas.map(jornada => {
           const playable = isJornadaPlayable(jornada);
           const isGordito = jornada.id === gorditoJornadaId;
           const hasBotin = !!jornada.botinMatchId;
@@ -409,7 +409,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
         <div className="container mx-auto px-4 py-8">
           
           {(() => {
-              const activeJornada = appConfig.jornadas.find(j => j.id === appConfig.gorditoJornadaId && (j.status === 'abierta' || j.status === 'en_juego')) || appConfig.jornadas.find(j => j.status === 'abierta' || j.status === 'en_juego');
+              const activeJornada = appConfig.jornadas.find(j => j.id === appConfig.gorditoJornadaId && j.status !== 'cancelada') || appConfig.jornadas.find(j => j.status !== 'cancelada');
               
               if (activeJornada) {
                   return (

@@ -7,9 +7,11 @@ import SellerPage from './pages/SellerPage';
 import ClientPage from './pages/ClientPage';
 import PurchaseCartonPage from './pages/PurchaseCartonPage';
 import Notification from './components/Notification';
+import BottomSheet from './components/BottomSheet';
 import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails } from './types';
 import { useSupabaseData } from './hooks/useSupabaseData';
 import { supabase } from './supabaseClient';
+import TicketIcon from './components/icons/TicketIcon';
 
 // --- Componente de Modal Legal ---
 const LegalModal: React.FC<{ content: LegalLink; onClose: () => void }> = ({ content, onClose }) => (
@@ -966,27 +968,18 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     }
 
     try {
-        // Restar al vendedor
-        const newSellerBalance = (seller.balance || 0) - amount;
-        await supabase.from('users').update({ balance: newSellerBalance }).eq('id', sellerId);
-        await supabase.from('transactions').insert({
-            user_id: sellerId,
-            amount: -amount,
-            type: 'transfer_out',
-            description: `Transferencia enviada a ${client.username}`
+        const { error: rpcError } = await supabase.rpc('transfer_balance', {
+            p_seller_id: sellerId,
+            p_client_id: clientId,
+            p_amount: amount
         });
 
-        // Sumar al cliente
-        const newClientBalance = (client.balance || 0) + amount;
-        await supabase.from('users').update({ balance: newClientBalance }).eq('id', clientId);
-        await supabase.from('transactions').insert({
-            user_id: clientId,
-            amount: amount,
-            type: 'transfer_in',
-            description: `Transferencia recibida de ${seller.username}`
-        });
+        if (rpcError) throw rpcError;
 
         // Actualización optimista de estado para que se refleje de inmediato
+        const newSellerBalance = (seller.balance || 0) - amount;
+        const newClientBalance = (client.balance || 0) + amount;
+        
         if (currentUser?.id === sellerId) {
             setCurrentUser(prev => prev ? { ...prev, balance: newSellerBalance } : null);
         }
@@ -1047,45 +1040,69 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
           }
           return <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'purchaseCarton':
-        return jornadaToPlay && currentUser ? (
-            <PurchaseCartonPage
-                jornada={jornadaToPlay}
-                teams={appConfig.teams}
-                currentUser={currentUser}
-                onPurchase={handlePurchaseCarton}
-                onExit={navigateToHome}
-            />
-        ) : <HomePage
-            appConfig={appConfig} userRole={userRole} currentUser={currentUser} userCartonCount={userCartonCount} onLoginClick={navigateToLogin} onRegisterClick={navigateToRegister} onHomeClick={navigateToHome} onAdminClick={navigateToAdmin} onSellerPanelClick={navigateToSellerPanel} onClientPanelClick={navigateToClientPanel} onLogoutClick={handleLogout} onLegalClick={handleLegalClick} onPlayJornada={handlePlayJornada}
-          />;
       case 'home':
       default:
         return (
-          <HomePage
-            appConfig={appConfig}
-            userRole={userRole}
-            currentUser={currentUser}
-            userCartonCount={userCartonCount}
-            onLoginClick={navigateToLogin}
-            onRegisterClick={navigateToRegister}
-            onHomeClick={navigateToHome}
-            onAdminClick={navigateToAdmin}
-            onSellerPanelClick={navigateToSellerPanel}
-            onClientPanelClick={navigateToClientPanel}
-            onLogoutClick={handleLogout}
-            onLegalClick={handleLegalClick}
-            onPlayJornada={handlePlayJornada}
-          />
+          <>
+            <HomePage
+              appConfig={appConfig}
+              userRole={userRole}
+              currentUser={currentUser}
+              userCartonCount={userCartonCount}
+              onLoginClick={navigateToLogin}
+              onRegisterClick={navigateToRegister}
+              onHomeClick={navigateToHome}
+              onAdminClick={navigateToAdmin}
+              onSellerPanelClick={navigateToSellerPanel}
+              onClientPanelClick={navigateToClientPanel}
+              onLogoutClick={handleLogout}
+              onLegalClick={handleLegalClick}
+              onPlayJornada={handlePlayJornada}
+            />
+            <BottomSheet 
+               isOpen={currentView === 'purchaseCarton'} 
+               onClose={navigateToHome}
+            >
+               {jornadaToPlay && currentUser && (
+                  <PurchaseCartonPage
+                      jornada={jornadaToPlay}
+                      teams={appConfig.teams}
+                      currentUser={currentUser}
+                      onPurchase={handlePurchaseCarton}
+                      onExit={navigateToHome}
+                  />
+               )}
+            </BottomSheet>
+          </>
         );
     }
   };
 
   return (
-    <>
-      <div className="min-h-screen">{renderView()}</div>
-      {legalModalContent && <LegalModal content={legalModalContent} onClose={() => setLegalModalContent(null)} />}
-      {notification && <Notification message={notification} onClose={() => setNotification(null)} />}
-    </>
+    <div className="bg-[#020617] flex justify-center items-center fixed inset-0 w-full h-full overflow-hidden">
+      <main className="w-full h-[100dvh] relative overflow-hidden shadow-2xl flex flex-col body-bg-space">
+        <div className="flex-1 overflow-y-auto no-scrollbar relative">
+            {renderView()}
+        </div>
+        
+        {/* FAB Global */}
+        {currentView === 'home' && currentUser && (
+            <button 
+                onClick={() => navigateToClientPanel()} 
+                className="absolute bottom-24 right-4 md:right-10 md:bottom-10 w-14 h-14 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full shadow-[0_10px_20px_rgba(168,85,247,0.4)] flex justify-center items-center active:scale-90 hover:scale-105 transition-transform z-50">
+                <TicketIcon className="text-white h-7 w-7" />
+                {(appConfig.cartones.filter(c => c.userId === currentUser.id).length) > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border border-[#020617]">
+                        {appConfig.cartones.filter(c => c.userId === currentUser.id).length}
+                    </span>
+                )}
+            </button>
+        )}
+        
+        {legalModalContent && <LegalModal content={legalModalContent} onClose={() => setLegalModalContent(null)} />}
+        {notification && <Notification message={notification} onClose={() => setNotification(null)} />}
+      </main>
+    </div>
   );
 };
 

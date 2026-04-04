@@ -23,6 +23,19 @@ const SellerTransactionsTab: React.FC<SellerTransactionsTabProps> = ({ currentUs
         }
     };
 
+    const getTransactionLabel = (type: Transaction['type'] | string) => {
+        switch (type) {
+             case 'recharge': return 'Recarga de Cliente';
+             case 'transfer_in': return 'Transf. Recibida M.';
+             case 'transfer_out': return 'Transf. Enviada M.';
+             case 'withdrawal': return 'Retiro de Saldo';
+             case 'prize': return 'Premio de Cliente';
+             case 'ticket_purchase': return 'Cartón de Cliente';
+             case 'commission': return 'Tu Comisión';
+             default: return 'Desconocido';
+         }
+    };
+
     const getTransactionColor = (amount: number, type: Transaction['type']) => {
         // Amount is mostly negative for out, positive for in, but we handle colors by sign
         if (amount > 0) return 'text-green-400';
@@ -83,7 +96,7 @@ const SellerTransactionsTab: React.FC<SellerTransactionsTabProps> = ({ currentUs
                                 <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.dateStr)}</td>
                                 <td className="px-6 py-4 flex items-center gap-2">
                                     <span className="text-lg">{getTransactionIcon(item.type)}</span>
-                                    <span className="capitalize">{item.type.replace('_', ' ')}</span>
+                                    <span>{getTransactionLabel(item.type)}</span>
                                 </td>
                                 <td className="px-6 py-4">{item.description}</td>
                                 <td className="px-6 py-4 text-center">

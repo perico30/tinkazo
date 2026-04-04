@@ -22,7 +22,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
 // Preview Card Component
 const JornadaAdminPreviewCard: React.FC<{ jornada: Jornada }> = ({ jornada }) => {
     return (
-        <div className="jornada-card w-full max-w-[318px] mx-auto">
+        <div className="jornada-card w-full">
             {jornada.styling.backgroundImage && (
                 <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
             )}
@@ -387,13 +387,13 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                 />
             )}
 
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="font-semibold text-xl">Gestión de Jornadas</h2>
-                <div className="flex gap-2">
-                    <button onClick={() => setJornadaModal({ status: 'abierta' })} className="flex items-center gap-2 bg-gray-700 text-white font-bold px-3 py-2 rounded-lg hover:bg-gray-600 border border-gray-600">
+            <div className="flex flex-col gap-3 mb-6">
+                <h2 className="font-semibold text-xl text-center md:text-left">Gestión de Jornadas</h2>
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <button onClick={() => setJornadaModal({ status: 'abierta' })} className="flex justify-center items-center gap-2 bg-gray-700 text-white font-bold px-3 py-2 rounded-lg active:scale-95 border border-gray-600 w-full sm:w-auto">
                         Jornada Manual
                     </button>
-                    <button onClick={() => setShowWizard(true)} className="flex items-center gap-2 bg-cyan-500 text-gray-900 font-bold px-3 py-2 rounded-lg hover:bg-cyan-400">
+                    <button onClick={() => setShowWizard(true)} className="flex justify-center items-center gap-2 bg-cyan-500 text-gray-900 font-bold px-3 py-2 rounded-lg active:scale-95 w-full sm:w-auto">
                         <PlusIcon className="h-5 w-5" />
                         Crear con Oficiales
                     </button>
@@ -469,17 +469,21 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                                     const isFinished = liveMatch && (liveMatch.status === 'FT' || liveMatch.status === 'AET' || liveMatch.status === 'AP');
                                     
                                     return (
-                                        <div key={match.id} className="flex items-center justify-between bg-gray-700/80 p-2 rounded-md">
-                                            <div className="flex items-center gap-2 text-sm font-medium">
-                                                {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="w-5 h-5 object-contain"/>}
-                                                <span className="truncate max-w-[80px]">{localTeam?.name || 'N/A'}</span>
-                                                <span className="text-gray-400 text-xs">vs</span>
-                                                <span className="truncate max-w-[80px]">{visitorTeam?.name || 'N/A'}</span>
-                                                {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="w-5 h-5 object-contain"/>}
+                                        <div key={match.id} className="flex flex-col gap-2 bg-gray-700/80 p-3 rounded-md">
+                                            <div className="flex items-center justify-between text-sm font-medium">
+                                                <div className="flex items-center gap-2 w-[40%]">
+                                                    {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="w-5 h-5 object-contain"/>}
+                                                    <span className="truncate">{localTeam?.name || 'N/A'}</span>
+                                                </div>
+                                                <span className="text-gray-400 text-xs text-center w-[10%]">vs</span>
+                                                <div className="flex items-center gap-2 justify-end w-[40%]">
+                                                    <span className="truncate">{visitorTeam?.name || 'N/A'}</span>
+                                                    {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="w-5 h-5 object-contain"/>}
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs">
-                                                {isFinished && <span className="bg-red-600 text-white font-bold px-2 py-0.5 rounded text-[10px]">FINALIZADO [{liveMatch.score1} - {liveMatch.score2}]</span>}
-                                                <button onClick={() => handleDeleteMatch(jornada.id, match.id)} className="text-red-500 hover:text-red-400"><TrashIcon className="h-4 w-4"/></button>
+                                            <div className="flex items-center justify-between mt-1">
+                                                {isFinished ? <span className="bg-red-600 text-white font-bold px-2 py-0.5 rounded text-[10px]">FINALIZADO [{liveMatch.score1} - {liveMatch.score2}]</span> : <span></span>}
+                                                <button onClick={() => handleDeleteMatch(jornada.id, match.id)} className="text-red-500 hover:text-red-400 p-1 bg-gray-800 rounded-full"><TrashIcon className="h-4 w-4"/></button>
                                             </div>
                                         </div>
                                     )

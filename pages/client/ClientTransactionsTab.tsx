@@ -74,8 +74,8 @@ const ClientTransactionsTab: React.FC<ClientTransactionsTabProps> = ({ transacti
     const getTransactionLabel = (type: string) => {
         switch (type) {
              case 'recharge': return 'Recarga de Saldo';
-             case 'transfer_in': return 'Transferencia Recibida';
-             case 'transfer_out': return 'Transferencia Enviada';
+             case 'transfer_in': return 'Transf. Recibida (Manual)';
+             case 'transfer_out': return 'Transf. Enviada (Manual)';
              case 'withdrawal': return 'Retiro de Saldo';
              case 'prize': return 'Premio Ganado';
              case 'ticket_purchase': return 'Compra de Cartón';
