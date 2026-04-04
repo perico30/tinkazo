@@ -76,7 +76,7 @@ CREATE TABLE public.jornadas (
     first_prize_amount NUMERIC NOT NULL DEFAULT 0.00,
     second_prize_amount NUMERIC NOT NULL DEFAULT 0.00,
     carton_price NUMERIC NOT NULL DEFAULT 0.00,
-    botin_match_id UUID,
+    botin_match_id TEXT,
     botin_result TEXT, -- Ej: "2-1"
     flag_icon_url TEXT,
     styling JSONB,
@@ -86,7 +86,7 @@ CREATE TABLE public.jornadas (
 
 -- Partidos (Matches)
 CREATE TABLE public.matches (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
     jornada_id UUID NOT NULL REFERENCES public.jornadas(id) ON DELETE CASCADE,
     local_team_id TEXT NOT NULL,
     visitor_team_id TEXT NOT NULL,
