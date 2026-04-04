@@ -601,7 +601,8 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         updateConfig(processedConfig); // optimistic
         showNotification('¡Cambios guardados con éxito!');
     } catch (error: any) {
-        showNotification(error.message || 'Error guardando en Supabase');
+        console.error("FATAL SAVE ERROR:", error);
+        window.alert("ERROR CRITICO AL GUARDAR: " + (error.message || 'Error guardando en Supabase'));
     }
   }
   
