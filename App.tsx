@@ -984,13 +984,32 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
             setCurrentUser(prev => prev ? { ...prev, balance: newSellerBalance } : null);
         }
         
+        const newTxOut = {
+            id: `temp-${Date.now()}-out`,
+            userId: sellerId,
+            amount: -amount,
+            type: 'transfer_out' as const,
+            description: `Transferencia manual enviada a ${client.username}`,
+            createdAt: new Date().toISOString()
+        };
+        
+        const newTxIn = {
+            id: `temp-${Date.now()}-in`,
+            userId: clientId,
+            amount: amount,
+            type: 'transfer_in' as const,
+            description: `Transferencia manual recibida de ${seller.username}`,
+            createdAt: new Date().toISOString()
+        };
+
         updateConfig({
             ...appConfig,
             users: appConfig.users.map(u => {
                 if (u.id === sellerId) return { ...u, balance: newSellerBalance };
                 if (u.id === clientId) return { ...u, balance: newClientBalance };
                 return u;
-            })
+            }),
+            transactions: [newTxOut, newTxIn, ...appConfig.transactions]
         });
 
         showNotification(`Transferencia de Bs ${amount} a ${client.username} exitosa.`);

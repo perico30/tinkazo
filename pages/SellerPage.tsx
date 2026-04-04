@@ -135,12 +135,22 @@ const SellerPage: React.FC<SellerPageProps> = ({ currentUser, config, onUpdateUs
         <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
              <header className="bg-gray-800/80 backdrop-blur-md sticky top-0 z-10 p-4 border-b border-gray-800 flex items-center justify-between gap-4">
               <h2 className="text-lg font-bold text-cyan-400 capitalize">{tabs.find(t => t.id === activeTab)?.label}</h2>
-              <button
-                onClick={onLogout}
-                className="p-2 rounded-full active:scale-90 transition-transform bg-gray-800/80 text-gray-400 border border-gray-700"
-                >
-                <LogoutIcon className="h-4 w-4"/>
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={onExit}
+                  className="p-2 rounded-full active:scale-90 transition-transform bg-gray-800/80 text-cyan-400 border border-gray-700"
+                  aria-label="Pantalla de Inicio"
+                  >
+                  <HomeIcon className="h-4 w-4"/>
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="p-2 rounded-full active:scale-90 transition-transform bg-gray-800/80 text-gray-400 border border-gray-700"
+                  aria-label="Cerrar Sesión"
+                  >
+                  <LogoutIcon className="h-4 w-4"/>
+                </button>
+              </div>
             </header>
           <div className="p-4 space-y-4">
               {/* Header with metrics */}

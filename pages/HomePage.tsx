@@ -5,7 +5,6 @@ import type { AppConfig, JackpotConfig, CarouselImage, UserRole, LegalLink, Jorn
 import SoccerIcon from '../components/icons/SoccerIcon';
 import StarIcon from '../components/icons/StarIcon';
 import PlayIcon from '../components/icons/PlayIcon';
-import ActiveJornadaHero from '../components/ActiveJornadaHero';
 
 // --- Helper Functions ---
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -118,6 +117,49 @@ const VideoModal: React.FC<{ videoUrl: string; onClose: () => void; }> = ({ vide
 };
 
 
+// --- Componente de Contador (Nuevo) ---
+const CountdownTimer: React.FC<{ firstMatchDateStr: string }> = ({ firstMatchDateStr }) => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const targetDate = new Date(firstMatchDateStr);
+        // Jornada closes 10 min before first match starts
+        const closingTime = targetDate.getTime() - 10 * 60 * 1000;
+        
+        const updateTimer = () => {
+            const now = new Date().getTime();
+            const distance = closingTime - now;
+
+            if (distance <= 0) {
+                setTimeLeft('Cerrado');
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            if (days > 0) {
+                setTimeLeft(`${days}d ${hours}h`);
+            } else {
+                setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            }
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [firstMatchDateStr]);
+
+    return (
+        <div className="absolute top-2 right-2 z-[4] flex items-center gap-1 bg-black/60 text-white text-xs font-mono font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10">
+            ⏳ {timeLeft || '--:--:--'}
+        </div>
+    );
+};
+
+
 // --- Componentes de sección (Ahora dinámicos) ---
 const WelcomeMessage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
   <section className="text-center mb-16">
@@ -223,6 +265,14 @@ const JornadasSection: React.FC<{
     // Disable if less than 10 minutes (600,000 milliseconds) before the first match
     return (firstMatchDate.getTime() - now.getTime()) > 10 * 60 * 1000;
   };
+  
+  const getFirstMatchDateStr = (jornada: Jornada) => {
+     const scheduledMatches = jornada.matches
+      .filter(match => match.dateTime && !isNaN(new Date(match.dateTime).getTime()))
+      .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+      if (scheduledMatches.length === 0) return null;
+      return scheduledMatches[0].dateTime;
+  };
 
 
   if (visibleJornadas.length === 0) {
@@ -254,6 +304,10 @@ const JornadasSection: React.FC<{
                 className="jornada-card-overlay"
                 style={{ backgroundColor: hexToRgba(jornada.styling.backgroundColor, 0.7) }}
               ></div>
+              
+              {getFirstMatchDateStr(jornada) && playable && (
+                  <CountdownTimer firstMatchDateStr={getFirstMatchDateStr(jornada)!} />
+              )}
 
               {(isGordito || hasBotin) && (
                 <div className="absolute top-2 left-2 flex flex-col items-start gap-1 z-[4]">
@@ -408,21 +462,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
       <main className="flex-grow pt-24">
         <div className="container mx-auto px-4 py-8">
           
-          {(() => {
-              const activeJornada = appConfig.jornadas.find(j => j.id === appConfig.gorditoJornadaId && j.status !== 'cancelada') || appConfig.jornadas.find(j => j.status !== 'cancelada');
-              
-              if (activeJornada) {
-                  return (
-                      <ActiveJornadaHero 
-                          jornada={activeJornada} 
-                          botinAmount={appConfig.botinAmount}
-                          gorditoAmount={appConfig.gorditoJackpot.amount}
-                          onPlayClick={onPlayJornada}
-                      />
-                  );
-              }
-              return <WelcomeMessage title={appConfig.welcomeMessage.title} description={appConfig.welcomeMessage.description} />;
-          })()}
+          <WelcomeMessage title={appConfig.welcomeMessage.title} description={appConfig.welcomeMessage.description} />
           
           <div className="space-y-16">
             {appConfig.sectionsOrder.map((sectionKey) => {

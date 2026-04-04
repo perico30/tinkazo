@@ -7,9 +7,9 @@ import UsersTab from './admin/UsersTab';
 import WithdrawalsTab from './admin/WithdrawalsTab';
 import RechargesTab from './admin/RechargesTab';
 import SaveIcon from '../components/icons/SaveIcon';
+import HomeIcon from '../components/icons/HomeIcon';
 import LogoutIcon from '../components/icons/LogoutIcon';
 import GearIcon from '../components/icons/GearIcon';
-import HomeIcon from '../components/icons/HomeIcon';
 import UsersIcon from '../components/icons/UsersIcon';
 import CalendarIcon from '../components/icons/CalendarIcon';
 import UsersGroupIcon from '../components/icons/UsersGroupIcon';
@@ -184,7 +184,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
         <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
           <header className="bg-gray-800/80 backdrop-blur-md sticky top-0 z-10 shadow-md p-3 flex justify-between items-center gap-2 border-b border-gray-800">
              <div className="flex items-center gap-2 overflow-hidden">
-                <button onClick={onLogout} className="p-2 bg-gray-700/50 rounded-full flex-shrink-0 active:scale-90 transition-transform">
+                <button onClick={onExit} className="p-2 bg-gray-700/50 text-cyan-400 rounded-full flex-shrink-0 active:scale-90 transition-transform" aria-label="Pantalla de Inicio">
+                    <HomeIcon className="h-4 w-4"/>
+                </button>
+                <button onClick={onLogout} className="p-2 bg-gray-700/50 rounded-full flex-shrink-0 active:scale-90 transition-transform" aria-label="Cerrar Sesión">
                     <LogoutIcon className="h-4 w-4 text-gray-400"/>
                 </button>
                 <h2 className="text-lg font-bold text-cyan-400 truncate">{tabs.find(t => t.id === activeTab)?.label}</h2>
