@@ -551,8 +551,12 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                 styling: j.styling,
                 results_processed: j.resultsProcessed
             });
-            if (jError) console.error("Error upserting jornada:", jError);
+            if (jError) {
+                console.error("Error upserting jornada:", jError);
+                throw new Error(`Error guardando jornada ${j.name}: ${jError.message}`);
+            }
             
+            let hasMatchErrors = false;
             for (const m of j.matches) {
                  const { error: mError } = await supabase.from('matches').upsert({
                      id: m.id,
@@ -562,23 +566,29 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                      date_time: m.dateTime,
                      result: m.result || null
                  });
-                 if (mError) console.error("Error upserting match:", mError);
+                 if (mError) {
+                     console.error("Error upserting match:", mError);
+                     hasMatchErrors = true;
+                     throw new Error(`Error guardando un partido de ${j.name}: ${mError.message}`);
+                 }
             }
             
-            // Handle Match Deletions
-            const { data: existingMatches } = await supabase.from('matches').select('id').eq('jornada_id', j.id);
-            if (existingMatches) {
-                 const currentMatchIds = j.matches.map(m => m.id);
-                 const matchesToDelete = existingMatches.filter(em => !currentMatchIds.includes(em.id));
-                 for (const dm of matchesToDelete) {
-                     await supabase.from('matches').delete().eq('id', dm.id);
-                 }
+            // Handle Match Deletions ONLY if inserts succeeded to prevent accidental wiping
+            if (!hasMatchErrors) {
+                const { data: existingMatches } = await supabase.from('matches').select('id').eq('jornada_id', j.id);
+                if (existingMatches) {
+                     const currentMatchIds = j.matches.map(m => m.id);
+                     const matchesToDelete = existingMatches.filter(em => !currentMatchIds.includes(em.id));
+                     for (const dm of matchesToDelete) {
+                         await supabase.from('matches').delete().eq('id', dm.id);
+                     }
+                }
             }
         }
         
         // Handle Jornada Deletions
-        const { data: existingJornadas } = await supabase.from('jornadas').select('id');
-        if (existingJornadas) {
+        const { data: existingJornadas, error: fetchEJError } = await supabase.from('jornadas').select('id');
+        if (existingJornadas && !fetchEJError) {
             const currentIds = processedConfig.jornadas.map(j => j.id);
             const toDelete = existingJornadas.filter(ej => !currentIds.includes(ej.id));
             if (toDelete.length > 0) {
