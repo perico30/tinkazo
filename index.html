@@ -258,7 +258,14 @@
       .jornada-card-header .info {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          padding: 4px 12px;
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       }
       .jornada-card-body {
           flex-grow: 1;
@@ -276,20 +283,37 @@
       .jornada-card-footer {
           display: flex;
           justify-content: space-between;
-          align-items: flex-end;
-          gap: 12px;
+          align-items: center;
+          gap: 8px;
+          margin-top: auto;
       }
       .jornada-prize {
           text-align: center;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 9999px; /* pill shape / cilindro */
+          padding: 4px 14px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
       }
       .jornada-prize-label {
-          font-size: 0.65rem; /* ~10px */
-          font-weight: 500;
-          opacity: 0.8;
+          font-size: 0.6rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 2px;
       }
       .jornada-prize-amount {
-          font-size: 0.875rem; /* 14px */
-          font-weight: 700;
+          font-size: 0.95rem; /* 15.2px */
+          font-weight: 900;
+          color: #fbbf24; /* nice golden/amber color */
+          text-shadow: 0 1px 2px rgba(0,0,0,0.8);
       }
       .jornada-play-button {
           background-color: white;
