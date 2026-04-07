@@ -114,7 +114,7 @@ CREATE TABLE public.transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES public.users(id),
     amount NUMERIC NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('recharge', 'withdrawal', 'prize', 'ticket_purchase', 'commission')),
+    type TEXT NOT NULL CHECK (type IN ('recharge', 'withdrawal', 'prize', 'ticket_purchase', 'commission', 'welcome_bonus', 'transfer_out')),
     reference_id UUID,
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

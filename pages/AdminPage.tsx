@@ -30,13 +30,14 @@ interface AdminPageProps {
   onExit: () => void;
   onProcessWithdrawal: (requestId: string, action: 'approve' | 'reject') => void;
   onProcessSellerRecharge: (requestId: string, action: 'approve' | 'reject') => void;
+  dataFetchError?: boolean;
 }
 
 type AdminTab = 'dashboard' | 'config' | 'jornadas' | 'users' | 'financial' | 'cartones';
 
 type SaveState = 'idle' | 'saving' | 'success';
 
-const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, onExit, onProcessWithdrawal, onProcessSellerRecharge }) => {
+const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, onExit, onProcessWithdrawal, onProcessSellerRecharge, dataFetchError = false }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [draftConfig, setDraftConfig] = useState<AppConfig>(initialConfig);
   const [viewingClientTickets, setViewingClientTickets] = useState<RegisteredUser | null>(null);
@@ -203,10 +204,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
                 {isConfigTabActive && (
                     <button 
                       onClick={handleSave}
-                      disabled={saveState !== 'idle'}
+                      disabled={saveState !== 'idle' || dataFetchError}
                       className={`flex shrink-0 items-center justify-center gap-2 text-white font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform text-xs sm:text-sm
                         ${saveState === 'success' ? 'bg-green-600' : 'btn-gradient'}
                         disabled:opacity-70 disabled:cursor-not-allowed`}
+                      title={dataFetchError ? "Error de conexión: Recarga la página" : ""}
                     >
                       {renderSaveButtonContent()}
                     </button>
@@ -214,6 +216,17 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
             </div>
           
           <div className="p-4 overflow-y-auto">
+            {dataFetchError && (
+              <div className="mb-4 bg-red-900/30 border border-red-500 rounded-lg p-4 text-red-200">
+                <h3 className="font-bold flex items-center gap-2">
+                  <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Error de Conexión Detectado
+                </h3>
+                <p className="text-sm mt-2">La aplicación no pudo cargar correctamente la información desde la base de datos (posible error de caché o de red). Se ha bloqueado la opción de guardar cambios para proteger tu información y evitar sobreescrituras accidentales. Por favor, recarga la página.</p>
+              </div>
+            )}
             {renderTabContent()}
           </div>
         </main>

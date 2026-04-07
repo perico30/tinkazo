@@ -6,6 +6,7 @@ import type { AppConfig, RegisteredUser, Jornada, Carton, WithdrawalRequest, Rec
 export function useSupabaseData(initialAppConfig: AppConfig) {
   const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataFetchError, setDataFetchError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -146,8 +147,10 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
         }
 
         setAppConfig(mergedConfig);
+        setDataFetchError(false); // Clear error on success
       } catch (error) {
         console.error("Error loading initial data from Supabase:", error);
+        setDataFetchError(true); // Flag that an error occurred preventing full load
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -180,5 +183,5 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
       setAppConfig(prev => ({ ...prev, ...newConfig }));
   };
 
-  return { appConfig, setAppConfig, updateConfig, isLoading };
+  return { appConfig, setAppConfig, updateConfig, isLoading, dataFetchError };
 }

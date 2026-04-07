@@ -158,7 +158,7 @@ const App: React.FC = () => {
   const [legalModalContent, setLegalModalContent] = useState<LegalLink | null>(null);
   const [jornadaToPlay, setJornadaToPlay] = useState<Jornada | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
-  const { appConfig, updateConfig, isLoading } = useSupabaseData(initialAppConfig);
+  const { appConfig, updateConfig, isLoading, dataFetchError } = useSupabaseData(initialAppConfig);
   const isConfigLoaded = !isLoading;
 
   // Effect to update the favicon dynamically based on the configured logo
@@ -1147,7 +1147,17 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
       case 'register':
         return <RegisterPage setCurrentView={setCurrentView} onRegister={handleRegister} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'admin':
-        return userRole === 'admin' ? <AdminPage initialConfig={appConfig} onSave={handleSaveConfig} onLogout={handleLogout} onExit={navigateToHome} onProcessWithdrawal={handleProcessWithdrawal} onProcessSellerRecharge={handleProcessSellerRecharge} /> : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
+        return userRole === 'admin' ? (
+          <AdminPage
+            initialConfig={appConfig}
+            onSave={handleSaveConfig}
+            onLogout={handleLogout}
+            onExit={navigateToHome}
+            onProcessWithdrawal={handleProcessWithdrawal}
+            onProcessSellerRecharge={handleProcessSellerRecharge}
+            dataFetchError={dataFetchError}
+          />
+        ) : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'seller':
         return userRole === 'seller' && currentUser ? (
             <SellerPage
