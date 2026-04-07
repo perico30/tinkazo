@@ -131,7 +131,7 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                              <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-indigo-500/20 blur-xl rounded-full"></div>
                              <p className="relative z-10 text-indigo-300 font-bold uppercase tracking-widest text-[8px] sm:text-xs mb-0.5">Premio Consuelo</p>
                              <p className="relative z-10 text-xl sm:text-3xl font-bold text-white drop-shadow-md mb-0.5">{jornada.secondPrize}</p>
-                             <p className="relative z-10 text-indigo-200/80 font-medium text-[8px] sm:text-sm">1 acierto</p>
+                             <p className="relative z-10 text-indigo-200/80 font-medium text-[8px] sm:text-sm">1 fallo permitido</p>
                         </div>
                     </div>
                     
