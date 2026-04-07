@@ -28,6 +28,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
     let loginEmail = email.trim();
     if (loginEmail.toLowerCase() === 'superadmin') {
         loginEmail = 'superadmin@tinkazo.com';
+    } else if (!loginEmail.includes('@')) {
+        // Buscar el correo por el nombre de usuario
+        const matchedUser = users.find(u => u.username.toLowerCase() === loginEmail.toLowerCase());
+        if (matchedUser) {
+            loginEmail = matchedUser.email;
+        } else {
+            setError('Usuario no encontrado. Intenta con tu correo electrónico.');
+            setIsLoading(false);
+            return;
+        }
     }
 
     try {
@@ -80,14 +90,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
             <h2 className="text-3xl font-bold text-center text-white mb-6">Iniciar Sesión</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="text-sm font-medium text-gray-300 block mb-2">Correo Electrónico</label>
+                <label htmlFor="email" className="text-sm font-medium text-gray-300 block mb-2">Correo o Usuario</label>
                 <input
-                  type="email"
+                  type="text"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition"
-                  placeholder="tu@correo.com"
+                  placeholder="usuario o tu@correo.com"
                   required
                   disabled={isLoading}
                 />
