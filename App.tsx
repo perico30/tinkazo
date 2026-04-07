@@ -222,22 +222,17 @@ const App: React.FC = () => {
 
   // Intercept Supabase Auth redirects (like email confirmation links)
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-        // Check if the URL has an access token from an email link
-        if (window.location.hash.includes('access_token')) {
+    // Check if the URL has a Supabase access token hash from an email link
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      // Small timeout ensures Supabase has time to read the hash before we delete it
+      setTimeout(() => {
           // Clear the messy hash from the URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          // Redirect the user to the login screen and show a success message
-          alert('¡Correo confirmado exitosamente! Ya puedes iniciar sesión en tu cuenta.');
+          window.history.replaceState(null, document.title, window.location.pathname);
+          // Auto-direct to the login screen and show a success message
           setCurrentView('login');
-        }
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+          alert('¡Correo confirmado exitosamente! Ya puedes iniciar sesión con tu cuenta nueva.');
+      }, 500);
+    }
   }, []);
 
 
