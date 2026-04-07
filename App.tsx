@@ -161,6 +161,19 @@ const App: React.FC = () => {
   const { appConfig, updateConfig, isLoading } = useSupabaseData(initialAppConfig);
   const isConfigLoaded = !isLoading;
 
+  // Effect to update the favicon dynamically based on the configured logo
+  useEffect(() => {
+    if (appConfig.logoUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = appConfig.logoUrl;
+    }
+  }, [appConfig.logoUrl]);
+
   // Effect to rehydrate session from localStorage on initial app load
   useEffect(() => {
     try {
