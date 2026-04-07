@@ -539,15 +539,37 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         // 2. Only update the modified components (Simplified for drop-in replacement)
         // Let's do users balances and other admin-editable fields
         for (const u of processedConfig.users) {
-            await supabase.from('users').update({ 
-                balance: u.balance,
-                status: u.status,
-                assigned_seller_id: u.assignedSellerId || null,
-                username: u.username,
-                phone: u.phone,
-                country: u.country,
-                role: u.role
-            }).eq('id', u.id);
+            const originalUser = appConfig.users.find((orig: RegisteredUser) => orig.id === u.id);
+            if (!originalUser) continue;
+            
+            const updates: any = {};
+            
+            // Updates explicitly made by Admin
+            if (u.status !== originalUser.status) updates.status = u.status;
+            if (u.assignedSellerId !== originalUser.assignedSellerId) updates.assigned_seller_id = u.assignedSellerId || null;
+            if (u.username !== originalUser.username) updates.username = u.username;
+            if (u.role !== originalUser.role) updates.role = u.role;
+            if (u.phone !== originalUser.phone) updates.phone = u.phone;
+            if (u.country !== originalUser.country) updates.country = u.country;
+            
+            // Fix Balance Overwrite Bug:
+            // If the balance changed during processJornadaResults or Admin recharge, apply the DELTA to the LATEST DB balance.
+            // This prevents overwriting a ticket purchase that happened while the admin was typing!
+            if (u.balance !== originalUser.balance) {
+                const delta = (u.balance || 0) - (originalUser.balance || 0);
+                if (delta !== 0) {
+                    const { data: latestUser } = await supabase.from('users').select('balance').eq('id', u.id).single();
+                    if (latestUser) {
+                        updates.balance = Number(latestUser.balance) + delta;
+                    } else {
+                        updates.balance = u.balance;
+                    }
+                }
+            }
+            
+            if (Object.keys(updates).length > 0) {
+                await supabase.from('users').update(updates).eq('id', u.id);
+            }
         }
         for (const c of processedConfig.cartones) {
             await supabase.from('tickets').update({ hits: c.hits, prize_won: c.prizeWon, prize_details: c.prizeDetails }).eq('id', c.id);
