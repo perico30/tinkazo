@@ -96,7 +96,6 @@ const initialAppConfig: AppConfig = {
     rechargeRequests: [],
     botinAmount: 10000, // Initial Botin amount
     sellerCommissionPercentage: 10, // Default 10% commission for sellers
-    welcomeBonusAmount: 0,
     transactions: [],
     footer: {
       copyright: '© 2024 TINKAZO. Todos los derechos reservados.',
@@ -220,21 +219,6 @@ const App: React.FC = () => {
 
   // The real-time syncing is now handled entirely by useSupabaseData.
 
-  // Intercept Supabase Auth redirects (like email confirmation links)
-  useEffect(() => {
-    // Check if the URL has a Supabase access token hash from an email link
-    if (window.location.hash && window.location.hash.includes('access_token')) {
-      // Small timeout ensures Supabase has time to read the hash before we delete it
-      setTimeout(() => {
-          // Clear the messy hash from the URL
-          window.history.replaceState(null, document.title, window.location.pathname);
-          // Auto-direct to the login screen and show a success message
-          setCurrentView('login');
-          alert('¡Correo confirmado exitosamente! Ya puedes iniciar sesión con tu cuenta nueva.');
-      }, 500);
-    }
-  }, []);
-
 
   useEffect(() => {
     // Apply the correct background class to the body
@@ -342,7 +326,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleRegister = useCallback(async (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>, sellerCode?: string) => {
+  const handleRegister = useCallback(async (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => {
     // FIX: Using Supabase Auth
     try {
         const { data, error } = await supabase.auth.signUp({
@@ -353,8 +337,7 @@ const App: React.FC = () => {
                     username: userData.username,
                     role: 'client',
                     phone: userData.phone,
-                    country: userData.country,
-                    seller_code: sellerCode // Injected for handle_new_user trigger
+                    country: userData.country
                 }
             }
         });
@@ -378,7 +361,7 @@ const App: React.FC = () => {
              }
         }
 
-        alert('¡Registro exitoso! Por favor revisa tu correo electrónico e ingresa al enlace que te hemos enviado para confirmar tu cuenta y habilitar tu Bono de Bienvenida.');
+        alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
         setCurrentView('login');
     } catch (error: any) {
         showNotification(error.message || 'Error al registrar.');
@@ -533,7 +516,6 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
             theme: { ...processedConfig.theme, logoUrl: processedConfig.logoUrl },
             botin_amount: processedConfig.botinAmount,
             seller_commission_percentage: processedConfig.sellerCommissionPercentage,
-            welcome_bonus_amount: processedConfig.welcomeBonusAmount,
             admin_whatsapp: processedConfig.adminWhatsappNumber,
             welcome_message: processedConfig.welcomeMessage,
             welcome_popup: processedConfig.welcomePopup,
