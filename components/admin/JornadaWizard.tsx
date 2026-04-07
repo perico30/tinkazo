@@ -111,7 +111,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
       await resolveTeam(em.team2.id, em.team2.name, em.logo2);
 
       matches.push({
-        id: em.id,
+        id: crypto.randomUUID(),
         localTeamId: em.team1.id,
         visitorTeamId: em.team2.id,
         dateTime: em.startDate,

@@ -606,9 +606,17 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         }
         
         // 5. Sync Matches via Bulk Upsert
-        const allMatchesToUpsert = [];
+        const allMatchesToUpsert: any[] = [];
+        const seenMatchIds = new Set<string>();
+
         processedConfig.jornadas.forEach(j => {
             j.matches.forEach(m => {
+                // Prevenir conflictos de Primary Key si el mismo partido externo se metió en dos jornadas distintas
+                if (seenMatchIds.has(m.id)) {
+                    m.id = crypto.randomUUID(); 
+                }
+                seenMatchIds.add(m.id);
+
                 allMatchesToUpsert.push({
                     id: m.id,
                     jornada_id: j.id,
