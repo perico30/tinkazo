@@ -72,8 +72,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
   };
 
   const handleDraftRechargeUser = (userId: string, amount: number) => {
-    if (amount <= 0) {
-        alert('El monto de la recarga debe ser positivo.');
+    if (amount === 0 || isNaN(amount)) {
+        alert('El monto a ajustar debe ser diferente de cero.');
         return;
     }
     setDraftConfig(prev => ({

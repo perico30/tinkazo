@@ -115,11 +115,11 @@ const RechargeModal: React.FC<{
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const rechargeAmount = parseFloat(amount);
-        if (rechargeAmount > 0) {
+        if (rechargeAmount !== 0 && !isNaN(rechargeAmount)) {
             onRecharge(user.id, rechargeAmount);
             onClose();
         } else {
-            alert('Por favor, ingrese un monto válido.');
+            alert('Por favor, ingrese un monto válido (diferente de cero).');
         }
     };
 
@@ -136,8 +136,7 @@ const RechargeModal: React.FC<{
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
                             className="w-full bg-gray-700 p-2 rounded"
-                            placeholder="Ej. 100"
-                            min="1"
+                            placeholder="Ej. 100 o -50"
                             step="1"
                             autoFocus
                             required
