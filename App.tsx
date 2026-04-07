@@ -519,7 +519,11 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
             admin_whatsapp: processedConfig.adminWhatsappNumber,
             welcome_message: processedConfig.welcomeMessage,
             welcome_popup: processedConfig.welcomePopup,
-            jackpots: processedConfig.gorditoJackpot ? { gordito: processedConfig.gorditoJackpot, botin: processedConfig.botinJackpot } : {},
+            jackpots: { 
+                gordito: processedConfig.gorditoJackpot, 
+                botin: processedConfig.botinJackpot,
+                gorditoJornadaId: processedConfig.gorditoJornadaId || null
+            },
             video_tutorials: processedConfig.videoTutorials,
             carousel_images: processedConfig.carouselImages,
             recharge_qr_url: processedConfig.recharge.qrCodeUrl,
@@ -1176,9 +1180,11 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     if (!isConfigLoaded) {
       return (
         <div className="bg-[#020617] flex-1 flex flex-col justify-center items-center z-50">
-           <img src={appConfig.logoUrl || ''} alt="Tinkazo Logo" className="h-16 w-auto mb-6 animate-pulse opacity-50" />
-           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500 mb-4"></div>
-           <p className="text-cyan-400 font-medium uppercase tracking-[0.2em] text-xs">Conectando...</p>
+           {appConfig.logoUrl && (
+               <img src={appConfig.logoUrl} alt="Tinkazo Logo" className="h-16 w-auto mb-6 animate-pulse opacity-50 relative z-10" />
+           )}
+           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500 mb-4 relative z-10"></div>
+           <p className="text-cyan-400 font-medium uppercase tracking-[0.2em] text-xs relative z-10">Conectando...</p>
         </div>
       );
     }

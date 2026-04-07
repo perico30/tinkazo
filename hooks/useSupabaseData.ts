@@ -48,6 +48,7 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
             welcomePopup: configData.welcome_popup || initialAppConfig.welcomePopup,
             gorditoJackpot: configData.jackpots?.gordito || initialAppConfig.gorditoJackpot,
             botinJackpot: configData.jackpots?.botin || initialAppConfig.botinJackpot,
+            gorditoJornadaId: configData.jackpots?.gorditoJornadaId || initialAppConfig.gorditoJornadaId,
             videoTutorials: configData.video_tutorials || initialAppConfig.videoTutorials,
             carouselImages: configData.carousel_images || initialAppConfig.carouselImages,
             recharge: { qrCodeUrl: configData.recharge_qr_url || '' },
