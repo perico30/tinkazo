@@ -220,6 +220,26 @@ const App: React.FC = () => {
 
   // The real-time syncing is now handled entirely by useSupabaseData.
 
+  // Intercept Supabase Auth redirects (like email confirmation links)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        // Check if the URL has an access token from an email link
+        if (window.location.hash.includes('access_token')) {
+          // Clear the messy hash from the URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          // Redirect the user to the login screen and show a success message
+          alert('¡Correo confirmado exitosamente! Ya puedes iniciar sesión en tu cuenta.');
+          setCurrentView('login');
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
 
   useEffect(() => {
     // Apply the correct background class to the body
