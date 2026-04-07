@@ -226,8 +226,8 @@ const CarouselSection: React.FC<{ images: CarouselImage[] }> = ({ images }) => {
     
     // Duration based on number of images to keep speed consistent. 5s per image.
     // FIX: Changed const to let to allow reassignment.
-    let animationDuration = `${images.length * 5}s`;
-    if (images.length < 3) animationDuration = `${images.length * 8}s`;
+    let animationDuration = `${images.length * 2.5}s`;
+    if (images.length < 3) animationDuration = `${images.length * 4}s`;
 
 
     return (
@@ -285,8 +285,23 @@ const JornadasSection: React.FC<{
       return scheduledMatches[0].dateTime;
   };
 
+  const sortedJornadas = [...visibleJornadas].sort((a, b) => {
+      const isPlayableA = isJornadaPlayable(a);
+      const isPlayableB = isJornadaPlayable(b);
 
-  if (visibleJornadas.length === 0) {
+      if (isPlayableA && !isPlayableB) return -1;
+      if (!isPlayableA && isPlayableB) return 1;
+
+      const dateAStr = getFirstMatchDateStr(a);
+      const dateBStr = getFirstMatchDateStr(b);
+      
+      const timeA = dateAStr ? new Date(dateAStr).getTime() : Infinity;
+      const timeB = dateBStr ? new Date(dateBStr).getTime() : Infinity;
+
+      return timeA - timeB;
+  });
+
+  if (sortedJornadas.length === 0) {
     return (
       <section className="mb-8">
         <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center">Jornadas Disponibles</h2>
@@ -301,7 +316,7 @@ const JornadasSection: React.FC<{
     <section className="mb-8">
       <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center gradient-text">Jornadas Disponibles</h2>
       <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {visibleJornadas.map(jornada => {
+        {sortedJornadas.map(jornada => {
           const playable = isJornadaPlayable(jornada);
           const isGordito = jornada.id === gorditoJornadaId;
           const hasBotin = !!jornada.botinMatchId;
