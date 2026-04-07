@@ -5,6 +5,7 @@ import ConfigurationTab from './admin/ConfigurationTab';
 import JornadasTab from './admin/JornadasTab';
 import UsersTab from './admin/UsersTab';
 import AdminFinancialTab from './admin/AdminFinancialTab';
+import AdminCartonesTab from './admin/AdminCartonesTab';
 import SaveIcon from '../components/icons/SaveIcon';
 import HomeIcon from '../components/icons/HomeIcon';
 import LogoutIcon from '../components/icons/LogoutIcon';
@@ -14,6 +15,7 @@ import CalendarIcon from '../components/icons/CalendarIcon';
 import UsersGroupIcon from '../components/icons/UsersGroupIcon';
 import BanknotesIcon from '../components/icons/BanknotesIcon';
 import CreditCardIcon from '../components/icons/CreditCardIcon';
+import TicketIcon from '../components/icons/TicketIcon';
 import AdminClientTicketsModal from './admin/AdminClientTicketsModal';
 import CartonModal from '../components/CartonModal';
 import MenuIcon from '../components/icons/MenuIcon';
@@ -30,7 +32,7 @@ interface AdminPageProps {
   onProcessSellerRecharge: (requestId: string, action: 'approve' | 'reject') => void;
 }
 
-type AdminTab = 'dashboard' | 'config' | 'jornadas' | 'users' | 'financial';
+type AdminTab = 'dashboard' | 'config' | 'jornadas' | 'users' | 'financial' | 'cartones';
 
 type SaveState = 'idle' | 'saving' | 'success';
 
@@ -98,6 +100,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
   const tabs: { id: AdminTab; label: string; icon: React.FC<{className?: string}> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'jornadas', label: 'Jornadas', icon: CalendarIcon },
+    { id: 'cartones', label: 'Cartones', icon: TicketIcon },
     { id: 'users', label: 'Usuarios', icon: UsersGroupIcon },
     { id: 'financial', label: 'Financiero', icon: BanknotesIcon },
     { id: 'config', label: 'Configuración', icon: GearIcon },
@@ -107,6 +110,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
     switch(activeTab) {
       case 'dashboard':
         return <DashboardTab config={draftConfig} />;
+      case 'cartones':
+        return <AdminCartonesTab config={draftConfig} onViewCarton={handleViewCarton} />;
       case 'config':
         return <ConfigurationTab config={draftConfig} setConfig={setDraftConfig} />;
        case 'jornadas':

@@ -80,14 +80,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
             <h2 className="text-3xl font-bold text-center text-white mb-6">Iniciar Sesión</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="text-sm font-medium text-gray-300 block mb-2">Correo Electrónico o Usuario</label>
+                <label htmlFor="email" className="text-sm font-medium text-gray-300 block mb-2">Correo Electrónico</label>
                 <input
-                  type="text"
+                  type="email"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition"
-                  placeholder="tu@correo.com o superadmin"
+                  placeholder="tu@correo.com"
                   required
                   disabled={isLoading}
                 />
