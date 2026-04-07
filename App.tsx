@@ -778,6 +778,22 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
     }
   }, [appConfig.cartones, appConfig.jornadas, showNotification]);
 
+  const handleDeleteCarton = useCallback(async (cartonId: string) => {
+      if (!window.confirm('¿Estás seguro de que deseas eliminar este cartón perdido? Esta acción no se puede deshacer.')) return;
+      try {
+          const { error } = await supabase.from('tickets').delete().eq('id', cartonId);
+          if (error) throw error;
+          
+          updateConfig({
+              ...appConfig,
+              cartones: appConfig.cartones.filter(c => c.id !== cartonId)
+          });
+          showNotification('Cartón eliminado con éxito.');
+      } catch (error: any) {
+          showNotification(error.message || 'Error al eliminar el cartón');
+      }
+  }, [appConfig, updateConfig, showNotification]);
+
   const handleRequestWithdrawal = useCallback(async (userId: string, amount: number, userQrCodeUrl: string) => {
       const user = appConfig.users.find(u => u.id === userId);
       if (!user) {
@@ -1083,6 +1099,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
               onLogout={handleLogout}
               onExit={navigateToHome}
               onUpdateCarton={handleUpdateCarton}
+              onPlayJornada={handlePlayJornada}
             />
           ) : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'clientPanel':
@@ -1093,10 +1110,12 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                       config={appConfig}
                       onUpdateUser={handleUpdateUser}
                       onUpdateCarton={handleUpdateCarton}
+                      onDeleteCarton={handleDeleteCarton}
                       onRequestWithdrawal={handleRequestWithdrawal}
                       onRequestRecharge={handleRequestClientRecharge}
                       onLogout={handleLogout}
                       onExit={navigateToHome}
+                      onPlayJornada={handlePlayJornada}
                   />
               );
           }

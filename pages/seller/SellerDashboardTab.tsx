@@ -15,10 +15,10 @@ const hexToRgba = (hex: string, alpha: number): string => {
 interface SellerDashboardTabProps {
   currentUser: RegisteredUser;
   config: AppConfig;
+  onPlayJornada?: (jornada: any) => void;
 }
 
-
-const SellerDashboardTab: React.FC<SellerDashboardTabProps> = ({ currentUser, config }) => {
+const SellerDashboardTab: React.FC<SellerDashboardTabProps> = ({ currentUser, config, onPlayJornada }) => {
     const openJornadas = config.jornadas.filter(j => j.status === 'abierta');
 
     return (
@@ -37,7 +37,11 @@ const SellerDashboardTab: React.FC<SellerDashboardTabProps> = ({ currentUser, co
                           const hasBotin = !!jornada.botinMatchId;
 
                           return (
-                            <div key={jornada.id} className="jornada-card">
+                            <div 
+                                key={jornada.id} 
+                                className="jornada-card transition-transform cursor-pointer hover:shadow-cyan-500/20 shadow-xl active:scale-[0.98]"
+                                onClick={() => onPlayJornada?.(jornada)}
+                            >
                                 {jornada.styling.backgroundImage && (
                                     <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
                                 )}
@@ -75,18 +79,17 @@ const SellerDashboardTab: React.FC<SellerDashboardTabProps> = ({ currentUser, co
                                         <h3 className="jornada-card-title">{jornada.name}</h3>
                                     </div>
                                     <footer className="jornada-card-footer">
-                                        <div className="jornada-prize">
-                                            <p className="jornada-prize-label">1er Lugar</p>
-                                            <p className="jornada-prize-amount">{jornada.firstPrize}</p>
-                                        </div>
-                                        <div className="jornada-prize">
-                                            <p className="jornada-prize-label">2do Lugar</p>
-                                            <p className="jornada-prize-amount">{jornada.secondPrize}</p>
+                                        <div className="bg-[#020617]/50 border border-white/10 rounded-full px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-inner">
+                                            <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">1er:</span>
+                                            <span className="text-[11px] font-black text-cyan-400">{jornada.firstPrize}</span>
+                                            <span className="text-gray-600 font-bold">|</span>
+                                            <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">2do:</span>
+                                            <span className="text-[11px] font-black text-indigo-400">{jornada.secondPrize}</span>
                                         </div>
                                         {/* Status indicator instead of play button for sellers */}
                                         <div className="w-full text-center mt-3 pt-3 border-t border-white/20">
                                             <span className="text-white font-bold bg-white/20 px-4 py-1.5 rounded-full text-sm shadow-md backdrop-blur-sm">
-                                                ABIERTA PARA VENTA
+                                                TOCAR PARA JUGAR
                                             </span>
                                         </div>
                                     </footer>

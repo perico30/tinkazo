@@ -138,11 +138,13 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
   };
   const addSocialLink = () => handleNestedChange('footer', 'socialLinks', [...config.footer.socialLinks, { platform: '', url: '', logoUrl: '' }]);
   const removeSocialLink = (index: number) => handleNestedChange('footer', 'socialLinks', config.footer.socialLinks.filter((_, i) => i !== index));
-  const handleLegalChange = (index: 0 | 1, key: keyof LegalLink, value: string) => {
-    const newLinks = [...config.footer.legalLinks] as [LegalLink, LegalLink];
+  const handleLegalChange = (index: number, key: keyof LegalLink, value: string) => {
+    const newLinks = [...(config.footer.legalLinks || [])];
     newLinks[index] = { ...newLinks[index], [key]: value };
     handleNestedChange('footer', 'legalLinks', newLinks);
   };
+  const addLegalLink = () => handleNestedChange('footer', 'legalLinks', [...(config.footer.legalLinks || []), { title: '', content: '' }]);
+  const removeLegalLink = (index: number) => handleNestedChange('footer', 'legalLinks', (config.footer.legalLinks || []).filter((_, i) => i !== index));
 
     const handleVideoChange = (index: number, key: keyof VideoTutorial, value: string) => {
     const newVideos = [...config.videoTutorials];
@@ -411,10 +413,10 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
                 <h4 className="font-semibold mb-2">Redes Sociales</h4>
                 {config.footer.socialLinks.map((link, i) => (
                     <div key={i} className="bg-gray-700/50 p-4 rounded-lg mb-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                            <input type="text" placeholder="Plataforma (ej. WhatsApp)" value={link.platform} onChange={e => handleSocialChange(i, 'platform', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
-                            <input type="text" placeholder="https://ejemplo.com" value={link.url} onChange={e => handleSocialChange(i, 'url', e.target.value)} className="flex-1 bg-gray-600 p-2 rounded" />
-                            <button onClick={() => removeSocialLink(i)} className="p-2 text-red-400 hover:text-red-300 rounded-full hover:bg-red-500/20"><TrashIcon className="h-5 w-5"/></button>
+                        <div className="flex items-center gap-2 outline-none w-full">
+                            <input type="text" placeholder="Nombre (ej. WhatsApp)" value={link.platform} onChange={e => handleSocialChange(i, 'platform', e.target.value)} className="min-w-0 w-1/3 text-sm bg-gray-600 p-2 rounded" />
+                            <input type="text" placeholder="https://..." value={link.url} onChange={e => handleSocialChange(i, 'url', e.target.value)} className="min-w-0 flex-1 text-sm bg-gray-600 p-2 rounded" />
+                            <button onClick={() => removeSocialLink(i)} className="shrink-0 p-2 text-red-400 hover:text-red-300 rounded-full hover:bg-red-500/20"><TrashIcon className="h-5 w-5"/></button>
                         </div>
                         <ImageUpload
                             label="Logo de Red Social (Opcional)"
@@ -427,12 +429,16 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
             </div>
             <div>
                 <h4 className="font-semibold mb-2">Textos Legales</h4>
-                {config.footer.legalLinks.map((link, i) => (
-                    <div key={i} className="space-y-2 mb-4">
-                        <label className="block font-medium">{link.title}</label>
-                        <textarea value={link.content} onChange={e => handleLegalChange(i as 0 | 1, 'content', e.target.value)} className="w-full bg-gray-700 p-2 rounded h-32" />
+                {(config.footer.legalLinks || []).map((link, i) => (
+                    <div key={i} className="bg-gray-700/50 p-4 rounded-lg space-y-2 mb-4 relative">
+                        <div className="flex gap-2">
+                            <input type="text" value={link.title} onChange={e => handleLegalChange(i, 'title', e.target.value)} className="block w-full font-medium bg-gray-600 p-2 rounded text-cyan-300" placeholder="Título (ej. Términos y Condiciones)" />
+                            <button onClick={() => removeLegalLink(i)} className="shrink-0 p-2 text-red-400 hover:text-red-300 rounded-full hover:bg-red-500/20" title="Eliminar Texto Legal"><TrashIcon className="h-5 w-5"/></button>
+                        </div>
+                        <textarea value={link.content} onChange={e => handleLegalChange(i, 'content', e.target.value)} className="w-full bg-gray-600 p-2 rounded h-32" placeholder="Contenido del texto legal..." />
                     </div>
                 ))}
+                <button onClick={addLegalLink} className="text-cyan-400 mt-2">Añadir Texto Legal</button>
             </div>
         </div>
       </details>

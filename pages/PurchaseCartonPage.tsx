@@ -108,79 +108,81 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
         <>
             <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
                 <div className="max-w-4xl mx-auto">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex justify-between items-center mb-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-cyan-400">{jornada.name}</h1>
-                            <p className="text-gray-400">Realiza tus pronósticos</p>
+                            <h1 className="text-xl sm:text-3xl font-bold text-cyan-400">{jornada.name}</h1>
+                            <p className="text-[11px] sm:text-base text-gray-400">Realiza tus pronósticos</p>
                         </div>
-                        <button onClick={onExit} className="text-gray-400 hover:text-white">&times; Salir</button>
+                        <button onClick={onExit} className="text-xs sm:text-base text-gray-400 hover:text-white">&times; Salir</button>
                     </div>
                     
-                    {/* Tarjetas de Premios Rediseñadas */}
-                    <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Tarjetas de Premios Rediseñadas - Sizes Reduced and Side-by-Side mobile */}
+                    <div className="mb-4 grid grid-cols-2 gap-2 sm:gap-4 border-b border-gray-700/50 pb-4">
                         {/* Box 1: Premio Mayor */}
-                        <div className="bg-gradient-to-br from-cyan-900/60 to-blue-900/40 border border-cyan-500/40 rounded-xl p-5 flex flex-col items-center justify-center shadow-lg relative overflow-hidden text-center">
-                             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-cyan-500/20 blur-2xl rounded-full"></div>
-                             <p className="relative z-10 text-cyan-300 font-bold uppercase tracking-widest text-xs mb-2">Premio Mayor</p>
-                             <p className="relative z-10 text-3xl sm:text-4xl font-black text-white drop-shadow-md mb-2">{jornada.firstPrize}</p>
-                             <p className="relative z-10 text-cyan-200/80 font-medium text-sm">a todos los aciertos</p>
+                        <div className="bg-gradient-to-br from-cyan-900/60 to-blue-900/40 border border-cyan-500/40 rounded-xl p-2 sm:p-4 flex flex-col items-center justify-center shadow-md relative overflow-hidden text-center">
+                             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-cyan-500/20 blur-xl rounded-full"></div>
+                             <p className="relative z-10 text-cyan-300 font-bold uppercase tracking-widest text-[8px] sm:text-xs mb-0.5">Premio Mayor</p>
+                             <p className="relative z-10 text-xl sm:text-3xl font-black text-white drop-shadow-md mb-0.5">{jornada.firstPrize}</p>
+                             <p className="relative z-10 text-cyan-200/80 font-medium text-[8px] sm:text-sm">todos los aciertos</p>
                         </div>
                         
                         {/* Box 2: Premio Consuelo */}
-                        <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/40 border border-indigo-500/40 rounded-xl p-5 flex flex-col items-center justify-center shadow-lg relative overflow-hidden text-center">
-                             <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-indigo-500/20 blur-2xl rounded-full"></div>
-                             <p className="relative z-10 text-indigo-300 font-bold uppercase tracking-widest text-xs mb-2">Premio Consuelo</p>
-                             <p className="relative z-10 text-2xl sm:text-3xl font-bold text-white drop-shadow-md mb-2">{jornada.secondPrize}</p>
-                             <p className="relative z-10 text-indigo-200/80 font-medium text-sm">- 1 acierto</p>
+                        <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/40 border border-indigo-500/40 rounded-xl p-2 sm:p-4 flex flex-col items-center justify-center shadow-md relative overflow-hidden text-center">
+                             <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-indigo-500/20 blur-xl rounded-full"></div>
+                             <p className="relative z-10 text-indigo-300 font-bold uppercase tracking-widest text-[8px] sm:text-xs mb-0.5">Premio Consuelo</p>
+                             <p className="relative z-10 text-xl sm:text-3xl font-bold text-white drop-shadow-md mb-0.5">{jornada.secondPrize}</p>
+                             <p className="relative z-10 text-indigo-200/80 font-medium text-[8px] sm:text-sm">1 acierto</p>
                         </div>
                     </div>
                     
                     {botinMatch && (
-                        <div className="mb-6 bg-purple-900/50 border border-purple-600 rounded-lg shadow-lg p-6">
-                            <h3 className="text-2xl font-bold text-center text-purple-300 mb-4">🌟 ¡Partido del Botín! 🌟</h3>
-                            <p className="text-center text-gray-300 mb-4">
-                                Acierta el resultado exacto de este partido para ganar un premio especial.
-                                ¡No tiene costo extra!
+                        <div className="mb-4 bg-purple-900/40 border border-purple-600/60 rounded-lg shadow-md p-3 sm:p-5 relative overflow-hidden">
+                            <h3 className="text-sm sm:text-xl font-bold text-center text-purple-300 mb-1">🌟 ¡Partido del Botín! 🌟</h3>
+                            <p className="text-center text-[10px] sm:text-sm text-gray-300 mb-3 leading-tight max-w-sm mx-auto">
+                                Acierta el resultado exacto. ¡No extra costo!
                             </p>
-                            <div className="bg-gray-700/50 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between text-center">
-                                <div className="flex items-center gap-2">
-                                    {getTeam(botinMatch.localTeamId) && <img src={getTeam(botinMatch.localTeamId)?.logo} alt="" className="h-8 w-8 object-contain" />}
-                                    <span className="font-semibold">{getTeam(botinMatch.localTeamId)?.name}</span>
+                            
+                            <div className="bg-gray-800/60 p-2 sm:p-4 rounded-lg flex flex-row items-center justify-center gap-2 sm:gap-6 text-center max-w-md mx-auto relative z-10">
+                                <div className="flex flex-col items-center gap-1 w-1/3">
+                                    {getTeam(botinMatch.localTeamId) && <img src={getTeam(botinMatch.localTeamId)?.logo} alt="" className="h-6 w-6 sm:h-10 sm:w-10 object-contain drop-shadow-md" />}
+                                    <span className="font-semibold text-[9px] sm:text-sm leading-tight text-white line-clamp-2">{getTeam(botinMatch.localTeamId)?.name}</span>
                                 </div>
-                                <span className="text-gray-400 font-bold my-2 sm:my-0">VS</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold">{getTeam(botinMatch.visitorTeamId)?.name}</span>
-                                    {getTeam(botinMatch.visitorTeamId) && <img src={getTeam(botinMatch.visitorTeamId)?.logo} alt="" className="h-8 w-8 object-contain" />}
+                                <span className="text-gray-400 font-bold text-xs sm:text-base">VS</span>
+                                <div className="flex flex-col items-center gap-1 w-1/3">
+                                    {getTeam(botinMatch.visitorTeamId) && <img src={getTeam(botinMatch.visitorTeamId)?.logo} alt="" className="h-6 w-6 sm:h-10 sm:w-10 object-contain drop-shadow-md" />}
+                                    <span className="font-semibold text-[9px] sm:text-sm leading-tight text-white line-clamp-2">{getTeam(botinMatch.visitorTeamId)?.name}</span>
                                 </div>
                             </div>
-                            <div className="mt-4 flex flex-col items-center">
-                                <div className="flex items-center gap-4 mb-4">
+                            
+                            <div className="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 relative z-10">
+                                <div className="flex items-center gap-2 bg-gray-800/40 py-1 px-3 rounded-full border border-gray-600/30">
                                     <input
                                         id="playBotin"
                                         type="checkbox"
                                         checked={playBotin}
                                         onChange={e => setPlayBotin(e.target.checked)}
-                                        className="h-5 w-5 rounded text-purple-500 focus:ring-purple-500"
+                                        className="h-3 w-3 sm:h-4 sm:w-4 rounded text-purple-500 focus:ring-purple-500 bg-gray-700 border-gray-600"
                                     />
-                                    <label htmlFor="playBotin" className="font-semibold text-white">¡Quiero participar por el Botín!</label>
+                                    <label htmlFor="playBotin" className="font-bold text-purple-200 text-[10px] sm:text-sm cursor-pointer select-none">Participar</label>
                                 </div>
+                                
                                 {playBotin && (
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2 bg-gray-800/60 p-1.5 rounded-lg border border-purple-500/30">
                                         <input
                                             type="number"
                                             min="0"
                                             value={botinPrediction.localScore}
                                             onChange={e => setBotinPrediction(p => ({...p, localScore: e.target.value}))}
-                                            className="w-20 text-center bg-gray-700 p-2 rounded text-xl font-bold"
+                                            className="w-8 sm:w-12 text-center bg-gray-700 p-0.5 sm:p-1.5 rounded text-sm sm:text-lg font-bold border border-gray-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                                             placeholder="L"
                                         />
-                                        <span className="text-xl font-bold text-gray-400">-</span>
+                                        <span className="text-sm sm:text-xl font-bold text-purple-400">-</span>
                                         <input
                                             type="number"
                                             min="0"
                                             value={botinPrediction.visitorScore}
                                             onChange={e => setBotinPrediction(p => ({...p, visitorScore: e.target.value}))}
-                                            className="w-20 text-center bg-gray-700 p-2 rounded text-xl font-bold"
+                                            className="w-8 sm:w-12 text-center bg-gray-700 p-0.5 sm:p-1.5 rounded text-sm sm:text-lg font-bold border border-gray-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                                             placeholder="V"
                                         />
                                     </div>

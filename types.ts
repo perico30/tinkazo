@@ -65,7 +65,7 @@ export interface LegalLink {
 export interface FooterConfig {
   copyright: string;
   socialLinks: SocialLink[];
-  legalLinks: [LegalLink, LegalLink];
+  legalLinks: LegalLink[];
 }
 
 export interface Team {

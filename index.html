@@ -89,7 +89,11 @@
       .jackpot-card {
           position: relative;
           border-radius: 1.5rem; /* 24px */
-          padding: 2rem; /* 32px */
+          padding: 1.5rem 1rem;
+          aspect-ratio: 24 / 7; /* ensure a banner shape on mobile */
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
           text-align: center;
           overflow: hidden;
           color: white;
@@ -294,16 +298,16 @@
           -webkit-backdrop-filter: blur(6px);
           border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: 9999px; 
-          padding: 2px 12px; /* reduced top/bottom padding to make it thinner */
+          padding: 1px 8px; /* even thinner */
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          min-width: 65px; /* ensures a nice elongated look */
+          min-width: 50px; /* smaller */
       }
       .jornada-prize-label {
-          font-size: 0.55rem;
+          font-size: 0.5rem;
           font-weight: 600;
           color: rgba(255, 255, 255, 0.85);
           text-transform: uppercase;
@@ -311,7 +315,7 @@
           margin-bottom: 0px; /* tighter vertical spacing */
       }
       .jornada-prize-amount {
-          font-size: 0.85rem; 
+          font-size: 0.75rem; 
           font-weight: 900;
           color: #fbbf24;
           text-shadow: 0 1px 2px rgba(0,0,0,0.8);

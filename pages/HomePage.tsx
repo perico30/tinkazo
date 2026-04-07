@@ -162,9 +162,9 @@ const CountdownTimer: React.FC<{ firstMatchDateStr: string }> = ({ firstMatchDat
 
 // --- Componentes de sección (Ahora dinámicos) ---
 const WelcomeMessage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
-  <section className="text-center mb-16">
-    <h1 className="text-5xl font-extrabold mb-4 gradient-text">{title}</h1>
-    <p className="text-lg text-gray-300 max-w-3xl mx-auto">{description}</p>
+  <section className="text-center mb-8 sm:mb-16 mt-4 sm:mt-0">
+    <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 sm:mb-6 gradient-text leading-tight">{title}</h1>
+    <p className="text-base sm:text-lg text-gray-300 max-w-3xl mx-auto px-4 leading-snug">{description}</p>
   </section>
 );
 
@@ -277,19 +277,19 @@ const JornadasSection: React.FC<{
 
   if (visibleJornadas.length === 0) {
     return (
-      <section>
-        <h2 className="text-4xl font-bold mb-8 text-center">Jornadas Disponibles</h2>
-        <div className="bg-gray-800 rounded-lg p-8 text-center">
-          <p className="text-gray-400">No hay jornadas disponibles en este momento. ¡Vuelve pronto!</p>
+      <section className="mb-8">
+        <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center">Jornadas Disponibles</h2>
+        <div className="bg-gray-800 rounded-lg p-6 sm:p-8 text-center">
+          <p className="text-sm sm:text-base text-gray-400">No hay jornadas disponibles en este momento. ¡Vuelve pronto!</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section>
-      <h2 className="text-4xl font-bold mb-8 text-center gradient-text">Jornadas Disponibles</h2>
-      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <section className="mb-8">
+      <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center gradient-text">Jornadas Disponibles</h2>
+      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {visibleJornadas.map(jornada => {
           const playable = isJornadaPlayable(jornada);
           const isGordito = jornada.id === gorditoJornadaId;
@@ -338,13 +338,12 @@ const JornadasSection: React.FC<{
                   <h3 className="jornada-card-title">{jornada.name}</h3>
                 </div>
                 <footer className="jornada-card-footer">
-                  <div className="jornada-prize">
-                      <p className="jornada-prize-label">1er Lugar</p>
-                      <p className="jornada-prize-amount">{jornada.firstPrize}</p>
-                  </div>
-                  <div className="jornada-prize">
-                      <p className="jornada-prize-label">2do Lugar</p>
-                      <p className="jornada-prize-amount">{jornada.secondPrize}</p>
+                  <div className="bg-[#020617]/50 border border-white/10 rounded-full px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-inner">
+                      <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">1er:</span>
+                      <span className="text-[11px] font-black text-cyan-400">{jornada.firstPrize}</span>
+                      <span className="text-gray-600 font-bold">|</span>
+                      <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">2do:</span>
+                      <span className="text-[11px] font-black text-indigo-400">{jornada.secondPrize}</span>
                   </div>
                    <button 
                       onClick={() => onPlayJornada(jornada)}
@@ -459,8 +458,8 @@ const HomePage: React.FC<HomePageProps> = (props) => {
       
       {isPopupVisible && <WelcomePopup config={appConfig.welcomePopup} onClose={closePopup} primaryColor={appConfig.theme.primaryColor} />}
 
-      <main className="flex-grow pt-24">
-        <div className="container mx-auto px-4 py-8">
+      <main className="flex-grow pt-16 sm:pt-24">
+        <div className="container mx-auto px-4 py-2 sm:py-8">
           
           <WelcomeMessage title={appConfig.welcomeMessage.title} description={appConfig.welcomeMessage.description} />
           

@@ -42,13 +42,12 @@ const JornadaAdminPreviewCard: React.FC<{ jornada: Jornada }> = ({ jornada }) =>
                     <h3 className="jornada-card-title">{jornada.name || 'Nombre Jornada'}</h3>
                 </div>
                 <footer className="jornada-card-footer">
-                    <div className="jornada-prize">
-                        <p className="jornada-prize-label">1er Lugar</p>
-                        <p className="jornada-prize-amount">{jornada.firstPrize || 'Bs 1000'}</p>
-                    </div>
-                    <div className="jornada-prize">
-                        <p className="jornada-prize-label">2do Lugar</p>
-                        <p className="jornada-prize-amount">{jornada.secondPrize || 'Bs 500'}</p>
+                    <div className="bg-[#020617]/50 border border-white/10 rounded-full px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-inner">
+                        <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">1er:</span>
+                        <span className="text-[11px] font-black text-cyan-400">{jornada.firstPrize || 'Bs 1000'}</span>
+                        <span className="text-gray-600 font-bold">|</span>
+                        <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">2do:</span>
+                        <span className="text-[11px] font-black text-indigo-400">{jornada.secondPrize || 'Bs 500'}</span>
                     </div>
                     <button className="jornada-play-button" disabled>Jugar</button>
                 </footer>

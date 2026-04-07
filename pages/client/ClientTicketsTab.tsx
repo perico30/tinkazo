@@ -8,9 +8,10 @@ interface ClientTicketsTabProps {
     jornadas: Jornada[];
     teams: Team[];
     onViewCarton: (carton: Carton) => void;
+    onDeleteCarton: (cartonId: string) => void;
 }
 
-const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas, teams, onViewCarton }) => {
+const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas, teams, onViewCarton, onDeleteCarton }) => {
     const { liveEvents } = useLiveScores();
     if (cartones.length === 0) {
         return (
@@ -112,6 +113,8 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                         </span>
                     );
                 }
+
+                const isDeletable = earlyLost || (resultsProcessed && !isWinner);
                 
                 return (
                     <div key={carton.id} className="bg-gray-800 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -129,12 +132,22 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                                 <p className="mt-1 text-sm font-semibold text-yellow-400">Aciertos en vivo: {liveHits}/{jornada.matches.length}</p>
                             ) : null}
                         </div>
-                        <button 
-                            onClick={() => onViewCarton(carton)}
-                            className="w-full sm:w-auto flex-shrink-0 bg-cyan-500 text-gray-900 font-bold px-4 py-2 rounded-lg hover:bg-cyan-400"
-                        >
-                            Ver/Editar Cartón
-                        </button>
+                        <div className="w-full sm:w-auto flex sm:flex-col gap-2 flex-shrink-0">
+                            {isDeletable && (
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); onDeleteCarton(carton.id); }}
+                                    className="flex-1 sm:flex-none bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-3 py-2 rounded-lg hover:bg-red-500/40 text-sm"
+                                >
+                                    Eliminar
+                                </button>
+                            )}
+                            <button 
+                                onClick={() => onViewCarton(carton)}
+                                className="flex-1 sm:flex-none bg-cyan-500 text-gray-900 font-bold px-4 py-2 rounded-lg hover:bg-cyan-400 text-sm w-full"
+                            >
+                                Ver Cartón
+                            </button>
+                        </div>
                     </div>
                 );
             })}

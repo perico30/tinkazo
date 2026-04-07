@@ -47,7 +47,11 @@ const ClientDashboardTab: React.FC<ClientDashboardTabProps> = ({ currentUser, co
                       const playable = isJornadaPlayable(jornada);
 
                       return (
-                          <div key={jornada.id} className={`jornada-card ${playable ? '' : 'opacity-75 grayscale'}`}>
+                          <div 
+                              key={jornada.id} 
+                              className={`jornada-card transition-transform ${playable ? 'cursor-pointer hover:shadow-cyan-500/20 shadow-xl active:scale-[0.98]' : 'opacity-75 grayscale'}`}
+                              onClick={() => playable && onPlayJornada(jornada)}
+                          >
                               {jornada.styling.backgroundImage && (
                                   <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
                               )}
@@ -85,18 +89,20 @@ const ClientDashboardTab: React.FC<ClientDashboardTabProps> = ({ currentUser, co
                                       <h3 className="jornada-card-title">{jornada.name}</h3>
                                   </div>
                                   <footer className="jornada-card-footer">
-                                      <div className="jornada-prize">
-                                          <p className="jornada-prize-label">1er Lugar</p>
-                                          <p className="jornada-prize-amount">{jornada.firstPrize}</p>
-                                      </div>
-                                      <div className="jornada-prize">
-                                          <p className="jornada-prize-label">2do Lugar</p>
-                                          <p className="jornada-prize-amount">{jornada.secondPrize}</p>
+                                      <div className="bg-[#020617]/50 border border-white/10 rounded-full px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-inner">
+                                          <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">1er:</span>
+                                          <span className="text-[11px] font-black text-cyan-400">{jornada.firstPrize}</span>
+                                          <span className="text-gray-600 font-bold">|</span>
+                                          <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">2do:</span>
+                                          <span className="text-[11px] font-black text-indigo-400">{jornada.secondPrize}</span>
                                       </div>
                                       <button 
                                           className="jornada-button action disabled:bg-gray-600 disabled:cursor-not-allowed mx-auto block mt-4" 
                                           disabled={!playable}
-                                          onClick={() => onPlayJornada(jornada)}
+                                          onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (playable) onPlayJornada(jornada);
+                                          }}
                                       >
                                           {playable ? 'Jugar Ahora' : 'Cerrada'}
                                       </button>

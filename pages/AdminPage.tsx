@@ -4,8 +4,7 @@ import DashboardTab from './admin/DashboardTab';
 import ConfigurationTab from './admin/ConfigurationTab';
 import JornadasTab from './admin/JornadasTab';
 import UsersTab from './admin/UsersTab';
-import WithdrawalsTab from './admin/WithdrawalsTab';
-import RechargesTab from './admin/RechargesTab';
+import AdminFinancialTab from './admin/AdminFinancialTab';
 import SaveIcon from '../components/icons/SaveIcon';
 import HomeIcon from '../components/icons/HomeIcon';
 import LogoutIcon from '../components/icons/LogoutIcon';
@@ -18,8 +17,8 @@ import CreditCardIcon from '../components/icons/CreditCardIcon';
 import AdminClientTicketsModal from './admin/AdminClientTicketsModal';
 import CartonModal from '../components/CartonModal';
 import MenuIcon from '../components/icons/MenuIcon';
-import CloseIcon from '../components/icons/CloseIcon';
 import CheckCircleIcon from '../components/icons/CheckCircleIcon';
+import Header from '../components/Header';
 
 
 interface AdminPageProps {
@@ -31,7 +30,7 @@ interface AdminPageProps {
   onProcessSellerRecharge: (requestId: string, action: 'approve' | 'reject') => void;
 }
 
-type AdminTab = 'dashboard' | 'config' | 'jornadas' | 'users' | 'withdrawals' | 'recharges';
+type AdminTab = 'dashboard' | 'config' | 'jornadas' | 'users' | 'financial';
 
 type SaveState = 'idle' | 'saving' | 'success';
 
@@ -100,8 +99,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'jornadas', label: 'Jornadas', icon: CalendarIcon },
     { id: 'users', label: 'Usuarios', icon: UsersGroupIcon },
-    { id: 'recharges', label: 'Recargas', icon: CreditCardIcon },
-    { id: 'withdrawals', label: 'Retiros', icon: BanknotesIcon },
+    { id: 'financial', label: 'Financiero', icon: BanknotesIcon },
     { id: 'config', label: 'Configuración', icon: GearIcon },
   ];
 
@@ -115,10 +113,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
         return <JornadasTab config={draftConfig} setConfig={setDraftConfig} />;
       case 'users':
         return <UsersTab config={draftConfig} setConfig={setDraftConfig} onActivateUser={handleDraftActivateUser} onRechargeUser={handleDraftRechargeUser} onViewClientTickets={handleViewClientTickets} />;
-      case 'recharges':
-        return <RechargesTab config={draftConfig} onProcessSellerRecharge={onProcessSellerRecharge} />;
-      case 'withdrawals':
-        return <WithdrawalsTab config={draftConfig} onProcessWithdrawal={onProcessWithdrawal} />;
+      case 'financial':
+        return <AdminFinancialTab config={draftConfig} onProcessWithdrawal={onProcessWithdrawal} onProcessSellerRecharge={onProcessSellerRecharge} />;
       default:
         return null;
     }
@@ -180,30 +176,37 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
         />
       )}
       <div className="relative flex flex-col h-full bg-gray-900 text-white overflow-hidden">
+        
+        <Header 
+          appName={draftConfig.appName}
+          logoUrl={draftConfig.logoUrl}
+          userRole="admin"
+          currentUser={null} // Admins usually don't have a balance to show in this context
+          primaryColor={draftConfig.theme.primaryColor}
+          userCartonCount={0}
+          onHomeClick={onExit}
+          onLoginClick={() => {}}
+          onRegisterClick={() => {}}
+          onAdminClick={() => {}}
+          onLogoutClick={onLogout}
+        />
+
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
-          <header className="bg-gray-800/80 backdrop-blur-md sticky top-0 z-10 shadow-md p-3 flex justify-between items-center gap-2 border-b border-gray-800">
-             <div className="flex items-center gap-2 overflow-hidden">
-                <button onClick={onExit} className="p-2 bg-gray-700/50 text-cyan-400 rounded-full flex-shrink-0 active:scale-90 transition-transform" aria-label="Pantalla de Inicio">
-                    <HomeIcon className="h-4 w-4"/>
-                </button>
-                <button onClick={onLogout} className="p-2 bg-gray-700/50 rounded-full flex-shrink-0 active:scale-90 transition-transform" aria-label="Cerrar Sesión">
-                    <LogoutIcon className="h-4 w-4 text-gray-400"/>
-                </button>
-                <h2 className="text-lg font-bold text-cyan-400 truncate">{tabs.find(t => t.id === activeTab)?.label}</h2>
+            <div className="bg-gray-800/80 p-2 border-b border-gray-800 sticky top-0 z-10 backdrop-blur-md flex justify-between items-center px-4">
+                <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">{tabs.find(t => t.id === activeTab)?.label}</span>
+                {isConfigTabActive && (
+                    <button 
+                      onClick={handleSave}
+                      disabled={saveState !== 'idle'}
+                      className={`flex shrink-0 items-center justify-center gap-2 text-white font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform text-xs sm:text-sm
+                        ${saveState === 'success' ? 'bg-green-600' : 'btn-gradient'}
+                        disabled:opacity-70 disabled:cursor-not-allowed`}
+                    >
+                      {renderSaveButtonContent()}
+                    </button>
+                )}
             </div>
-            {isConfigTabActive && (
-                <button 
-                  onClick={handleSave}
-                  disabled={saveState !== 'idle'}
-                  className={`flex shrink-0 items-center justify-center gap-2 text-white font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform text-sm
-                    ${saveState === 'success' ? 'bg-green-600' : 'btn-gradient'}
-                    disabled:opacity-70 disabled:cursor-not-allowed`}
-                >
-                  {renderSaveButtonContent()}
-                </button>
-            )}
-          </header>
           
           <div className="p-4 overflow-y-auto">
             {renderTabContent()}
@@ -211,8 +214,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
         </main>
 
         {/* Bottom Nav */}
-        <nav className="absolute bottom-0 w-full bg-[#020617]/90 backdrop-blur-xl border-t border-slate-800 pb-safe z-40">
-           <div className="flex justify-around items-center h-16 px-1 overflow-x-auto no-scrollbar">
+        <nav className="absolute bottom-6 left-4 right-4 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-[2rem] z-40 shadow-2xl shadow-cyan-900/20 overflow-hidden">
+           <div className="flex justify-around items-center h-16 w-full px-1 overflow-x-auto no-scrollbar">
               {tabs.map(tab => (
                  <button
                     key={tab.id}

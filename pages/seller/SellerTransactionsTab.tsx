@@ -77,45 +77,42 @@ const SellerTransactionsTab: React.FC<SellerTransactionsTabProps> = ({ currentUs
     }, [transactions, rechargeRequests]);
 
     return (
-        <div className="bg-gray-800 p-4 rounded-lg">
-            <h2 className="font-semibold text-lg mb-4">Historial de Movimientos</h2>
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-300">
-                    <thead className="text-xs text-gray-400 uppercase bg-gray-700">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">Fecha</th>
-                            <th scope="col" className="px-6 py-3">Tipo</th>
-                            <th scope="col" className="px-6 py-3">Descripción</th>
-                            <th scope="col" className="px-6 py-3 text-center">Estado</th>
-                            <th scope="col" className="px-6 py-3 text-right">Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {historyItems.map(item => (
-                            <tr key={item.id} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
-                                <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.dateStr)}</td>
-                                <td className="px-6 py-4 flex items-center gap-2">
-                                    <span className="text-lg">{getTransactionIcon(item.type)}</span>
-                                    <span>{getTransactionLabel(item.type)}</span>
-                                </td>
-                                <td className="px-6 py-4">{item.description}</td>
-                                <td className="px-6 py-4 text-center">
-                                    <span className={`px-2 py-1 text-xs font-bold rounded-full uppercase ${item.statusColor}`}>
-                                        {item.statusLabel}
+        <details className="bg-gray-800 rounded-lg p-3 border border-gray-700/50 group">
+            <summary className="font-semibold text-sm cursor-pointer list-none flex justify-between items-center text-gray-300 hover:text-white transition-colors">
+                <span>Historial de Movimientos ({historyItems.length})</span>
+                <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            
+            <div className="mt-3 bg-gray-900/50 rounded overflow-hidden border border-gray-700/50">
+               {historyItems.length === 0 ? (
+                    <p className="text-center text-gray-500 text-xs py-4">No hay transacciones registradas.</p>
+               ) : (
+                   <div className="flex flex-col divide-y divide-gray-700/50">
+                        {historyItems.map((tx) => (
+                            <div key={tx.id} className="flex justify-between items-center p-2 text-xs hover:bg-gray-700/30 transition-colors">
+                                <div className="flex items-center gap-2 truncate pr-2">
+                                    <span className="text-gray-500 text-[9px] w-8 flex-shrink-0">
+                                        {new Date(tx.dateMs).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
                                     </span>
-                                </td>
-                                <td className={`px-6 py-4 text-right font-bold ${getTransactionColor(item.amount, item.type)}`}>
-                                    {item.amount > 0 ? '+' : ''}Bs {Math.abs(item.amount).toLocaleString('es-ES')}
-                                </td>
-                            </tr>
+                                    <div className="truncate flex items-center gap-1">
+                                        <span className="text-[10px]">{getTransactionIcon(tx.type)}</span>
+                                        <p className="font-semibold text-gray-300 text-[10px] uppercase truncate">{getTransactionLabel(tx.type)}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 flex-shrink-0 text-right">
+                                    <span className={`px-1 py-0.5 text-[8px] font-bold rounded uppercase ${tx.statusColor}`}>
+                                        {tx.statusLabel}
+                                    </span>
+                                    <span className={`font-bold ${getTransactionColor(tx.amount, tx.type)} w-16 text-right inline-block text-[10px]`}>
+                                        {tx.amount > 0 ? '+' : (tx.amount < 0 ? '-' : '')}{Math.floor(Math.abs(tx.amount))}
+                                    </span>
+                                </div>
+                            </div>
                         ))}
-                    </tbody>
-                </table>
-                {historyItems.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No hay transacciones registradas.</p>
-                )}
+                    </div>
+               )}
             </div>
-        </div>
+        </details>
     );
 };
 
