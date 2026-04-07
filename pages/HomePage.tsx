@@ -176,7 +176,18 @@ const JackpotsSection: React.FC<{ gorditoJackpot: JackpotConfig; botinJackpot: J
         amount: `Bs ${Math.floor(botinAmount).toLocaleString('es-ES')}`,
     };
     
-    const jackpotsToRender = [gorditoJackpot, botinToRender];
+    // Ensure Gordito has 'Bs' prefix and correct formatting if it is numeric
+    const cleanGorditoNumber = gorditoJackpot.amount.replace(/[^0-9]/g, '');
+    const formattedGorditoAmount = cleanGorditoNumber 
+        ? `Bs ${Number(cleanGorditoNumber).toLocaleString('es-ES')}` 
+        : gorditoJackpot.amount;
+
+    const gorditoToRender: JackpotConfig = {
+        ...gorditoJackpot,
+        amount: formattedGorditoAmount
+    };
+
+    const jackpotsToRender = [gorditoToRender, botinToRender];
 
     return (
     <section className="grid md:grid-cols-2 gap-8">
