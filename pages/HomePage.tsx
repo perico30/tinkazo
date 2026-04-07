@@ -332,10 +332,7 @@ const JornadasSection: React.FC<{
                 style={{ backgroundColor: hexToRgba(jornada.styling.backgroundColor, 0.7) }}
               ></div>
               
-              <div className="absolute top-2 left-2 z-[4] flex items-center gap-1 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full shadow-lg backdrop-blur-sm border border-cyan-400/30">
-                  <TicketIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  <span>Bs. {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span>
-              </div>
+
               
               {getFirstMatchDateStr(jornada) && playable && (
                   <CountdownTimer firstMatchDateStr={getFirstMatchDateStr(jornada)!} />
@@ -359,12 +356,18 @@ const JornadasSection: React.FC<{
               )}
 
               <div className="jornada-card-content" style={{ color: jornada.styling.textColor }}>
-                <header className="jornada-card-header">
-                  <div className="info">
-                    <SoccerIcon className="h-4 w-4" />
-                    <span>{jornada.matches.length} Partidos</span>
+                <header className="jornada-card-header items-start">
+                  <div className="flex flex-col gap-2">
+                    <div className="info">
+                      <SoccerIcon className="h-4 w-4" />
+                      <span>{jornada.matches.length} Partidos</span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-cyan-400/30 w-fit">
+                        <TicketIcon className="h-3 w-3" />
+                        <span>Bs. {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span>
+                    </div>
                   </div>
-                  {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="League" className="h-5 w-auto rounded" />}
+                  {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="League" className="h-5 w-auto rounded mt-1" />}
                 </header>
                 <div className="jornada-card-body">
                   <h3 className="jornada-card-title">{jornada.name}</h3>
