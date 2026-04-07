@@ -571,69 +571,91 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                 await supabase.from('users').update(updates).eq('id', u.id);
             }
         }
-        for (const c of processedConfig.cartones) {
+        // 3. Optimize Ticket (Cartones) updates
+        // Only update tickets that actually changed (e.g. after a jornada closes)
+        const cartonesToUpdate = processedConfig.cartones.filter(c => {
+            const orig = appConfig.cartones.find((original: typeof c) => original.id === c.id);
+            return !orig || c.hits !== orig.hits || c.prizeWon !== orig.prizeWon || JSON.stringify(c.prizeDetails) !== JSON.stringify(orig.prizeDetails);
+        });
+        
+        for (const c of cartonesToUpdate) {
             await supabase.from('tickets').update({ hits: c.hits, prize_won: c.prizeWon, prize_details: c.prizeDetails }).eq('id', c.id);
         }
         
-        // Sync Jornadas natively instead of JSON
-        for (const j of processedConfig.jornadas) {
-            const { error: jError } = await supabase.from('jornadas').upsert({ 
-                id: j.id,
-                name: j.name,
-                status: j.status,
-                first_prize_amount: parseFloat(j.firstPrize.replace(/[^0-9]/g, "")) || 0,
-                second_prize_amount: parseFloat(j.secondPrize.replace(/[^0-9]/g, "")) || 0,
-                carton_price: j.cartonPrice || 0,
-                botin_match_id: j.botinMatchId,
-                botin_result: j.botinResult,
-                flag_icon_url: j.flagIconUrl,
-                styling: j.styling,
-                results_processed: j.resultsProcessed
-            });
+        // 4. Sync Jornadas via Bulk Upsert
+        const jornadasToUpsert = processedConfig.jornadas.map(j => ({
+            id: j.id,
+            name: j.name,
+            status: j.status,
+            first_prize_amount: parseFloat(j.firstPrize.replace(/[^0-9]/g, "")) || 0,
+            second_prize_amount: parseFloat(j.secondPrize.replace(/[^0-9]/g, "")) || 0,
+            carton_price: j.cartonPrice || 0,
+            botin_match_id: j.botinMatchId,
+            botin_result: j.botinResult,
+            flag_icon_url: j.flagIconUrl,
+            styling: j.styling,
+            results_processed: j.resultsProcessed
+        }));
+
+        if (jornadasToUpsert.length > 0) {
+            const { error: jError } = await supabase.from('jornadas').upsert(jornadasToUpsert);
             if (jError) {
-                console.error("Error upserting jornada:", jError);
-                throw new Error(`Error guardando jornada ${j.name}: ${jError.message}`);
+                console.error("Error upserting jornadas:", jError);
+                throw new Error(`Error guardando jornadas: ${jError.message}`);
             }
-            
-            let hasMatchErrors = false;
-            for (const m of j.matches) {
-                 const { error: mError } = await supabase.from('matches').upsert({
-                     id: m.id,
-                     jornada_id: j.id,
-                     local_team_id: m.localTeamId,
-                     visitor_team_id: m.visitorTeamId,
-                     date_time: m.dateTime,
-                     result: m.result || null
-                 });
-                 if (mError) {
-                     console.error("Error upserting match:", mError);
-                     hasMatchErrors = true;
-                     throw new Error(`Error guardando un partido de ${j.name}: ${mError.message}`);
-                 }
+        }
+        
+        // 5. Sync Matches via Bulk Upsert
+        const allMatchesToUpsert = [];
+        processedConfig.jornadas.forEach(j => {
+            j.matches.forEach(m => {
+                allMatchesToUpsert.push({
+                    id: m.id,
+                    jornada_id: j.id,
+                    local_team_id: m.localTeamId,
+                    visitor_team_id: m.visitorTeamId,
+                    date_time: m.dateTime,
+                    result: m.result || null
+                });
+            });
+        });
+
+        if (allMatchesToUpsert.length > 0) {
+            const { error: mError } = await supabase.from('matches').upsert(allMatchesToUpsert);
+            if (mError) {
+                console.error("Error upserting matches:", mError);
+                throw new Error(`Error guardando partidos: ${mError.message}`);
             }
+        }
             
-            // Handle Match Deletions ONLY if inserts succeeded to prevent accidental wiping
-            if (!hasMatchErrors) {
-                const { data: existingMatches } = await supabase.from('matches').select('id').eq('jornada_id', j.id);
-                if (existingMatches) {
-                     const currentMatchIds = j.matches.map(m => m.id);
-                     const matchesToDelete = existingMatches.filter(em => !currentMatchIds.includes(em.id));
-                     for (const dm of matchesToDelete) {
-                         await supabase.from('matches').delete().eq('id', dm.id);
-                     }
+        // 6. Handle Match Deletions
+        const { data: existingMatches } = await supabase.from('matches').select('id, jornada_id');
+        if (existingMatches) {
+            const currentJornadaIds = processedConfig.jornadas.map(j => j.id);
+            const currentMatchIds = allMatchesToUpsert.map(m => m.id);
+            
+            // Only care about matches from jornadas that still exist, but aren't in the new list
+            const matchesToDelete = existingMatches.filter(em => currentJornadaIds.includes(em.jornada_id) && !currentMatchIds.includes(em.id));
+            
+            if (matchesToDelete.length > 0) {
+                const idsToDelete = matchesToDelete.map(m => m.id);
+                // Supabase limit for .in() is usually generous but let's be safe
+                for (let i = 0; i < idsToDelete.length; i += 100) {
+                    await supabase.from('matches').delete().in('id', idsToDelete.slice(i, i + 100));
                 }
             }
         }
         
-        // Handle Jornada Deletions
+        // 7. Handle Jornada Deletions
         const { data: existingJornadas, error: fetchEJError } = await supabase.from('jornadas').select('id');
         if (existingJornadas && !fetchEJError) {
             const currentIds = processedConfig.jornadas.map(j => j.id);
-            const toDelete = existingJornadas.filter(ej => !currentIds.includes(ej.id));
-            if (toDelete.length > 0) {
-                 for (const d of toDelete) {
-                      await supabase.from('jornadas').delete().eq('id', d.id);
-                 }
+            const toDeleteIds = existingJornadas.filter(ej => !currentIds.includes(ej.id)).map(ej => ej.id);
+            
+            if (toDeleteIds.length > 0) {
+                for (let i = 0; i < toDeleteIds.length; i += 100) {
+                    await supabase.from('jornadas').delete().in('id', toDeleteIds.slice(i, i + 100));
+                }
             }
         }
 
