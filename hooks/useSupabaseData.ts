@@ -43,6 +43,7 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
             logoUrl: configData.theme?.logoUrl || initialAppConfig.logoUrl,
             botinAmount: parseFloat(configData.botin_amount ?? initialAppConfig.botinAmount.toString()),
             sellerCommissionPercentage: parseFloat(configData.seller_commission_percentage ?? initialAppConfig.sellerCommissionPercentage.toString()),
+            welcomeBonusAmount: parseFloat(configData.welcome_bonus_amount ?? initialAppConfig.welcomeBonusAmount.toString()),
             adminWhatsappNumber: configData.admin_whatsapp,
             welcomeMessage: configData.welcome_message || initialAppConfig.welcomeMessage,
             welcomePopup: configData.welcome_popup || initialAppConfig.welcomePopup,

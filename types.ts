@@ -152,7 +152,7 @@ export interface Transaction {
   id: string;
   userId: string;
   amount: number;
-  type: 'recharge' | 'withdrawal' | 'prize' | 'ticket_purchase' | 'commission' | 'transfer_in' | 'transfer_out';
+  type: 'recharge' | 'withdrawal' | 'prize' | 'ticket_purchase' | 'commission' | 'transfer_in' | 'transfer_out' | 'welcome_bonus';
   referenceId?: string | null;
   description?: string;
   createdAt: string;
@@ -201,5 +201,6 @@ export interface AppConfig {
   footer: FooterConfig;
   botinAmount: number;
   sellerCommissionPercentage: number;
+  welcomeBonusAmount: number;
   transactions: Transaction[];
 }

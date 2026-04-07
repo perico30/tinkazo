@@ -356,6 +356,17 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
                 />
                 <p className="text-xs text-gray-400 mt-1">Porcentaje de comisión que gana un vendedor al recargar su propio saldo.</p>
             </div>
+            <div>
+                <label className="block mb-1 text-sm font-medium text-gray-300">Bono de Bienvenida para Nuevos Registros</label>
+                <input 
+                    type="number" 
+                    value={config.welcomeBonusAmount || 0} 
+                    onChange={e => handleValueChange('welcomeBonusAmount', Number(e.target.value))} 
+                    className="w-full bg-gray-700 p-2 rounded"
+                    min="0"
+                />
+                <p className="text-xs text-gray-400 mt-1">Monto inicial que recibe automáticamente un cliente al registrarse exitosamente en la plataforma.</p>
+            </div>
         </div>
       </details>
 

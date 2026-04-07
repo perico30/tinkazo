@@ -96,6 +96,7 @@ const initialAppConfig: AppConfig = {
     rechargeRequests: [],
     botinAmount: 10000, // Initial Botin amount
     sellerCommissionPercentage: 10, // Default 10% commission for sellers
+    welcomeBonusAmount: 0,
     transactions: [],
     footer: {
       copyright: '© 2024 TINKAZO. Todos los derechos reservados.',
@@ -326,7 +327,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleRegister = useCallback(async (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => {
+  const handleRegister = useCallback(async (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>, sellerCode?: string) => {
     // FIX: Using Supabase Auth
     try {
         const { data, error } = await supabase.auth.signUp({
@@ -337,7 +338,8 @@ const App: React.FC = () => {
                     username: userData.username,
                     role: 'client',
                     phone: userData.phone,
-                    country: userData.country
+                    country: userData.country,
+                    seller_code: sellerCode // Injected for handle_new_user trigger
                 }
             }
         });
@@ -361,7 +363,7 @@ const App: React.FC = () => {
              }
         }
 
-        alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
+        alert('¡Registro exitoso! Por favor revisa tu correo electrónico e ingresa al enlace que te hemos enviado para confirmar tu cuenta y habilitar tu Bono de Bienvenida.');
         setCurrentView('login');
     } catch (error: any) {
         showNotification(error.message || 'Error al registrar.');
@@ -516,6 +518,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
             theme: { ...processedConfig.theme, logoUrl: processedConfig.logoUrl },
             botin_amount: processedConfig.botinAmount,
             seller_commission_percentage: processedConfig.sellerCommissionPercentage,
+            welcome_bonus_amount: processedConfig.welcomeBonusAmount,
             admin_whatsapp: processedConfig.adminWhatsappNumber,
             welcome_message: processedConfig.welcomeMessage,
             welcome_popup: processedConfig.welcomePopup,

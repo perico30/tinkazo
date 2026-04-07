@@ -7,7 +7,7 @@ interface RegisterPageProps {
   setCurrentView: (view: View) => void;
   primaryColor: string;
   // FIX: Updated the Omit type to also exclude 'status' and 'balance', which are handled by the parent component.
-  onRegister: (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => void;
+  onRegister: (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>, sellerCode?: string) => void;
   appName: string;
   logoUrl: string;
 }
@@ -18,10 +18,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ setCurrentView, primaryColo
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState(COUNTRIES[0].code);
+  const [sellerCode, setSellerCode] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onRegister({ username, email, password, phone, country });
+    onRegister({ username, email, password, phone, country }, sellerCode);
   };
 
   return (
@@ -105,6 +106,24 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ setCurrentView, primaryColo
                   </select>
                 </div>
               </div>
+              
+              <div className="pt-2 border-t border-gray-700/50 mt-2">
+                <label htmlFor="sellerCode" className="text-sm font-medium text-cyan-300 block mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Código de Vendedor (Opcional)
+                </label>
+                <input
+                  type="text"
+                  id="sellerCode"
+                  value={sellerCode}
+                  onChange={(e) => setSellerCode(e.target.value.trim())}
+                  className="w-full bg-gray-800/80 border border-cyan-500/30 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 focus:outline-none transition placeholder-gray-500"
+                  placeholder="Ej: pedro_ventas (Déjalo en blanco si no tienes)"
+                />
+              </div>
+
               <button
                 type="submit"
                 className="w-full text-white font-bold py-3 rounded-lg mt-6 shadow-lg btn-gradient"
