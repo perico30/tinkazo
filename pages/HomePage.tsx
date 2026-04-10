@@ -259,7 +259,8 @@ const JornadasSection: React.FC<{
     gorditoJornadaId?: string | null;
     onPlayJornada: (jornada: Jornada) => void 
 }> = ({ jornadas, currentUser, onPlayJornada, gorditoJornadaId }) => {
-  const visibleJornadas = jornadas.filter(j => j.status !== 'cancelada');
+  // Solo mostramos jornadas que no estén canceladas y que todavía NO hayan sido procesadas (no se han pagado los premios finales)
+  const visibleJornadas = jornadas.filter(j => j.status !== 'cancelada' && !j.resultsProcessed);
   
   const isJornadaPlayable = (jornada: Jornada) => {
     // Filter out matches that don't have a valid date. This makes the check more robust
@@ -337,6 +338,20 @@ const JornadasSection: React.FC<{
               {getFirstMatchDateStr(jornada) && playable && (
                   <CountdownTimer firstMatchDateStr={getFirstMatchDateStr(jornada)!} />
               )}
+
+              
+              <div className="absolute top-2 left-2 z-[4]">
+                {playable ? (
+                  <div className="flex items-center gap-1 bg-green-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                    Disponible
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 bg-red-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
+                    Cerrada
+                  </div>
+                )}
+              </div>
 
               {(isGordito || hasBotin) && (
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-[4]">

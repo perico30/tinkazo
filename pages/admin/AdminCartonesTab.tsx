@@ -60,11 +60,29 @@ const AdminCartonesTab: React.FC<AdminCartonesTabProps> = ({ config, onViewCarto
             <tbody>
               {filteredCartones.map((carton) => {
                 const user = getUserDetails(carton.userId);
+                const jornada = config.jornadas.find(j => j.id === carton.jornadaId);
+                const isProcessed = jornada?.resultsProcessed;
+                const isLost = isProcessed && (!carton.prizeWon || carton.prizeWon === 0);
+                const isWinner = isProcessed && carton.prizeWon && carton.prizeWon > 0;
+                
+                let rowStyle = "border-b border-gray-700 hover:bg-gray-750 transition-colors";
+                let textStyle = "text-white";
+                let idStyle = "text-gray-400";
+                
+                if (isLost) {
+                    rowStyle = "border-b border-red-500/30 bg-red-900/40 hover:bg-red-900/60 transition-colors";
+                    textStyle = "text-red-100";
+                    idStyle = "text-red-300";
+                } else if (isWinner) {
+                    rowStyle = "border-b border-green-500/30 bg-green-900/40 hover:bg-green-900/60 transition-colors";
+                    textStyle = "text-green-100";
+                }
+
                 return (
-                  <tr key={carton.id} className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-400">{carton.id.substring(0, 8)}...</td>
+                  <tr key={carton.id} className={rowStyle}>
+                    <td className={`px-4 py-3 font-mono text-xs ${idStyle}`}>{carton.id.substring(0, 8)}...</td>
                     <td className="px-4 py-3">
-                      <div className="font-semibold text-white">{user.name}</div>
+                      <div className={`font-semibold ${textStyle}`}>{user.name}</div>
                       <div className="text-xs text-cyan-400">{user.email}</div>
                     </td>
                     <td className="px-4 py-3 truncate max-w-[150px]">{getJornadaName(carton.jornadaId)}</td>
