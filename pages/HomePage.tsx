@@ -260,7 +260,7 @@ const JornadasSection: React.FC<{
     onPlayJornada: (jornada: Jornada) => void 
 }> = ({ jornadas, currentUser, onPlayJornada, gorditoJornadaId }) => {
   // Solo mostramos jornadas que no estén canceladas y que todavía NO hayan sido procesadas (no se han pagado los premios finales)
-  const visibleJornadas = jornadas.filter(j => j.status !== 'cancelada' && !j.resultsProcessed);
+  const visibleJornadas = jornadas.filter(j => j.status !== 'cancelada' && j.status !== 'cerrada' && !j.resultsProcessed);
   
   const isJornadaPlayable = (jornada: Jornada) => {
     // Filter out matches that don't have a valid date. This makes the check more robust

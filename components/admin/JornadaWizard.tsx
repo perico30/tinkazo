@@ -28,7 +28,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
   const [selectedMatches, setSelectedMatches] = useState<ExternalMatch[]>([]);
   const [expandedCountries, setExpandedCountries] = useState<Set<string>>(new Set());
   const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
-  
+
   // Form fields
   const [name, setName] = useState('');
   const [firstPrize, setFirstPrize] = useState('');
@@ -55,9 +55,9 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
     setLoading(true);
     let data;
     if (searchQuery) {
-        data = await searchLiveScoreEvents(searchQuery, startDate, endDate);
+      data = await searchLiveScoreEvents(searchQuery, startDate, endDate);
     } else {
-        data = await fetchLiveScoreEvents(startDate, endDate);
+      data = await fetchLiveScoreEvents(startDate, endDate);
     }
     // Filtrar para que solo aparezcan partidos que NO han empezado (NS = Not Started)
     data = data.filter(match => match.status === 'NS');
@@ -93,19 +93,19 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
     // Al guardar, intentamos obtener los logos almacenados en cache (o re-fetch si es rápido)
     // Para guardarlos en la BD y que los clientes no tengan que buscarlos
     const newTeams: Team[] = [];
-    
+
     // Función auxiliar para obtener equipos sin depender de bloqueos pesados
     const resolveTeam = async (id: string, name: string, fallbackUrl: string | undefined) => {
-        let logo = await getCachedLogoUrl(name);
-        if (!logo) logo = fallbackUrl || '';
-        if (!newTeams.find(t => t.id === id)) {
-           newTeams.push({ id, name, logo });
-        }
+      let logo = await getCachedLogoUrl(name);
+      if (!logo) logo = fallbackUrl || '';
+      if (!newTeams.find(t => t.id === id)) {
+        newTeams.push({ id, name, logo });
+      }
     };
 
     // Generar Partidos y Equipos
     const matches: Match[] = [];
-    
+
     for (const em of selectedMatches) {
       await resolveTeam(em.team1.id, em.team1.name, em.logo1);
       await resolveTeam(em.team2.id, em.team2.name, em.logo2);
@@ -190,35 +190,35 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-gray-400 font-semibold">Desde:</label>
                   <input
-                      type="date"
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
                   />
                   <label className="text-sm text-gray-400 font-semibold">Hasta:</label>
                   <input
-                      type="date"
-                      value={endDate}
-                      onChange={e => setEndDate(e.target.value)}
-                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
-                      min={startDate}
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
+                    min={startDate}
                   />
                 </div>
                 <div className="flex flex-1 gap-2 mt-2 md:mt-0">
-                    <input 
-                      type="text" 
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Buscar equipo, liga o país..."
-                      className="flex-1 bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
-                      onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                    />
-                    <button 
-                      onClick={handleSearch}
-                      className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 rounded-lg flex items-center justify-center font-bold text-sm transition"
-                    >
-                      Buscar
-                    </button>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Buscar equipo, liga o país..."
+                    className="flex-1 bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
+                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  />
+                  <button
+                    onClick={handleSearch}
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 rounded-lg flex items-center justify-center font-bold text-sm transition"
+                  >
+                    Buscar
+                  </button>
                 </div>
               </div>
 
@@ -230,42 +230,41 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
                 <div className="space-y-2">
                   {Object.entries(groupedMatches).map(([country, leagues]) => (
                     <div key={country} className="border border-gray-700 rounded-lg overflow-hidden">
-                      <button 
+                      <button
                         onClick={() => toggleCountry(country)}
                         className="w-full bg-gray-800 p-3 flex justify-between items-center hover:bg-gray-700 transition"
                       >
                         <span className="font-bold text-gray-200">{country}</span>
                         <span className="text-xl">{expandedCountries.has(country) ? '▼' : '▶'}</span>
                       </button>
-                      
+
                       {expandedCountries.has(country) && (
                         <div className="bg-gray-900 border-t border-gray-700 p-2 space-y-2">
                           {Object.entries(leagues).map(([league, matches]) => {
                             const leagueId = `${country}-${league}`;
                             return (
                               <div key={leagueId} className="border border-gray-700/50 rounded-lg overflow-hidden">
-                                <button 
+                                <button
                                   onClick={() => toggleLeague(leagueId)}
                                   className="w-full bg-gray-800/80 p-2 flex justify-between items-center hover:bg-gray-700/80 transition text-sm"
                                 >
                                   <span className="font-semibold text-cyan-300">{league} ({matches.length})</span>
                                   <span>{expandedLeagues.has(leagueId) ? '▼' : '▶'}</span>
                                 </button>
-                                
+
                                 {expandedLeagues.has(leagueId) && (
                                   <div className="p-2 grid grid-cols-1 xl:grid-cols-2 gap-2 bg-gray-900/50">
                                     {matches.map(match => {
                                       const isSelected = selectedMatches.some(m => m.id === match.id);
                                       return (
-                                        <div 
+                                        <div
                                           key={match.id}
                                           onClick={() => toggleMatchSelection(match)}
-                                          className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col justify-center ${
-                                            isSelected ? 'border-cyan-500 bg-cyan-900/40' : 'border-gray-700 bg-gray-800 hover:border-gray-600'
-                                          }`}
+                                          className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col justify-center ${isSelected ? 'border-cyan-500 bg-cyan-900/40' : 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                                            }`}
                                         >
                                           <div className="text-xs text-center text-gray-400 mb-2 border-b border-gray-700/50 pb-1">
-                                            {new Date(match.startDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} • {new Date(match.startDate).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}
+                                            {new Date(match.startDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} • {new Date(match.startDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                                           </div>
                                           <div className="flex justify-between items-center gap-2">
                                             <div className="flex-1 flex flex-col items-center text-center gap-1">
@@ -303,7 +302,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
             <div className="space-y-6 max-w-2xl mx-auto">
               <h3 className="text-lg font-semibold text-cyan-400 mb-2">Paso 2: Configuración Comercial</h3>
               <p className="text-gray-400 text-sm mb-4">Has seleccionado {selectedMatches.length} partidos para esta jornada.</p>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm mb-1 text-gray-300">Nombre de la Jornada</label>
@@ -330,11 +329,11 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
           {step === 3 && (
             <div className="space-y-6 max-w-2xl mx-auto">
               <h3 className="text-lg font-semibold text-cyan-400 mb-2">Paso 3: Detalles Finales y Estilos</h3>
-              
+
               <div className="bg-gray-700/50 p-4 rounded-lg mb-6">
                 <label className="block text-sm mb-2 text-yellow-500 font-bold">¿Qué partido aplicará para el Pozo "Gordito"?</label>
-                <select 
-                  value={botinMatchId || ''} 
+                <select
+                  value={botinMatchId || ''}
                   onChange={e => setBotinMatchId(e.target.value)}
                   className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600"
                 >
@@ -349,11 +348,11 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm mb-2">Color de Fondo</label>
-                  <input type="color" value={styling.backgroundColor} onChange={e => setStyling(s => ({...s, backgroundColor: e.target.value}))} className="w-full h-12 rounded bg-gray-700 cursor-pointer" />
+                  <input type="color" value={styling.backgroundColor} onChange={e => setStyling(s => ({ ...s, backgroundColor: e.target.value }))} className="w-full h-12 rounded bg-gray-700 cursor-pointer" />
                 </div>
                 <div>
                   <label className="block text-sm mb-2">Color del Botón</label>
-                  <input type="color" value={styling.buttonColor} onChange={e => setStyling(s => ({...s, buttonColor: e.target.value}))} className="w-full h-12 rounded bg-gray-700 cursor-pointer" />
+                  <input type="color" value={styling.buttonColor} onChange={e => setStyling(s => ({ ...s, buttonColor: e.target.value }))} className="w-full h-12 rounded bg-gray-700 cursor-pointer" />
                 </div>
               </div>
 
@@ -361,7 +360,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
                 <ImageUpload label="Bandera o Logo de la Liga" imageUrl={flagIconUrl} onImageSelect={setFlagIconUrl} />
               </div>
               <div className="mt-4">
-                <ImageUpload label="Imagen de Fondo (Opcional)" imageUrl={styling.backgroundImage} onImageSelect={url => setStyling(s => ({...s, backgroundImage: url}))} />
+                <ImageUpload label="Imagen de Fondo (Opcional)" imageUrl={styling.backgroundImage} onImageSelect={url => setStyling(s => ({ ...s, backgroundImage: url }))} />
               </div>
             </div>
           )}
@@ -369,15 +368,15 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
 
         {/* Footer */}
         <div className="p-4 bg-gray-900 border-t border-gray-700 flex justify-between rounded-b-lg">
-          <button 
-            onClick={step === 1 ? onCancel : () => setStep((step - 1) as 1 | 2)} 
+          <button
+            onClick={step === 1 ? onCancel : () => setStep((step - 1) as 1 | 2)}
             className="px-6 py-2 rounded-lg font-semibold bg-gray-700 hover:bg-gray-600 transition-colors"
           >
             {step === 1 ? 'Cancelar' : 'Atrás'}
           </button>
 
           {step === 1 && (
-             <button 
+            <button
               onClick={handleNextStep1}
               className="px-6 py-2 rounded-lg font-bold bg-cyan-500 text-gray-900 hover:bg-cyan-400 transition-colors flex items-center gap-2"
             >
@@ -386,7 +385,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
           )}
 
           {step === 2 && (
-             <button 
+            <button
               onClick={handleNextStep2}
               className="px-6 py-2 rounded-lg font-bold bg-cyan-500 text-gray-900 hover:bg-cyan-400 transition-colors"
             >
@@ -395,7 +394,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
           )}
 
           {step === 3 && (
-             <button 
+            <button
               onClick={handleFinish}
               className="px-8 py-2 rounded-lg font-bold bg-green-500 text-gray-900 hover:bg-green-400 transition-colors shadow-[0_0_15px_rgba(34,197,94,0.4)]"
             >
