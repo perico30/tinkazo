@@ -17,8 +17,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, imageUrl, onImageSelec
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) { // Max size 2MB
-            alert('El archivo es demasiado grande. Por favor, elige una imagen de menos de 2MB.');
+        if (file.size > 5 * 1024 * 1024) { // Max size 5MB
+            alert('El archivo es demasiado grande. Por favor, elige una imagen de menos de 5MB.');
             return;
         }
 

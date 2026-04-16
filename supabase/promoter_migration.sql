@@ -51,3 +51,7 @@ DROP POLICY IF EXISTS "Promoter profiles insertable by authenticated" ON promote
 CREATE POLICY "Promoter profiles insertable by authenticated"
   ON promoter_profiles FOR INSERT
   WITH CHECK (true);
+
+-- 6. Agregar columnas de QR y WhatsApp al perfil del promotor
+ALTER TABLE promoter_profiles ADD COLUMN IF NOT EXISTS qr_image_url TEXT DEFAULT NULL;
+ALTER TABLE promoter_profiles ADD COLUMN IF NOT EXISTS whatsapp_number TEXT DEFAULT NULL;

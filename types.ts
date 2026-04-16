@@ -13,6 +13,7 @@ export interface ThemeConfig {
   textColor: string;
   primaryColor: string;
   backgroundStyle: 'space' | 'business';
+  backgroundImageUrl?: string;
   hiddenSections?: ('jackpots' | 'carousel' | 'jornadas' | 'tutorials')[];
 }
 
@@ -132,6 +133,8 @@ export interface PromoterProfile {
   guaranteeBalance: number;
   status: 'active' | 'suspended';
   createdAt: string;
+  qrImageUrl?: string;
+  whatsappNumber?: string;
 }
 
 export type Prediction = '1' | 'X' | '2';

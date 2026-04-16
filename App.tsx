@@ -1319,7 +1319,15 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
 
   return (
     <div className="bg-[#020617] flex justify-center items-center fixed inset-0 w-full h-full overflow-hidden">
-      <main className="w-full h-[100dvh] relative overflow-hidden shadow-2xl flex flex-col body-bg-space">
+      <main 
+        className="w-full h-[100dvh] relative overflow-hidden shadow-2xl flex flex-col body-bg-space"
+        style={appConfig.theme.backgroundImageUrl ? {
+          backgroundImage: `linear-gradient(to bottom, rgba(2,6,23,0.75), rgba(2,6,23,0.85)), url(${appConfig.theme.backgroundImageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed'
+        } : undefined}
+      >
         <div className="flex-1 overflow-y-auto no-scrollbar relative">
             {renderMainContent()}
         </div>

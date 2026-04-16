@@ -6,7 +6,6 @@ import JornadasTab from './admin/JornadasTab';
 import UsersTab from './admin/UsersTab';
 import AdminFinancialTab from './admin/AdminFinancialTab';
 import AdminCartonesTab from './admin/AdminCartonesTab';
-import PromoterManagementTab from './admin/PromoterManagementTab';
 import SaveIcon from '../components/icons/SaveIcon';
 import HomeIcon from '../components/icons/HomeIcon';
 import LogoutIcon from '../components/icons/LogoutIcon';
@@ -34,7 +33,7 @@ interface AdminPageProps {
   dataFetchError?: boolean;
 }
 
-type AdminTab = 'dashboard' | 'config' | 'jornadas' | 'users' | 'financial' | 'cartones' | 'promoters';
+type AdminTab = 'dashboard' | 'config' | 'jornadas' | 'users' | 'financial' | 'cartones';
 
 type SaveState = 'idle' | 'saving' | 'success';
 
@@ -105,7 +104,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
     { id: 'cartones', label: 'Cartones', icon: TicketIcon },
     { id: 'users', label: 'Usuarios', icon: UsersGroupIcon },
     { id: 'financial', label: 'Financiero', icon: BanknotesIcon },
-    { id: 'promoters', label: 'Promotores', icon: UsersGroupIcon },
     { id: 'config', label: 'Configuración', icon: GearIcon },
   ];
 
@@ -123,8 +121,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
         return <UsersTab config={draftConfig} setConfig={setDraftConfig} onActivateUser={handleDraftActivateUser} onRechargeUser={handleDraftRechargeUser} onViewClientTickets={handleViewClientTickets} />;
       case 'financial':
         return <AdminFinancialTab config={draftConfig} onProcessWithdrawal={onProcessWithdrawal} onProcessSellerRecharge={onProcessSellerRecharge} />;
-      case 'promoters':
-        return <PromoterManagementTab config={draftConfig} setConfig={setDraftConfig} />;
       default:
         return null;
     }
@@ -160,7 +156,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
     }
   };
 
-  const isConfigTabActive = ['config', 'jornadas', 'users', 'promoters'].includes(activeTab);
+  const isConfigTabActive = ['config', 'jornadas', 'users'].includes(activeTab);
 
   return (
     <>

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { AppConfig, RegisteredUser, Carton, Prediction, Jornada, Team, PromoterProfile } from '../types';
 import JornadaWizard from '../components/admin/JornadaWizard';
+import ImageUpload from '../components/admin/ImageUpload';
 import CartonModal from '../components/CartonModal';
 import Header from '../components/Header';
 import HomeIcon from '../components/icons/HomeIcon';
@@ -22,7 +23,7 @@ interface PromoterPageProps {
   onPlayJornada: (jornada: Jornada) => void;
 }
 
-type PromoterTab = 'dashboard' | 'jornadas' | 'clients' | 'finance';
+type PromoterTab = 'dashboard' | 'jornadas' | 'clients' | 'finance' | 'settings';
 
 const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada }) => {
   const [activeTab, setActiveTab] = useState<PromoterTab>('dashboard');
@@ -172,11 +173,34 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
   const getCartonesForJornada = (jornadaId: string) =>
     config.cartones.filter(c => c.jornadaId === jornadaId);
 
+  // Settings state
+  const [settingsQr, setSettingsQr] = useState(promoterProfile?.qrImageUrl || '');
+  const [settingsWhatsapp, setSettingsWhatsapp] = useState(promoterProfile?.whatsappNumber || '');
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  const handleSaveSettings = async () => {
+    if (!promoterProfile) return;
+    setSavingSettings(true);
+    try {
+      const { error } = await supabase
+        .from('promoter_profiles')
+        .update({ qr_image_url: settingsQr, whatsapp_number: settingsWhatsapp })
+        .eq('user_id', currentUser.id);
+      if (error) throw error;
+      alert('¡Configuración guardada!');
+    } catch (e: any) {
+      alert('Error: ' + e.message);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   const tabs: { id: PromoterTab; label: string; icon: React.FC<{className?: string}> }[] = [
     { id: 'dashboard', label: 'Inicio', icon: HomeIcon },
     { id: 'jornadas', label: 'Jornadas', icon: CalendarIcon },
     { id: 'clients', label: 'Clientes', icon: UsersIcon },
     { id: 'finance', label: 'Financiero', icon: WalletIcon },
+    { id: 'settings', label: 'Ajustes', icon: GearIcon },
   ];
 
   return (
@@ -605,6 +629,40 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-bold text-purple-400">⚙️ Configuración de Pago</h2>
+                <p className="text-sm text-gray-400">Configura tu QR de pago y WhatsApp. Tus clientes verán esta información al recargar saldo.</p>
+                
+                <div className="bg-gray-800 p-6 rounded-lg space-y-5">
+                  <ImageUpload
+                    label="Tu Código QR de Pago"
+                    imageUrl={settingsQr}
+                    onImageSelect={setSettingsQr}
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Número de WhatsApp</label>
+                    <input
+                      type="tel"
+                      value={settingsWhatsapp}
+                      onChange={e => setSettingsWhatsapp(e.target.value)}
+                      className="w-full bg-gray-700 p-2.5 rounded-lg border border-gray-600"
+                      placeholder="+58 412 1234567"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Incluye código de país. Ej: +58412...</p>
+                  </div>
+                  <button
+                    onClick={handleSaveSettings}
+                    disabled={savingSettings}
+                    className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 font-bold transition disabled:opacity-50"
+                  >
+                    {savingSettings ? 'Guardando...' : '💾 Guardar Configuración'}
+                  </button>
                 </div>
               </div>
             )}

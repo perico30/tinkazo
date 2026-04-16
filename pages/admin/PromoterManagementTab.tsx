@@ -160,6 +160,64 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
     }
   };
 
+  const handleToggleStatus = async (userId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+    const action = newStatus === 'suspended' ? 'suspender' : 'activar';
+    if (!window.confirm(`¿Estás seguro de ${action} a este promotor?`)) return;
+    try {
+      const { error } = await supabase
+        .from('promoter_profiles')
+        .update({ status: newStatus })
+        .eq('user_id', userId);
+      if (error) throw error;
+      setConfig(prev => ({
+        ...prev,
+        promoterProfiles: prev.promoterProfiles.map(p =>
+          p.userId === userId ? { ...p, status: newStatus as 'active' | 'suspended' } : p
+        )
+      }));
+      alert(`Promotor ${newStatus === 'active' ? 'activado' : 'suspendido'} exitosamente.`);
+    } catch (e: any) {
+      alert('Error: ' + e.message);
+    }
+  };
+
+  const handleDeletePromoter = async (userId: string, username: string) => {
+    if (!window.confirm(`¿Eliminar al promotor "${username}"?\n\nSus clientes quedarán asignados al administrador. Esta acción no se puede deshacer.`)) return;
+    try {
+      // Unassign clients that were referred by this promoter
+      await supabase
+        .from('users')
+        .update({ referred_by: null, assigned_seller_id: null })
+        .eq('referred_by', userId);
+
+      // Delete promoter profile first
+      const { error: profileError } = await supabase
+        .from('promoter_profiles')
+        .delete()
+        .eq('user_id', userId);
+      if (profileError) throw profileError;
+
+      // Delete user record
+      const { error: userError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+      if (userError) throw userError;
+
+      setConfig(prev => ({
+        ...prev,
+        promoterProfiles: prev.promoterProfiles.filter(p => p.userId !== userId),
+        users: prev.users.map(u => 
+          u.referredBy === userId ? { ...u, referredBy: null, assignedSellerId: null } : u
+        ).filter(u => u.id !== userId)
+      }));
+      alert('Promotor eliminado. Sus clientes ahora están con el administrador.');
+    } catch (e: any) {
+      alert('Error al eliminar: ' + e.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -374,6 +432,26 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
                     })}
                   </div>
                 )}
+
+                {/* Actions */}
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-700">
+                  <button
+                    onClick={() => handleToggleStatus(user.id, profile?.status || 'active')}
+                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${
+                      profile?.status === 'active'
+                        ? 'bg-yellow-900/30 hover:bg-yellow-900/50 border border-yellow-500/30 text-yellow-300'
+                        : 'bg-green-900/30 hover:bg-green-900/50 border border-green-500/30 text-green-300'
+                    }`}
+                  >
+                    {profile?.status === 'active' ? '⏸️ Suspender' : '▶️ Activar'}
+                  </button>
+                  <button
+                    onClick={() => handleDeletePromoter(user.id, user.username)}
+                    className="px-4 py-2 rounded-lg text-sm font-bold bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-red-300 transition"
+                  >
+                    🗑️ Eliminar
+                  </button>
+                </div>
               </div>
             );
           })}

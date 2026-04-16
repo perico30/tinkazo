@@ -181,6 +181,10 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ config, setConfig }
                 <option value="business">Corporativo</option>
             </select>
           </div>
+          <ImageUpload label="Imagen de Fondo Personalizada (Opcional)" imageUrl={config.theme.backgroundImageUrl || ''} onImageSelect={url => handleNestedChange('theme', 'backgroundImageUrl', url)} />
+          {config.theme.backgroundImageUrl && (
+            <button type="button" onClick={() => handleNestedChange('theme', 'backgroundImageUrl', '')} className="text-sm text-red-400 hover:underline -mt-2">Eliminar imagen de fondo</button>
+          )}
           <div className="flex items-center justify-between"><label>Color de Texto</label><input type="color" value={config.theme.textColor} onChange={e => handleNestedChange('theme', 'textColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
           <div className="flex items-center justify-between md:col-span-2"><label>Color Primario (Acentos)</label><input type="color" value={config.theme.primaryColor} onChange={e => handleNestedChange('theme', 'primaryColor', e.target.value)} className="w-12 h-10 rounded border-none bg-gray-700" /></div>
         </div>

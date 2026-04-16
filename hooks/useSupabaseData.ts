@@ -154,7 +154,9 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
             referralCode: p.referral_code,
             guaranteeBalance: parseFloat(p.guarantee_balance || '0'),
             status: p.status,
-            createdAt: p.created_at
+            createdAt: p.created_at,
+            qrImageUrl: p.qr_image_url || '',
+            whatsappNumber: p.whatsapp_number || ''
           }))
         };
 

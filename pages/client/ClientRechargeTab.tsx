@@ -20,10 +20,15 @@ const ClientRechargeTab: React.FC<ClientRechargeTabProps> = ({ currentUser, conf
 
     const assignedSeller = config.users.find(u => u.id === currentUser.assignedSellerId);
     
-    // Determine which QR and WhatsApp to use
-    const qrCodeUrl = assignedSeller?.sellerQrCodeUrl || config.recharge.qrCodeUrl;
-    const whatsappNumber = assignedSeller?.sellerWhatsappNumber || config.adminWhatsappNumber;
-    const sellerName = assignedSeller?.username || 'el administrador';
+    // Check if the user was referred by a promoter
+    const referrerPromoterProfile = currentUser.referredBy 
+      ? config.promoterProfiles.find(p => p.userId === currentUser.referredBy) 
+      : null;
+
+    // Priority: Promoter QR > Seller QR > Admin QR
+    const qrCodeUrl = referrerPromoterProfile?.qrImageUrl || assignedSeller?.sellerQrCodeUrl || config.recharge.qrCodeUrl;
+    const whatsappNumber = referrerPromoterProfile?.whatsappNumber || assignedSeller?.sellerWhatsappNumber || config.adminWhatsappNumber;
+    const sellerName = referrerPromoterProfile?.displayName || assignedSeller?.username || 'el administrador';
 
     const handleRechargeRequest = (e: React.FormEvent) => {
         e.preventDefault();

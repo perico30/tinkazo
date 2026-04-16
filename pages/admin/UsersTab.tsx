@@ -8,6 +8,7 @@ import TrashIcon from '../../components/icons/TrashIcon';
 import PencilIcon from '../../components/icons/PencilIcon';
 import CheckCircleIcon from '../../components/icons/CheckCircleIcon';
 import WalletIcon from '../../components/icons/WalletIcon';
+import PromoterManagementTab from './PromoterManagementTab';
 
 interface UsersTabProps {
   config: AppConfig;
@@ -207,7 +208,7 @@ const AddSellerModal: React.FC<{ onClose: () => void; onSave: (data: any) => voi
 
 
 const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, onRechargeUser, onViewClientTickets }) => {
-    const [activeSubTab, setActiveSubTab] = useState<'client' | 'seller'>('client');
+    const [activeSubTab, setActiveSubTab] = useState<'client' | 'seller' | 'promoter'>('client');
     const [searchQuery, setSearchQuery] = useState('');
     const [modalUser, setModalUser] = useState<RegisteredUser | null>(null);
     const [rechargeModalUser, setRechargeModalUser] = useState<RegisteredUser | null>(null);
@@ -338,6 +339,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                      <div className="flex border-b border-gray-700">
                         <button onClick={() => { setActiveSubTab('client'); setSearchQuery(''); }} className={`px-4 py-2 text-sm font-medium ${activeSubTab === 'client' ? 'border-b-2 border-cyan-400 text-white' : 'text-gray-400 hover:text-white'}`}>Clientes</button>
                         <button onClick={() => { setActiveSubTab('seller'); setSearchQuery(''); }} className={`px-4 py-2 text-sm font-medium ${activeSubTab === 'seller' ? 'border-b-2 border-cyan-400 text-white' : 'text-gray-400 hover:text-white'}`}>Vendedores</button>
+                        <button onClick={() => { setActiveSubTab('promoter'); setSearchQuery(''); }} className={`px-4 py-2 text-sm font-medium ${activeSubTab === 'promoter' ? 'border-b-2 border-purple-400 text-white' : 'text-gray-400 hover:text-white'}`}>Promotores</button>
                     </div>
                     {activeSubTab === 'seller' && (
                         <button 
@@ -350,6 +352,10 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                     )}
                 </div>
 
+                {activeSubTab === 'promoter' ? (
+                  <PromoterManagementTab config={config} setConfig={setConfig} />
+                ) : (
+                  <>
                 <div className="mb-4 bg-blue-900/30 border border-blue-500/50 rounded p-3 text-sm text-blue-200">
                     <p className="font-bold mb-1">ℹ️ Registro de Usuarios Seguros</p>
                     <p>Como ahora usamos autenticación segura de Supabase, <strong>los usuarios y vendedores deben registrarse ellos mismos</strong> desde la página pública principal. Una vez registrados, aparecerán aquí con estado "Pendiente" listos para ser verificados.</p>
@@ -414,6 +420,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                     </table>
                     {usersToDisplay.length === 0 && <p className="text-center text-gray-500 py-8">No se encontraron resultados.</p>}
                 </div>
+                  </>
+                )}
             </div>
         </div>
     );
