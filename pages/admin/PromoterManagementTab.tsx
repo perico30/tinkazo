@@ -144,6 +144,14 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
           : `Ajuste de garantía: Bs ${amount}`
       });
 
+      // Update local state immediately
+      setConfig(prev => ({
+        ...prev,
+        promoterProfiles: prev.promoterProfiles.map(p =>
+          p.userId === userId ? { ...p, guaranteeBalance: newBalance } : p
+        )
+      }));
+
       alert(`Garantía actualizada: ${amount > 0 ? '+' : ''}Bs ${amount}`);
       setEditingGuarantee(null);
       setGuaranteeAmount('');
