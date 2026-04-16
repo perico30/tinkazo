@@ -384,7 +384,10 @@ const App: React.FC = () => {
         if (error) throw error;
 
         if (data?.user) {
-             const { error: insertError } = await supabase.from('users').insert({
+             // Small delay to let the trigger finish inserting first
+             await new Promise(resolve => setTimeout(resolve, 500));
+             
+             const { error: upsertError } = await supabase.from('users').upsert({
                 id: data.user.id,
                 username: userData.username,
                 email: userData.email,
@@ -396,9 +399,9 @@ const App: React.FC = () => {
                 assigned_seller_id: assignedSellerId,
                 referred_by: referrerId,
                 referral_code: null
-             });
-             if (insertError && insertError.code !== '23505') {
-                 console.error("Error manual insert public.users:", insertError);
+             }, { onConflict: 'id' });
+             if (upsertError) {
+                 console.error("Error upsert public.users:", upsertError);
              }
         }
 
