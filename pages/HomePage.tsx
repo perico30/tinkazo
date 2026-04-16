@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import type { AppConfig, JackpotConfig, CarouselImage, UserRole, LegalLink, Jornada, Team, RegisteredUser, Carton, VideoTutorial } from '../types';
+import type { AppConfig, JackpotConfig, CarouselImage, UserRole, LegalLink, Jornada, Team, RegisteredUser, Carton, VideoTutorial, PromoterProfile } from '../types';
 import SoccerIcon from '../components/icons/SoccerIcon';
 import StarIcon from '../components/icons/StarIcon';
 import TicketIcon from '../components/icons/TicketIcon';
@@ -160,8 +160,34 @@ const CountdownTimer: React.FC<{ firstMatchDateStr: string }> = ({ firstMatchDat
     );
 };
 
+// Inline version (no absolute positioning) - returns just the time text
+const CountdownTimerInline: React.FC<{ firstMatchDateStr: string }> = ({ firstMatchDateStr }) => {
+    const [timeLeft, setTimeLeft] = useState('');
 
-// --- Componentes de sección (Ahora dinámicos) ---
+    useEffect(() => {
+        const targetDate = new Date(firstMatchDateStr);
+        const closingTime = targetDate.getTime() - 10 * 60 * 1000;
+        
+        const updateTimer = () => {
+            const now = new Date().getTime();
+            const distance = closingTime - now;
+            if (distance <= 0) { setTimeLeft('Cerrado'); return; }
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            setTimeLeft(days > 0 ? `${days}d ${hours}h` : `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [firstMatchDateStr]);
+
+    return <span>{timeLeft || '--:--:--'}</span>;
+};
+
+
 const WelcomeMessage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
   <section className="text-center mb-8 sm:mb-16 mt-4 sm:mt-0">
     <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 sm:mb-6 gradient-text leading-tight">{title}</h1>
@@ -256,26 +282,55 @@ const JornadasSection: React.FC<{
     teams: Team[], 
     cartones: Carton[], 
     currentUser: RegisteredUser | null, 
+    promoterProfiles: PromoterProfile[],
     gorditoJornadaId?: string | null;
     onPlayJornada: (jornada: Jornada) => void 
-}> = ({ jornadas, currentUser, onPlayJornada, gorditoJornadaId }) => {
-  // Solo mostramos jornadas que no estén canceladas y que todavía NO hayan sido procesadas (no se han pagado los premios finales)
-  const visibleJornadas = jornadas.filter(j => j.status !== 'cancelada' && j.status !== 'cerrada' && !j.resultsProcessed);
+}> = ({ jornadas, currentUser, onPlayJornada, gorditoJornadaId, promoterProfiles }) => {
+  const [accessCodeInput, setAccessCodeInput] = useState('');
+  const [unlockedPromoterIds, setUnlockedPromoterIds] = useState<Set<string>>(new Set());
+
+  // Check if there are any private jornadas at all
+  const hasPrivateJornadas = jornadas.some(j => j.visibility === 'private' && j.status !== 'cancelada');
+
+  // Filter: show public jornadas + private ones the user has unlocked or owns
+  const visibleJornadas = jornadas.filter(j => {
+    if (j.status === 'cancelada' || j.status === 'cerrada' || j.resultsProcessed) return false;
+    if (!j.visibility || j.visibility === 'public') return true;
+    if (j.visibility === 'private') {
+      if (currentUser && j.promoterId === currentUser.id) return true;
+      // Show if user unlocked this promoter's jornadas
+      if (j.promoterId && unlockedPromoterIds.has(j.promoterId)) return true;
+      // Show if the user was referred by this promoter
+      if (currentUser && j.promoterId && currentUser.referredBy === j.promoterId) return true;
+      return false;
+    }
+    return true;
+  });
+
+  // Handle access code: match against promoter referral codes to unlock ALL their jornadas
+  const handleAccessCode = () => {
+    if (!accessCodeInput.trim()) return;
+    const matchedPromoter = promoterProfiles.find(
+      p => p.referralCode.toUpperCase() === accessCodeInput.trim().toUpperCase()
+    );
+    if (matchedPromoter) {
+      setUnlockedPromoterIds(prev => new Set([...prev, matchedPromoter.userId]));
+      setAccessCodeInput('');
+      alert(`¡Acceso desbloqueado! Ahora puedes ver todas las jornadas de ${matchedPromoter.displayName}.`);
+    } else {
+      alert('Código no válido. Solicita el código correcto a tu promotor.');
+    }
+  };
   
   const isJornadaPlayable = (jornada: Jornada) => {
-    // Filter out matches that don't have a valid date. This makes the check more robust
-    // against malformed data (e.g., a match saved without a date).
     const scheduledMatches = jornada.matches
       .filter(match => match.dateTime && !isNaN(new Date(match.dateTime).getTime()))
       .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
   
-    // If there are no valid, scheduled matches, the jornada is considered open for play.
     if (scheduledMatches.length === 0) return true;
     
     const firstMatchDate = new Date(scheduledMatches[0].dateTime);
     const now = new Date();
-
-    // Disable if less than 10 minutes (600,000 milliseconds) before the first match
     return (firstMatchDate.getTime() - now.getTime()) > 10 * 60 * 1000;
   };
   
@@ -303,113 +358,133 @@ const JornadasSection: React.FC<{
       return timeA - timeB;
   });
 
-  if (sortedJornadas.length === 0) {
-    return (
-      <section className="mb-8">
-        <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center">Jornadas Disponibles</h2>
-        <div className="bg-gray-800 rounded-lg p-6 sm:p-8 text-center">
-          <p className="text-sm sm:text-base text-gray-400">No hay jornadas disponibles en este momento. ¡Vuelve pronto!</p>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="mb-8">
       <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center gradient-text">Jornadas Disponibles</h2>
-      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {sortedJornadas.map(jornada => {
-          const playable = isJornadaPlayable(jornada);
-          const isGordito = jornada.id === gorditoJornadaId;
-          const hasBotin = !!jornada.botinMatchId;
+      
+      {/* Access Code Input - only show when private jornadas exist */}
+      {hasPrivateJornadas && (
+        <div className="flex gap-2 max-w-md mx-auto mb-6">
+          <input
+            type="text"
+            value={accessCodeInput}
+            onChange={e => setAccessCodeInput(e.target.value.toUpperCase())}
+            placeholder="Código de promotor"
+            className="flex-1 bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-yellow-500 focus:outline-none font-mono tracking-wider text-center"
+          />
+          <button
+            onClick={handleAccessCode}
+            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold text-sm transition"
+          >
+            Acceder
+          </button>
+        </div>
+      )}
 
-          return (
-            <div key={jornada.id} className="jornada-card">
-              {jornada.styling.backgroundImage && (
-                <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
-              )}
-              <div 
-                className="jornada-card-overlay"
-                style={{ backgroundColor: hexToRgba(jornada.styling.backgroundColor, 0.7) }}
-              ></div>
-              
+      {sortedJornadas.length === 0 ? (
+        <div className="bg-gray-800 rounded-lg p-6 sm:p-8 text-center">
+          <p className="text-sm sm:text-base text-gray-400">No hay jornadas disponibles en este momento. ¡Vuelve pronto!</p>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {sortedJornadas.map(jornada => {
+            const playable = isJornadaPlayable(jornada);
+            const isGordito = jornada.id === gorditoJornadaId;
+            const hasBotin = !!jornada.botinMatchId;
 
-              
-              {getFirstMatchDateStr(jornada) && playable && (
-                  <CountdownTimer firstMatchDateStr={getFirstMatchDateStr(jornada)!} />
-              )}
+            return (
+              <div key={jornada.id} className="jornada-card">
+                {jornada.styling.backgroundImage && (
+                  <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
+                )}
+                <div 
+                  className="jornada-card-overlay"
+                  style={{ backgroundColor: hexToRgba(jornada.styling.backgroundColor, 0.7) }}
+                ></div>
+                
 
-              
-              <div className="absolute top-2 left-2 z-[4]">
-                {playable ? (
-                  <div className="flex items-center gap-1 bg-green-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                    Disponible
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 bg-red-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
-                    Cerrada
+                {(isGordito || hasBotin) && (
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-[4]">
+                      {isGordito && (
+                          <div className="flex items-center gap-1 bg-green-500/90 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
+                              <StarIcon className="h-3 w-3" />
+                              <span>Gordito Activado</span>
+                          </div>
+                      )}
+                      {hasBotin && (
+                          <div className="flex items-center gap-1 bg-yellow-400/90 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
+                              <StarIcon className="h-3 w-3" />
+                              <span>Botin Activado</span>
+                          </div>
+                      )}
                   </div>
                 )}
-              </div>
 
-              {(isGordito || hasBotin) && (
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-[4]">
-                    {isGordito && (
-                        <div className="flex items-center gap-1 bg-green-500/90 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
-                            <StarIcon className="h-3 w-3" />
-                            <span>Gordito Activado</span>
+                <div className="jornada-card-content" style={{ color: jornada.styling.textColor }}>
+                  <header className="jornada-card-header items-start">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {playable ? (
+                          <div className="flex items-center gap-1 bg-green-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            Disponible
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-red-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
+                            Cerrada
+                          </div>
+                        )}
+                        <div className="info">
+                          <SoccerIcon className="h-4 w-4" />
+                          <span>{jornada.matches.length} Partidos</span>
                         </div>
-                    )}
-                    {hasBotin && (
-                        <div className="flex items-center gap-1 bg-yellow-400/90 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
-                            <StarIcon className="h-3 w-3" />
-                            <span>Botin Activado</span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-cyan-400/30 w-fit">
+                          <TicketIcon className="h-3 w-3" />
+                          <span>Bs. {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="League" className="h-5 w-auto rounded" />}
+                      {getFirstMatchDateStr(jornada) && playable && (
+                        <div className="flex items-center gap-1 bg-black/60 text-white text-[10px] font-mono font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10">
+                          ⏳ <CountdownTimerInline firstMatchDateStr={getFirstMatchDateStr(jornada)!} />
                         </div>
+                      )}
+                    </div>
+                  </header>
+                  <div className="jornada-card-body">
+                    <h3 className="jornada-card-title">{jornada.name}</h3>
+                    {jornada.promoterName && (
+                      <div className="flex items-center gap-1 bg-purple-600/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full w-fit mt-1 backdrop-blur-sm border border-purple-400/30">
+                        🎪 {jornada.promoterName}
+                      </div>
                     )}
-                </div>
-              )}
-
-              <div className="jornada-card-content" style={{ color: jornada.styling.textColor }}>
-                <header className="jornada-card-header items-start">
-                  <div className="flex flex-col gap-2">
-                    <div className="info">
-                      <SoccerIcon className="h-4 w-4" />
-                      <span>{jornada.matches.length} Partidos</span>
-                    </div>
-                    <div className="flex items-center gap-1 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-cyan-400/30 w-fit">
-                        <TicketIcon className="h-3 w-3" />
-                        <span>Bs. {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span>
-                    </div>
                   </div>
-                  {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="League" className="h-5 w-auto rounded mt-1" />}
-                </header>
-                <div className="jornada-card-body">
-                  <h3 className="jornada-card-title">{jornada.name}</h3>
+                  <footer className="jornada-card-footer">
+                    <div className="bg-[#020617]/50 border border-white/10 rounded-full px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-inner">
+                        <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">1er:</span>
+                        <span className="text-[11px] font-black text-cyan-400">{jornada.firstPrize}</span>
+                        <span className="text-gray-600 font-bold">|</span>
+                        <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">2do:</span>
+                        <span className="text-[11px] font-black text-indigo-400">{jornada.secondPrize}</span>
+                    </div>
+                     <button 
+                        onClick={() => onPlayJornada(jornada)}
+                        disabled={!currentUser || !playable}
+                        className="jornada-play-button"
+                        style={{ color: jornada.styling.backgroundColor }}
+                        title={!currentUser ? 'Debes iniciar sesión para jugar' : !playable ? 'La venta para esta jornada ha cerrado' : `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}`}
+                    >
+                        {!playable ? 'Cerrado' : 'Jugar'}
+                    </button>
+                  </footer>
                 </div>
-                <footer className="jornada-card-footer">
-                  <div className="bg-[#020617]/50 border border-white/10 rounded-full px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-inner">
-                      <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">1er:</span>
-                      <span className="text-[11px] font-black text-cyan-400">{jornada.firstPrize}</span>
-                      <span className="text-gray-600 font-bold">|</span>
-                      <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">2do:</span>
-                      <span className="text-[11px] font-black text-indigo-400">{jornada.secondPrize}</span>
-                  </div>
-                   <button 
-                      onClick={() => onPlayJornada(jornada)}
-                      disabled={!currentUser || !playable}
-                      className="jornada-play-button"
-                      style={{ color: jornada.styling.backgroundColor }}
-                      title={!currentUser ? 'Debes iniciar sesión para jugar' : !playable ? 'La venta para esta jornada ha cerrado' : `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}`}
-                  >
-                      {!playable ? 'Cerrado' : 'Jugar'}
-                  </button>
-                </footer>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };
@@ -482,6 +557,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
                 teams={appConfig.teams} 
                 cartones={appConfig.cartones} 
                 currentUser={currentUser} 
+                promoterProfiles={appConfig.promoterProfiles}
                 onPlayJornada={onPlayJornada}
                 gorditoJornadaId={appConfig.gorditoJornadaId}
               />,

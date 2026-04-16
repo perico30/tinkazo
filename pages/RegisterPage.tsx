@@ -6,8 +6,7 @@ import { COUNTRIES } from '../constants/countries';
 interface RegisterPageProps {
   setCurrentView: (view: View) => void;
   primaryColor: string;
-  // FIX: Updated the Omit type to also exclude 'status' and 'balance', which are handled by the parent component.
-  onRegister: (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => void;
+  onRegister: (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'> & { referralCode?: string }) => void;
   appName: string;
   logoUrl: string;
 }
@@ -18,10 +17,15 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ setCurrentView, primaryColo
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState(COUNTRIES[0].code);
+  const [referralCode, setReferralCode] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onRegister({ username, email, password, phone, country });
+    if (!referralCode.trim()) {
+      alert('Debes ingresar un código de referido para registrarte. Solicítalo a tu vendedor o promotor.');
+      return;
+    }
+    onRegister({ username, email, password, phone, country, referralCode: referralCode.trim().toUpperCase() });
   };
 
   return (
@@ -42,6 +46,21 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ setCurrentView, primaryColo
           <div className="glass-card p-8 rounded-2xl">
             <h2 className="text-3xl font-bold text-center text-white mb-6">Crear Cuenta</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="referral-code" className="text-sm font-medium text-gray-300 block mb-2">
+                  Código de Referido <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="referral-code"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  className="w-full bg-gray-700 border border-purple-500/50 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:outline-none transition font-mono tracking-widest text-center text-lg"
+                  placeholder="EJ: TIGRE24"
+                  required
+                />
+                <p className="text-[10px] text-gray-400 mt-1 text-center">Solicita este código a tu vendedor o promotor</p>
+              </div>
               <div>
                 <label htmlFor="username" className="text-sm font-medium text-gray-300 block mb-2">Usuario</label>
                 <input

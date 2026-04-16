@@ -83,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Balance */}
-              {(userRole === 'client' || userRole === 'seller') && (
+              {(userRole === 'client' || userRole === 'seller' || userRole === 'promoter') && (
                 <div className="flex flex-col items-center bg-cyan-900/40 border border-cyan-800/80 px-1.5 py-0.5 rounded-md min-w-[35px]">
                     <span className="text-[7px] text-gray-400 font-bold leading-none uppercase tracking-widest">Saldo</span>
                     <span className="text-[10px] sm:text-sm font-black text-cyan-300 leading-tight">Bs {Math.floor(currentUser.balance || 0)}</span>
@@ -99,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({
               )}
 
               {/* Panel Button */}
-              {userRole === 'seller' && onSellerPanelClick && (
+              {(userRole === 'seller' || userRole === 'promoter') && onSellerPanelClick && (
                  <button
                     onClick={onSellerPanelClick}
                     className="flex flex-col items-center justify-center gap-0.5 px-1.5 py-0.5 sm:px-3 sm:py-1.5 bg-gray-800/40 border border-gray-700/50 rounded-lg transition-colors shrink-0 text-white"

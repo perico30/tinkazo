@@ -1,5 +1,5 @@
-export type View = 'home' | 'login' | 'register' | 'admin' | 'seller' | 'clientPanel' | 'purchaseCarton';
-export type UserRole = 'admin' | 'client' | 'seller' | null;
+export type View = 'home' | 'login' | 'register' | 'admin' | 'seller' | 'promoter' | 'clientPanel' | 'purchaseCarton';
+export type UserRole = 'admin' | 'client' | 'seller' | 'promoter' | null;
 
 export interface Country {
   code: string;
@@ -100,6 +100,10 @@ export interface Jornada {
     backgroundImage: string;
   };
   resultsProcessed?: boolean;
+  promoterId?: string | null;
+  promoterName?: string;
+  visibility?: 'public' | 'private';
+  accessCode?: string | null;
 }
 
 export interface RegisteredUser {
@@ -109,12 +113,25 @@ export interface RegisteredUser {
   password?: string;
   phone: string;
   country: string; // Country code
-  role: 'client' | 'seller';
+  role: 'client' | 'seller' | 'promoter';
   status: 'pending' | 'active';
   assignedSellerId?: string | null; // Only for clients
   balance?: number; // For clients
   sellerQrCodeUrl?: string; // For sellers
   sellerWhatsappNumber?: string; // For sellers
+  referralCode?: string | null;
+  referredBy?: string | null;
+}
+
+export interface PromoterProfile {
+  id: string;
+  userId: string;
+  displayName: string;
+  adminCommissionPct: number;
+  referralCode: string;
+  guaranteeBalance: number;
+  status: 'active' | 'suspended';
+  createdAt: string;
 }
 
 export type Prediction = '1' | 'X' | '2';
@@ -202,4 +219,5 @@ export interface AppConfig {
   botinAmount: number;
   sellerCommissionPercentage: number;
   transactions: Transaction[];
+  promoterProfiles: PromoterProfile[];
 }

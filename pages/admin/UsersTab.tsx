@@ -250,7 +250,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                     phone: sellerData.phone,
                     country: sellerData.country,
                     status: 'active',
-                    balance: 0
+                    balance: 0,
+                    referral_code: sellerData.username.toUpperCase().replace(/\s+/g, '').slice(0, 6) + Math.floor(Math.random() * 100).toString().padStart(2, '0')
                  });
                  if (insertError && insertError.code !== '23505') { // 23505 = conflict/already exists
                      console.error("No se pudo auto-insertar en public.users:", insertError);
@@ -369,6 +370,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                 <th scope="col" className="px-6 py-3">Usuario</th>
                                 <th scope="col" className="px-6 py-3">Correo</th>
                                 {activeSubTab === 'client' && <th scope="col" className="px-6 py-3">Vendedor Asignado</th>}
+                                {activeSubTab === 'seller' && <th scope="col" className="px-6 py-3">Código Referido</th>}
                                 <th scope="col" className="px-6 py-3">Saldo</th>
                                 <th scope="col" className="px-6 py-3">Estado</th>
                                 <th scope="col" className="px-6 py-3 text-right">Acciones</th>
@@ -380,6 +382,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                     <td className="px-6 py-4 font-medium whitespace-nowrap">{user.username}</td>
                                     <td className="px-6 py-4">{user.email}</td>
                                     {activeSubTab === 'client' && <td className="px-6 py-4">{getSellerName(user.assignedSellerId)}</td>}
+                                    {activeSubTab === 'seller' && <td className="px-6 py-4"><span className="font-mono font-bold text-purple-300">{user.referralCode || '—'}</span></td>}
                                     <td className="px-6 py-4 font-semibold">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 text-xs font-bold rounded-full ${user.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>

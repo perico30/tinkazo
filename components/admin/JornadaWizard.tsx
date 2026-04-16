@@ -42,6 +42,8 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
     backgroundColor: '#1f2937',
     backgroundImage: '',
   });
+  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+  const [accessCode, setAccessCode] = useState('');
 
   useEffect(() => {
     // Solo recargar si tenemos ambas fechas válidas
@@ -130,6 +132,8 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
       flagIconUrl,
       styling,
       resultsProcessed: false,
+      visibility,
+      accessCode: visibility === 'private' ? (accessCode || crypto.randomUUID().slice(0, 8).toUpperCase()) : null,
     };
 
     onSave(newJornada, newTeams);
@@ -321,6 +325,30 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
                 <div>
                   <label className="block text-sm mb-1 text-gray-300">Precio del Cartón (Bs)</label>
                   <input type="number" value={cartonPrice} onChange={e => setCartonPrice(e.target.value)} className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600" placeholder="Ej: 50" min="0" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1 text-gray-300">Visibilidad de la Jornada</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setVisibility('public')}
+                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${visibility === 'public' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}
+                    >
+                      🌍 Pública
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVisibility('private')}
+                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${visibility === 'private' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}
+                    >
+                      🔒 Privada
+                    </button>
+                  </div>
+                  {visibility === 'private' && (
+                    <div className="mt-2 bg-yellow-900/20 border border-yellow-500/30 p-3 rounded-lg">
+                      <p className="text-xs text-yellow-300">Solo los jugadores que tengan tu código de referido podrán ver esta jornada.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

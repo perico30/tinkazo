@@ -4,11 +4,12 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminPage from './pages/AdminPage';
 import SellerPage from './pages/SellerPage';
+import PromoterPage from './pages/PromoterPage';
 import ClientPage from './pages/ClientPage';
 import PurchaseCartonPage from './pages/PurchaseCartonPage';
 import Notification from './components/Notification';
 import BottomSheet from './components/BottomSheet';
-import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails } from './types';
+import type { View, AppConfig, UserRole, LegalLink, RegisteredUser, Jornada, Prediction, Carton, WithdrawalRequest, RechargeRequest, PrizeDetails, PromoterProfile } from './types';
 import { useSupabaseData } from './hooks/useSupabaseData';
 import { supabase } from './supabaseClient';
 import TicketIcon from './components/icons/TicketIcon';
@@ -97,6 +98,7 @@ const initialAppConfig: AppConfig = {
     botinAmount: 10000, // Initial Botin amount
     sellerCommissionPercentage: 10, // Default 10% commission for sellers
     transactions: [],
+    promoterProfiles: [],
     footer: {
       copyright: '© 2024 TINKAZO. Todos los derechos reservados.',
       socialLinks: [
@@ -192,6 +194,7 @@ const App: React.FC = () => {
             // Restore view, ensuring it's valid for the user's role
             if ((savedRole === 'admin' && savedView === 'admin') ||
                 (savedRole === 'seller' && savedView === 'seller') ||
+                (savedRole === 'promoter' && savedView === 'promoter') ||
                 (savedRole === 'client' && ['clientPanel', 'purchaseCarton', 'home'].includes(savedView))) {
               setCurrentView(savedView);
             }
@@ -278,6 +281,7 @@ const App: React.FC = () => {
   }, []);
   const navigateToAdmin = useCallback(() => setCurrentView('admin'), []);
   const navigateToSellerPanel = useCallback(() => setCurrentView('seller'), []);
+  const navigateToPromoterPanel = useCallback(() => setCurrentView('promoter'), []);
   const navigateToClientPanel = useCallback(() => {
     if (currentUser?.status === 'pending') {
         alert('Tu cuenta aún no ha sido activada. No puedes acceder a esta sección.');
@@ -316,6 +320,13 @@ const App: React.FC = () => {
       setCurrentView(view);
       localStorage.setItem('tinkazoUserRole', role);
       localStorage.setItem('tinkazoCurrentView', view);
+    } else if (sanitizedUser.role === 'promoter') {
+      const role: UserRole = 'promoter';
+      const view: View = 'promoter';
+      setUserRole(role);
+      setCurrentView(view);
+      localStorage.setItem('tinkazoUserRole', role);
+      localStorage.setItem('tinkazoCurrentView', view);
     } else {
       const role: UserRole = 'client';
       const view: View = 'home';
@@ -326,12 +337,40 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleRegister = useCallback(async (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'>) => {
-    // FIX: Using Supabase Auth
+  const handleRegister = useCallback(async (userData: Omit<RegisteredUser, 'id' | 'role' | 'assignedSellerId' | 'status' | 'balance'> & { referralCode?: string }) => {
     try {
+        // Validate referral code if provided
+        let referrerId: string | null = null;
+        let assignedSellerId: string | null = null;
+        let autoActivate = false;
+
+        if (userData.referralCode) {
+            // Check if it matches a promoter's referral code
+            const matchedPromoter = appConfig.promoterProfiles.find(
+              p => p.referralCode.toUpperCase() === userData.referralCode!.toUpperCase()
+            );
+            // Check if it matches a seller's referral code (from users table)
+            const matchedSeller = appConfig.users.find(
+              u => u.role === 'seller' && u.referralCode?.toUpperCase() === userData.referralCode!.toUpperCase()
+            );
+
+            if (matchedPromoter) {
+                referrerId = matchedPromoter.userId;
+                assignedSellerId = matchedPromoter.userId; // Promoter acts as the seller for this client
+                autoActivate = true;
+            } else if (matchedSeller) {
+                referrerId = matchedSeller.id;
+                assignedSellerId = matchedSeller.id;
+                autoActivate = true;
+            } else {
+                showNotification('Código de referido no válido. Verifica e intenta de nuevo.');
+                return;
+            }
+        }
+
         const { data, error } = await supabase.auth.signUp({
             email: userData.email,
-            password: userData.password || 'Tinkazo123!', // fallback if optional
+            password: userData.password || 'Tinkazo123!',
             options: {
                 data: {
                     username: userData.username,
@@ -344,7 +383,6 @@ const App: React.FC = () => {
         
         if (error) throw error;
 
-        // Force manual insertion into public.users in case the Supabase trigger is missing
         if (data?.user) {
              const { error: insertError } = await supabase.from('users').insert({
                 id: data.user.id,
@@ -353,20 +391,27 @@ const App: React.FC = () => {
                 role: 'client',
                 phone: userData.phone,
                 country: userData.country,
-                status: 'pending',
-                balance: 0
+                status: autoActivate ? 'active' : 'pending',
+                balance: 0,
+                assigned_seller_id: assignedSellerId,
+                referred_by: referrerId,
+                referral_code: null
              });
              if (insertError && insertError.code !== '23505') {
                  console.error("Error manual insert public.users:", insertError);
              }
         }
 
-        alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
+        if (autoActivate) {
+            alert('¡Registro exitoso! Tu cuenta ha sido activada automáticamente. Ya puedes iniciar sesión.');
+        } else {
+            alert('¡Registro exitoso! Tu cuenta ha sido creada, pero necesita ser activada por un administrador para acceder a todas las funciones.');
+        }
         setCurrentView('login');
     } catch (error: any) {
         showNotification(error.message || 'Error al registrar.');
     }
-  }, [showNotification]);
+  }, [showNotification, appConfig.promoterProfiles, appConfig.users]);
 
   const handleLogout = useCallback(() => {
     setUserRole(null);
@@ -594,7 +639,10 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
             botin_result: j.botinResult,
             flag_icon_url: j.flagIconUrl,
             styling: j.styling,
-            results_processed: j.resultsProcessed
+            results_processed: j.resultsProcessed,
+            promoter_id: j.promoterId || null,
+            visibility: j.visibility || 'public',
+            access_code: j.accessCode || null
         }));
 
         if (jornadasToUpsert.length > 0) {
@@ -1181,6 +1229,19 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
               onPlayJornada={handlePlayJornada}
             />
           ) : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
+      case 'promoter':
+        return userRole === 'promoter' && currentUser ? (
+            <PromoterPage
+              currentUser={currentUser}
+              config={appConfig}
+              onSave={handleSaveConfig}
+              onUpdateUser={handleUpdateUser}
+              onTransferBalance={handleTransferBalance}
+              onLogout={handleLogout}
+              onExit={navigateToHome}
+              onPlayJornada={handlePlayJornada}
+            />
+          ) : <LoginPage setCurrentView={setCurrentView} onAdminLogin={handleAdminLogin} onUserLogin={handleUserLogin} users={appConfig.users} primaryColor={appConfig.theme.primaryColor} appName={appConfig.appName} logoUrl={appConfig.logoUrl} />;
       case 'clientPanel':
           if (userRole === 'client' && currentUser) {
               return (
@@ -1213,7 +1274,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
               onRegisterClick={navigateToRegister}
               onHomeClick={navigateToHome}
               onAdminClick={navigateToAdmin}
-              onSellerPanelClick={navigateToSellerPanel}
+              onSellerPanelClick={userRole === 'promoter' ? navigateToPromoterPanel : navigateToSellerPanel}
               onClientPanelClick={navigateToClientPanel}
               onLogoutClick={handleLogout}
               onLegalClick={handleLegalClick}

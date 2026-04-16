@@ -1,0 +1,378 @@
+import React, { useState } from 'react';
+import type { AppConfig, RegisteredUser, PromoterProfile } from '../../types';
+import { supabase } from '../../supabaseClient';
+
+interface PromoterManagementTabProps {
+  config: AppConfig;
+  setConfig: React.Dispatch<React.SetStateAction<AppConfig>>;
+}
+
+const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, setConfig }) => {
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [newCommission, setNewCommission] = useState('10');
+  const [newReferralCode, setNewReferralCode] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingGuarantee, setEditingGuarantee] = useState<string | null>(null);
+  const [guaranteeAmount, setGuaranteeAmount] = useState('');
+
+  const promoterUsers = config.users.filter(u => u.role === 'promoter');
+
+  const getPromoterProfile = (userId: string) =>
+    config.promoterProfiles.find(p => p.userId === userId);
+
+  const getCartonesForPromoter = (userId: string) => {
+    const promoterJornadas = config.jornadas.filter(j => j.promoterId === userId);
+    return config.cartones.filter(c => promoterJornadas.some(j => j.id === c.jornadaId));
+  };
+
+  const getRevenueForPromoter = (userId: string) => {
+    const promoterJornadas = config.jornadas.filter(j => j.promoterId === userId);
+    return config.cartones
+      .filter(c => promoterJornadas.some(j => j.id === c.jornadaId))
+      .reduce((sum, c) => {
+        const jornada = promoterJornadas.find(j => j.id === c.jornadaId);
+        return sum + (jornada?.cartonPrice || 0);
+      }, 0);
+  };
+
+  const handleCreatePromoter = async () => {
+    if (!newUsername || !newEmail || !newPassword || !newDisplayName || !newReferralCode) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    // Check if referral code is unique
+    const codeExists = config.promoterProfiles.some(p => p.referralCode.toUpperCase() === newReferralCode.toUpperCase());
+    if (codeExists) {
+      alert('El código de referido ya existe. Elige otro.');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      // Step 1: Create auth user (this triggers auto-insert into public.users)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newEmail,
+        password: newPassword,
+        options: {
+          data: { username: newUsername, role: 'promoter', phone: newPhone || '0000000', country: 'VE' }
+        }
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo crear el usuario');
+
+      const userId = authData.user.id;
+
+      // Step 2: Wait a moment for the trigger to create the public.users row
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Step 3: Update the auto-created row (trigger already inserted it)
+      const { error: updateError } = await supabase.from('users').upsert({
+        id: userId,
+        username: newUsername,
+        email: newEmail,
+        phone: newPhone || '0000000',
+        country: 'VE',
+        role: 'promoter',
+        status: 'active',
+        balance: 0,
+        referral_code: newReferralCode.toUpperCase()
+      }, { onConflict: 'id' });
+      if (updateError) {
+        console.error("Error updating public.users:", updateError);
+      }
+
+      // Step 4: Insert into promoter_profiles
+      const { error: profileError } = await supabase.from('promoter_profiles').insert({
+        user_id: userId,
+        display_name: newDisplayName,
+        admin_commission_pct: parseFloat(newCommission),
+        referral_code: newReferralCode.toUpperCase(),
+        guarantee_balance: 0,
+        status: 'active'
+      });
+      if (profileError) throw profileError;
+
+      alert(`¡Promotor "${newDisplayName}" creado exitosamente! Código: ${newReferralCode.toUpperCase()}`);
+      setShowCreateForm(false);
+      setNewUsername('');
+      setNewEmail('');
+      setNewPassword('');
+      setNewDisplayName('');
+      setNewCommission('10');
+      setNewReferralCode('');
+      setNewPhone('');
+    } catch (error: any) {
+      alert('Error: ' + (error.message || 'No se pudo crear el promotor'));
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleUpdateGuarantee = async (userId: string) => {
+    const amount = parseFloat(guaranteeAmount);
+    if (isNaN(amount) || amount === 0) {
+      alert('Ingresa un monto válido.');
+      return;
+    }
+    try {
+      const profile = getPromoterProfile(userId);
+      if (!profile) throw new Error('Perfil no encontrado');
+
+      const newBalance = profile.guaranteeBalance + amount;
+
+      const { error } = await supabase
+        .from('promoter_profiles')
+        .update({ guarantee_balance: newBalance })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Create a transaction record
+      await supabase.from('transactions').insert({
+        user_id: userId,
+        amount: amount,
+        type: 'guarantee_deposit',
+        description: amount > 0 
+          ? `Depósito de garantía: +Bs ${amount}` 
+          : `Ajuste de garantía: Bs ${amount}`
+      });
+
+      alert(`Garantía actualizada: ${amount > 0 ? '+' : ''}Bs ${amount}`);
+      setEditingGuarantee(null);
+      setGuaranteeAmount('');
+    } catch (error: any) {
+      alert('Error: ' + (error.message || 'No se pudo actualizar'));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-purple-400">🎪 Gestión de Promotores</h2>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold text-sm transition"
+        >
+          {showCreateForm ? 'Cancelar' : '+ Crear Promotor'}
+        </button>
+      </div>
+
+      {/* Create Form */}
+      {showCreateForm && (
+        <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-lg space-y-3">
+          <h3 className="font-bold text-purple-300">Crear Nuevo Promotor</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={newUsername}
+              onChange={e => setNewUsername(e.target.value)}
+              placeholder="Nombre de usuario"
+              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+            />
+            <input
+              type="email"
+              value={newEmail}
+              onChange={e => setNewEmail(e.target.value)}
+              placeholder="Email"
+              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder="Contraseña"
+              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+            />
+            <input
+              type="text"
+              value={newDisplayName}
+              onChange={e => setNewDisplayName(e.target.value)}
+              placeholder="Nombre comercial (ej: El Tigre)"
+              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+            />
+            <input
+              type="text"
+              value={newReferralCode}
+              onChange={e => setNewReferralCode(e.target.value.toUpperCase())}
+              placeholder="Código referido (ej: TIGRE24)"
+              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm font-mono"
+            />
+            <input
+              type="tel"
+              value={newPhone}
+              onChange={e => setNewPhone(e.target.value)}
+              placeholder="Teléfono"
+              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+            />
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={newCommission}
+                onChange={e => setNewCommission(e.target.value)}
+                placeholder="Comisión %"
+                className="w-20 bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+                min="0"
+                max="100"
+              />
+              <span className="text-sm text-gray-400">% comisión</span>
+            </div>
+          </div>
+          <button
+            onClick={handleCreatePromoter}
+            disabled={isCreating}
+            className="w-full py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold text-sm transition disabled:opacity-50"
+          >
+            {isCreating ? 'Creando...' : 'Crear Promotor'}
+          </button>
+        </div>
+      )}
+
+      {/* Commission Summary */}
+      <div className="bg-gradient-to-r from-green-900/30 to-cyan-900/30 border border-green-500/30 p-4 rounded-lg">
+        <h3 className="font-bold text-green-400 mb-3">💰 Resumen de Comisiones</h3>
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div className="text-2xl font-bold text-white">{promoterUsers.length}</div>
+            <div className="text-xs text-gray-400">Promotores</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-cyan-400">
+              {config.jornadas.filter(j => j.promoterId).length}
+            </div>
+            <div className="text-xs text-gray-400">Jornadas de Promotores</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-green-400">
+              Bs {Math.floor(
+                promoterUsers.reduce((total, u) => {
+                  const profile = getPromoterProfile(u.id);
+                  const revenue = getRevenueForPromoter(u.id);
+                  const commission = revenue * ((profile?.adminCommissionPct || 10) / 100);
+                  return total + commission;
+                }, 0)
+              ).toLocaleString('es-ES')}
+            </div>
+            <div className="text-xs text-gray-400">Tu Comisión Total</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Promoter List */}
+      {promoterUsers.length === 0 ? (
+        <div className="text-center py-10 text-gray-500">No hay promotores creados aún.</div>
+      ) : (
+        <div className="space-y-4">
+          {promoterUsers.map(user => {
+            const profile = getPromoterProfile(user.id);
+            const cartones = getCartonesForPromoter(user.id);
+            const revenue = getRevenueForPromoter(user.id);
+            const commission = revenue * ((profile?.adminCommissionPct || 10) / 100);
+            const jornadas = config.jornadas.filter(j => j.promoterId === user.id);
+            const clients = config.users.filter(u => u.referredBy === user.id);
+
+            return (
+              <div key={user.id} className="bg-gray-800 border border-gray-700 p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-bold text-lg">{profile?.displayName || user.username}</h4>
+                    <p className="text-xs text-gray-400">{user.email} • @{user.username}</p>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono">
+                        {profile?.referralCode || 'N/A'}
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">
+                        {profile?.adminCommissionPct || 10}% comisión
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${profile?.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                    {profile?.status === 'active' ? '🟢 Activo' : '🔴 Suspendido'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs mb-3">
+                  <div className="bg-gray-900/50 p-2 rounded">
+                    <div className="text-gray-400">Garantía</div>
+                    <div className="font-bold text-green-400">Bs {Math.floor(profile?.guaranteeBalance || 0).toLocaleString('es-ES')}</div>
+                  </div>
+                  <div className="bg-gray-900/50 p-2 rounded">
+                    <div className="text-gray-400">Cartones</div>
+                    <div className="font-bold text-white">{cartones.length}</div>
+                  </div>
+                  <div className="bg-gray-900/50 p-2 rounded">
+                    <div className="text-gray-400">Tu Comisión</div>
+                    <div className="font-bold text-cyan-400">Bs {Math.floor(commission).toLocaleString('es-ES')}</div>
+                  </div>
+                  <div className="bg-gray-900/50 p-2 rounded">
+                    <div className="text-gray-400">Clientes</div>
+                    <div className="font-bold text-white">{clients.length}</div>
+                  </div>
+                </div>
+
+                {/* Guarantee Management */}
+                {editingGuarantee === user.id ? (
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="number"
+                      value={guaranteeAmount}
+                      onChange={e => setGuaranteeAmount(e.target.value)}
+                      placeholder="Monto (+ o -)"
+                      className="flex-1 bg-gray-700 p-2 rounded border border-gray-600 text-sm"
+                    />
+                    <button
+                      onClick={() => handleUpdateGuarantee(user.id)}
+                      className="px-3 py-2 bg-green-600 hover:bg-green-500 rounded text-sm font-bold transition"
+                    >
+                      Aplicar
+                    </button>
+                    <button
+                      onClick={() => { setEditingGuarantee(null); setGuaranteeAmount(''); }}
+                      className="px-3 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm transition"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setEditingGuarantee(user.id)}
+                    className="w-full mb-3 py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500/30 rounded-lg text-sm text-green-300 font-bold transition"
+                  >
+                    💰 Ajustar Garantía
+                  </button>
+                )}
+
+                {/* Jornadas Summary */}
+                {jornadas.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-gray-400">Jornadas ({jornadas.length}):</p>
+                    {jornadas.map(j => {
+                      const jCartones = config.cartones.filter(c => c.jornadaId === j.id);
+                      return (
+                        <div key={j.id} className="flex justify-between text-xs bg-gray-900/30 p-2 rounded">
+                          <span>{j.name}</span>
+                          <div className="flex gap-3">
+                            <span className="text-gray-400">{jCartones.length} cartones</span>
+                            <span className={`${j.status === 'abierta' ? 'text-green-400' : 'text-gray-500'}`}>{j.status}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PromoterManagementTab;

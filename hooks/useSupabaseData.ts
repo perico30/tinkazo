@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import type { AppConfig, RegisteredUser, Jornada, Carton, WithdrawalRequest, RechargeRequest, Transaction } from '../types';
+import type { AppConfig, RegisteredUser, Jornada, Carton, WithdrawalRequest, RechargeRequest, Transaction, PromoterProfile } from '../types';
 
 // Omit functions and handle just the state fetching and realtime
 export function useSupabaseData(initialAppConfig: AppConfig) {
@@ -21,7 +21,8 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
           { data: withdrawalData },
           { data: rechargeData },
           { data: sellerProfilesData },
-          { data: transactionsData }
+          { data: transactionsData },
+          { data: promoterProfilesData }
         ] = await Promise.all([
           supabase.from('app_config').select('*').eq('id', 'main').single(),
           supabase.from('users').select('*'),
@@ -30,7 +31,8 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
           supabase.from('withdrawal_requests').select('*'),
           supabase.from('recharge_requests').select('*'),
           supabase.from('seller_profiles').select('*'),
-          supabase.from('transactions').select('*').order('created_at', { ascending: false })
+          supabase.from('transactions').select('*').order('created_at', { ascending: false }),
+          supabase.from('promoter_profiles').select('*')
         ]);
 
         if (!isMounted) return;
@@ -76,23 +78,33 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
               assignedSellerId: u.assigned_seller_id,
               balance: parseFloat(u.balance),
               sellerQrCodeUrl: sp?.qr_code_url,
-              sellerWhatsappNumber: sp?.whatsapp_number
+              sellerWhatsappNumber: sp?.whatsapp_number,
+              referralCode: u.referral_code || null,
+              referredBy: u.referred_by || null
             };
           }),
-          jornadas: (jornadasData || []).map(j => ({
-            id: j.id,
-            name: j.name,
-            status: j.status,
-            firstPrize: j.first_prize_amount.toString(),
-            secondPrize: j.second_prize_amount.toString(),
-            cartonPrice: parseFloat(j.carton_price),
-            botinMatchId: j.botin_match_id,
-            botinResult: j.botin_result,
-            flagIconUrl: j.flag_icon_url,
-            styling: j.styling || { textColor: '#fff', buttonColor: '#000', backgroundColor: '#333', backgroundImage: '' },
-            resultsProcessed: j.results_processed,
-            matches: [] // Assuming matches are loaded either here or separately. For now let's say empty or fetch them.
-          })),
+          jornadas: (jornadasData || []).map(j => {
+            // Find the promoter's display name if this jornada belongs to one
+            const promoterProfile = j.promoter_id ? (promoterProfilesData || []).find(p => p.user_id === j.promoter_id) : null;
+            return {
+              id: j.id,
+              name: j.name,
+              status: j.status,
+              firstPrize: j.first_prize_amount.toString(),
+              secondPrize: j.second_prize_amount.toString(),
+              cartonPrice: parseFloat(j.carton_price),
+              botinMatchId: j.botin_match_id,
+              botinResult: j.botin_result,
+              flagIconUrl: j.flag_icon_url,
+              styling: j.styling || { textColor: '#fff', buttonColor: '#000', backgroundColor: '#333', backgroundImage: '' },
+              resultsProcessed: j.results_processed,
+              promoterId: j.promoter_id || null,
+              promoterName: promoterProfile?.display_name || undefined,
+              visibility: j.visibility || 'public',
+              accessCode: j.access_code || null,
+              matches: [] // Loaded separately below
+            };
+          }),
           cartones: (ticketsData || []).map(t => ({
             id: t.id,
             userId: t.user_id,
@@ -133,6 +145,16 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
             referenceId: tx.reference_id,
             description: tx.description,
             createdAt: tx.created_at
+          })),
+          promoterProfiles: (promoterProfilesData || []).map(p => ({
+            id: p.id,
+            userId: p.user_id,
+            displayName: p.display_name,
+            adminCommissionPct: parseFloat(p.admin_commission_pct),
+            referralCode: p.referral_code,
+            guaranteeBalance: parseFloat(p.guarantee_balance || '0'),
+            status: p.status,
+            createdAt: p.created_at
           }))
         };
 
@@ -170,6 +192,7 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawal_requests' }, () => loadData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'recharge_requests' }, () => loadData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'promoter_profiles' }, () => loadData())
       .subscribe();
 
     return () => {
