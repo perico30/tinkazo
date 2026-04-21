@@ -213,6 +213,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
     const [modalUser, setModalUser] = useState<RegisteredUser | null>(null);
     const [rechargeModalUser, setRechargeModalUser] = useState<RegisteredUser | null>(null);
     const [isAddSellerModalOpen, setIsAddSellerModalOpen] = useState(false);
+    const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
     const sellers = useMemo(() => config.users.filter(u => u.role === 'seller'), [config.users]);
 
@@ -328,6 +329,10 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
         return seller ? seller.username : <span className="text-red-400 italic">Vendedor no encontrado</span>;
     }
 
+    const toggleExpand = (userId: string) => {
+        setExpandedUserId(prev => prev === userId ? null : userId);
+    };
+
     return (
         <div className="max-w-6xl mx-auto">
             {modalUser && <EditUserModal user={modalUser} role={activeSubTab as 'client' | 'seller'} sellers={sellers} onClose={() => setModalUser(null)} onSave={handleSaveUser} />}
@@ -337,9 +342,9 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
             <div className="bg-gray-800 p-4 rounded-lg">
                 <div className="mb-4">
                      <div className="flex border-b border-gray-700 overflow-x-auto no-scrollbar">
-                        <button onClick={() => { setActiveSubTab('client'); setSearchQuery(''); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'client' ? 'border-b-2 border-cyan-400 text-cyan-300 bg-cyan-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Clientes</button>
-                        <button onClick={() => { setActiveSubTab('seller'); setSearchQuery(''); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'seller' ? 'border-b-2 border-cyan-400 text-cyan-300 bg-cyan-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Vendedores</button>
-                        <button onClick={() => { setActiveSubTab('promoter'); setSearchQuery(''); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'promoter' ? 'border-b-2 border-purple-400 text-purple-300 bg-purple-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Promotores</button>
+                        <button onClick={() => { setActiveSubTab('client'); setSearchQuery(''); setExpandedUserId(null); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'client' ? 'border-b-2 border-cyan-400 text-cyan-300 bg-cyan-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Clientes</button>
+                        <button onClick={() => { setActiveSubTab('seller'); setSearchQuery(''); setExpandedUserId(null); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'seller' ? 'border-b-2 border-cyan-400 text-cyan-300 bg-cyan-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Vendedores</button>
+                        <button onClick={() => { setActiveSubTab('promoter'); setSearchQuery(''); setExpandedUserId(null); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'promoter' ? 'border-b-2 border-purple-400 text-purple-300 bg-purple-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Promotores</button>
                     </div>
                     {activeSubTab === 'seller' && (
                         <button 
@@ -369,48 +374,89 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                     className="w-full bg-gray-700/80 border border-slate-600 p-2.5 rounded-lg mb-4 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 focus:outline-none transition-colors"
                 />
 
-                <div className="md:hidden space-y-1.5">
-                    {usersToDisplay.map(user => (
-                        <div key={user.id} className="flex items-center gap-2 bg-slate-800/50 border border-slate-700/30 p-2.5 rounded-lg">
-                            {/* Avatar */}
-                            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">
-                                {user.username.charAt(0).toUpperCase()}
-                            </div>
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="font-bold text-white text-xs truncate">{user.username}</span>
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
-                                        user.status === 'active'
-                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                            : 'bg-amber-500/20 text-amber-400'
-                                    }`}>
-                                        {user.status === 'active' ? '✓' : '⏳'}
-                                    </span>
-                                </div>
-                                <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[10px] text-cyan-300 font-bold">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</span>
-                                    {activeSubTab === 'client' && <span className="text-[10px] text-gray-300 truncate">• {getSellerName(user.assignedSellerId)}</span>}
-                                    {activeSubTab === 'seller' && user.referralCode && <span className="text-[10px] text-purple-300 font-mono">• {user.referralCode}</span>}
-                                </div>
-                            </div>
-                            {/* Actions */}
-                            <div className="flex items-center gap-0.5 shrink-0">
-                                {user.status === 'pending' && onActivateUser && (
-                                    <button onClick={() => onActivateUser(user.id)} className="p-1.5 text-emerald-400 bg-emerald-500/10 rounded-lg" title="Activar"><CheckCircleIcon className="h-3.5 w-3.5"/></button>
+                {/* ═══ MOBILE COMPACT LIST (< md) ═══ */}
+                <div className="md:hidden space-y-1">
+                    {usersToDisplay.map(user => {
+                        const isExpanded = expandedUserId === user.id;
+                        return (
+                            <div key={user.id} className="rounded-lg overflow-hidden">
+                                {/* Compact Row - Always visible */}
+                                <button
+                                    onClick={() => toggleExpand(user.id)}
+                                    className={`w-full flex items-center gap-2 p-2.5 text-left transition-colors ${isExpanded ? 'bg-slate-700/70' : 'bg-slate-800/50 hover:bg-slate-700/40'}`}
+                                >
+                                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">
+                                        {user.username.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="font-bold text-white text-xs truncate">{user.username}</span>
+                                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
+                                                user.status === 'active'
+                                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                                    : 'bg-amber-500/20 text-amber-400'
+                                            }`}>
+                                                {user.status === 'active' ? '✓' : '⏳'}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
+                                    </div>
+                                    <span className="text-[10px] text-cyan-300 font-bold shrink-0">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</span>
+                                    <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                                {/* Expanded Details */}
+                                {isExpanded && (
+                                    <div className="bg-slate-700/40 border-t border-slate-600/50 p-3 space-y-2.5">
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div className="bg-slate-900/40 rounded-lg p-2">
+                                                <span className="text-gray-500 uppercase tracking-wider text-[10px]">Saldo</span>
+                                                <p className="font-bold text-cyan-300">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</p>
+                                            </div>
+                                            <div className="bg-slate-900/40 rounded-lg p-2">
+                                                <span className="text-gray-500 uppercase tracking-wider text-[10px]">Estado</span>
+                                                <p className={`font-semibold ${user.status === 'active' ? 'text-emerald-400' : 'text-amber-400'}`}>{user.status === 'active' ? 'Activo' : 'Pendiente'}</p>
+                                            </div>
+                                            {activeSubTab === 'client' && (
+                                                <div className="bg-slate-900/40 rounded-lg p-2 col-span-2">
+                                                    <span className="text-gray-500 uppercase tracking-wider text-[10px]">Vendedor Asignado</span>
+                                                    <p className="font-semibold text-white text-xs">{getSellerName(user.assignedSellerId)}</p>
+                                                </div>
+                                            )}
+                                            {activeSubTab === 'seller' && user.referralCode && (
+                                                <div className="bg-slate-900/40 rounded-lg p-2 col-span-2">
+                                                    <span className="text-gray-500 uppercase tracking-wider text-[10px]">Código Referido</span>
+                                                    <p className="font-bold text-purple-300 font-mono">{user.referralCode}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {user.status === 'pending' && onActivateUser && (
+                                                <button onClick={(e) => { e.stopPropagation(); onActivateUser(user.id); }} className="flex-1 min-w-[80px] py-2 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs hover:bg-emerald-600/30 transition flex items-center justify-center gap-1">
+                                                    <CheckCircleIcon className="h-3.5 w-3.5"/> Activar
+                                                </button>
+                                            )}
+                                            {onRechargeUser && (
+                                                <button onClick={(e) => { e.stopPropagation(); setRechargeModalUser(user); }} className="flex-1 min-w-[80px] py-2 rounded-lg bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 font-bold text-xs hover:bg-cyan-600/30 transition flex items-center justify-center gap-1">
+                                                    <WalletIcon className="h-3.5 w-3.5"/> Saldo
+                                                </button>
+                                            )}
+                                            {onViewClientTickets && (
+                                                <button onClick={(e) => { e.stopPropagation(); onViewClientTickets(user); }} className="flex-1 min-w-[80px] py-2 rounded-lg bg-purple-600/20 text-purple-400 border border-purple-500/30 font-bold text-xs hover:bg-purple-600/30 transition flex items-center justify-center gap-1">
+                                                    🎫 Cartones
+                                                </button>
+                                            )}
+                                            <button onClick={(e) => { e.stopPropagation(); setModalUser(user); }} className="flex-1 min-w-[80px] py-2 rounded-lg bg-gray-600/20 text-gray-300 border border-gray-500/30 font-bold text-xs hover:bg-gray-600/30 transition flex items-center justify-center gap-1">
+                                                <PencilIcon className="h-3.5 w-3.5"/> Editar
+                                            </button>
+                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(user.id); }} className="py-2 px-3 rounded-lg bg-red-600/20 text-red-400 border border-red-500/30 font-bold text-xs hover:bg-red-600/30 transition flex items-center justify-center gap-1">
+                                                <TrashIcon className="h-3.5 w-3.5"/>
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
-                                {onRechargeUser && (
-                                    <button onClick={() => setRechargeModalUser(user)} className="p-1.5 text-cyan-400 bg-cyan-500/10 rounded-lg" title="Saldo"><WalletIcon className="h-3.5 w-3.5"/></button>
-                                )}
-                                {onViewClientTickets && (
-                                    <button onClick={() => onViewClientTickets(user)} className="p-1.5 text-purple-400 bg-purple-500/10 rounded-lg text-[9px] font-bold" title="Cartones">🎫</button>
-                                )}
-                                <button onClick={() => setModalUser(user)} className="p-1.5 text-gray-400 hover:text-white" title="Editar"><PencilIcon className="h-3.5 w-3.5"/></button>
-                                <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 text-red-500 hover:text-red-400" title="Eliminar"><TrashIcon className="h-3.5 w-3.5"/></button>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     {usersToDisplay.length === 0 && <p className="text-center text-gray-500 py-8">No se encontraron resultados.</p>}
                 </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { AppConfig, RegisteredUser, PromoterProfile } from '../../types';
 import { supabase } from '../../supabaseClient';
 
@@ -19,6 +19,8 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
   const [isCreating, setIsCreating] = useState(false);
   const [editingGuarantee, setEditingGuarantee] = useState<string | null>(null);
   const [guaranteeAmount, setGuaranteeAmount] = useState('');
+  const [expandedPromoter, setExpandedPromoter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const promoterUsers = config.users.filter(u => u.role === 'promoter');
 
@@ -334,128 +336,163 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
       {promoterUsers.length === 0 ? (
         <div className="text-center py-10 text-gray-500">No hay promotores creados aún.</div>
       ) : (
-        <div className="space-y-4">
-          {promoterUsers.map(user => {
-            const profile = getPromoterProfile(user.id);
-            const cartones = getCartonesForPromoter(user.id);
-            const revenue = getRevenueForPromoter(user.id);
-            const commission = revenue * ((profile?.adminCommissionPct || 10) / 100);
-            const jornadas = config.jornadas.filter(j => j.promoterId === user.id);
-            const clients = config.users.filter(u => u.referredBy === user.id);
+        <>
+          <input
+            type="text"
+            placeholder="Buscar promotor..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full bg-gray-700/80 border border-slate-600 p-2.5 rounded-lg mb-3 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30 focus:outline-none transition-colors text-sm"
+          />
+          <div className="space-y-1">
+            {promoterUsers
+              .filter(u => {
+                if (!searchQuery) return true;
+                const q = searchQuery.toLowerCase();
+                const profile = getPromoterProfile(u.id);
+                return u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (profile?.displayName || '').toLowerCase().includes(q) || (profile?.referralCode || '').toLowerCase().includes(q);
+              })
+              .map(user => {
+              const profile = getPromoterProfile(user.id);
+              const cartones = getCartonesForPromoter(user.id);
+              const revenue = getRevenueForPromoter(user.id);
+              const commission = revenue * ((profile?.adminCommissionPct || 10) / 100);
+              const jornadas = config.jornadas.filter(j => j.promoterId === user.id);
+              const clients = config.users.filter(u => u.referredBy === user.id);
+              const isExpanded = expandedPromoter === user.id;
 
-            return (
-              <div key={user.id} className="bg-gray-800 border border-gray-700 p-4 rounded-lg">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h4 className="font-bold text-lg">{profile?.displayName || user.username}</h4>
-                    <p className="text-xs text-gray-400">{user.email} • @{user.username}</p>
-                    <div className="flex gap-2 mt-1">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono">
-                        {profile?.referralCode || 'N/A'}
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">
-                        {profile?.adminCommissionPct || 10}% comisión
-                      </span>
+              return (
+                <div key={user.id} className="rounded-lg overflow-hidden">
+                  {/* Compact Row */}
+                  <button
+                    onClick={() => setExpandedPromoter(prev => prev === user.id ? null : user.id)}
+                    className={`w-full flex items-center gap-2.5 p-2.5 text-left transition-colors ${isExpanded ? 'bg-purple-900/30' : 'bg-slate-800/50 hover:bg-slate-700/40'}`}
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">
+                      {(profile?.displayName || user.username).charAt(0).toUpperCase()}
                     </div>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${profile?.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-                    {profile?.status === 'active' ? '🟢 Activo' : '🔴 Suspendido'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs mb-3">
-                  <div className="bg-gray-900/50 p-2 rounded">
-                    <div className="text-gray-400">Garantía</div>
-                    <div className="font-bold text-green-400">Bs {Math.floor(profile?.guaranteeBalance || 0).toLocaleString('es-ES')}</div>
-                  </div>
-                  <div className="bg-gray-900/50 p-2 rounded">
-                    <div className="text-gray-400">Cartones</div>
-                    <div className="font-bold text-white">{cartones.length}</div>
-                  </div>
-                  <div className="bg-gray-900/50 p-2 rounded">
-                    <div className="text-gray-400">Tu Comisión</div>
-                    <div className="font-bold text-cyan-400">Bs {Math.floor(commission).toLocaleString('es-ES')}</div>
-                  </div>
-                  <div className="bg-gray-900/50 p-2 rounded">
-                    <div className="text-gray-400">Clientes</div>
-                    <div className="font-bold text-white">{clients.length}</div>
-                  </div>
-                </div>
-
-                {/* Guarantee Management */}
-                {editingGuarantee === user.id ? (
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="number"
-                      value={guaranteeAmount}
-                      onChange={e => setGuaranteeAmount(e.target.value)}
-                      placeholder="Monto (+ o -)"
-                      className="flex-1 bg-gray-700 p-2 rounded border border-gray-600 text-sm"
-                    />
-                    <button
-                      onClick={() => handleUpdateGuarantee(user.id)}
-                      className="px-3 py-2 bg-green-600 hover:bg-green-500 rounded text-sm font-bold transition"
-                    >
-                      Aplicar
-                    </button>
-                    <button
-                      onClick={() => { setEditingGuarantee(null); setGuaranteeAmount(''); }}
-                      className="px-3 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm transition"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setEditingGuarantee(user.id)}
-                    className="w-full mb-3 py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500/30 rounded-lg text-sm text-green-300 font-bold transition"
-                  >
-                    💰 Ajustar Garantía
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-white text-xs truncate">{profile?.displayName || user.username}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${profile?.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {profile?.status === 'active' ? '✓' : '✗'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-purple-300 font-mono">{profile?.referralCode || 'N/A'}</span>
+                        <span className="text-[10px] text-gray-500">•</span>
+                        <span className="text-[10px] text-gray-400 truncate">{user.email}</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-green-400 font-bold shrink-0">Bs {Math.floor(profile?.guaranteeBalance || 0).toLocaleString('es-ES')}</span>
+                    <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
-                )}
 
-                {/* Jornadas Summary */}
-                {jornadas.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-gray-400">Jornadas ({jornadas.length}):</p>
-                    {jornadas.map(j => {
-                      const jCartones = config.cartones.filter(c => c.jornadaId === j.id);
-                      return (
-                        <div key={j.id} className="flex justify-between text-xs bg-gray-900/30 p-2 rounded">
-                          <span>{j.name}</span>
-                          <div className="flex gap-3">
-                            <span className="text-gray-400">{jCartones.length} cartones</span>
-                            <span className={`${j.status === 'abierta' ? 'text-green-400' : 'text-gray-500'}`}>{j.status}</span>
-                          </div>
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="bg-slate-700/30 border-t border-purple-500/20 p-3 space-y-3">
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                        <div className="bg-gray-900/50 p-2 rounded">
+                          <div className="text-gray-400">Garantía</div>
+                          <div className="font-bold text-green-400">Bs {Math.floor(profile?.guaranteeBalance || 0).toLocaleString('es-ES')}</div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        <div className="bg-gray-900/50 p-2 rounded">
+                          <div className="text-gray-400">Cartones</div>
+                          <div className="font-bold text-white">{cartones.length}</div>
+                        </div>
+                        <div className="bg-gray-900/50 p-2 rounded">
+                          <div className="text-gray-400">Tu Comisión</div>
+                          <div className="font-bold text-cyan-400">Bs {Math.floor(commission).toLocaleString('es-ES')}</div>
+                        </div>
+                        <div className="bg-gray-900/50 p-2 rounded">
+                          <div className="text-gray-400">Clientes</div>
+                          <div className="font-bold text-white">{clients.length}</div>
+                        </div>
+                      </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-700">
-                  <button
-                    onClick={() => handleToggleStatus(user.id, profile?.status || 'active')}
-                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${
-                      profile?.status === 'active'
-                        ? 'bg-yellow-900/30 hover:bg-yellow-900/50 border border-yellow-500/30 text-yellow-300'
-                        : 'bg-green-900/30 hover:bg-green-900/50 border border-green-500/30 text-green-300'
-                    }`}
-                  >
-                    {profile?.status === 'active' ? '⏸️ Suspender' : '▶️ Activar'}
-                  </button>
-                  <button
-                    onClick={() => handleDeletePromoter(user.id, user.username)}
-                    className="px-4 py-2 rounded-lg text-sm font-bold bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-red-300 transition"
-                  >
-                    🗑️ Eliminar
-                  </button>
+                      <div className="flex flex-wrap gap-1.5 text-[10px]">
+                        <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">{profile?.adminCommissionPct || 10}% comisión</span>
+                        <span className="px-2 py-0.5 rounded-full bg-gray-600/30 text-gray-400">@{user.username}</span>
+                      </div>
+
+                      {/* Guarantee Management */}
+                      {editingGuarantee === user.id ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            value={guaranteeAmount}
+                            onChange={e => setGuaranteeAmount(e.target.value)}
+                            placeholder="Monto (+ o -)"
+                            className="flex-1 bg-gray-700 p-2 rounded border border-gray-600 text-sm"
+                          />
+                          <button
+                            onClick={() => handleUpdateGuarantee(user.id)}
+                            className="px-3 py-2 bg-green-600 hover:bg-green-500 rounded text-sm font-bold transition"
+                          >
+                            Aplicar
+                          </button>
+                          <button
+                            onClick={() => { setEditingGuarantee(null); setGuaranteeAmount(''); }}
+                            className="px-3 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm transition"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setEditingGuarantee(user.id)}
+                          className="w-full py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500/30 rounded-lg text-sm text-green-300 font-bold transition"
+                        >
+                          💰 Ajustar Garantía
+                        </button>
+                      )}
+
+                      {/* Jornadas Summary */}
+                      {jornadas.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-gray-400">Jornadas ({jornadas.length}):</p>
+                          {jornadas.map(j => {
+                            const jCartones = config.cartones.filter(c => c.jornadaId === j.id);
+                            return (
+                              <div key={j.id} className="flex justify-between text-xs bg-gray-900/30 p-2 rounded">
+                                <span>{j.name}</span>
+                                <div className="flex gap-3">
+                                  <span className="text-gray-400">{jCartones.length} cartones</span>
+                                  <span className={`${j.status === 'abierta' ? 'text-green-400' : 'text-gray-500'}`}>{j.status}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-2 border-t border-gray-700">
+                        <button
+                          onClick={() => handleToggleStatus(user.id, profile?.status || 'active')}
+                          className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${
+                            profile?.status === 'active'
+                              ? 'bg-yellow-900/30 hover:bg-yellow-900/50 border border-yellow-500/30 text-yellow-300'
+                              : 'bg-green-900/30 hover:bg-green-900/50 border border-green-500/30 text-green-300'
+                          }`}
+                        >
+                          {profile?.status === 'active' ? '⏸️ Suspender' : '▶️ Activar'}
+                        </button>
+                        <button
+                          onClick={() => handleDeletePromoter(user.id, user.username)}
+                          className="px-4 py-2 rounded-lg text-xs font-bold bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-red-300 transition"
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
