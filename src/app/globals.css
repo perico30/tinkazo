@@ -18,6 +18,8 @@ html {
   /* Prevent text size adjust on orientation change */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Match app background to prevent color bleed at safe area edges */
+  background-color: #020617;
 }
 
 body {
