@@ -190,40 +190,40 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
           {step === 1 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-cyan-400 mb-2">Paso 1: Filtra los Partidos Disponibles</h3>
-              <div className="flex flex-col md:flex-row gap-2 mb-4 bg-gray-900/50 p-3 rounded-lg border border-gray-700">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-3 mb-4 bg-gray-900/50 p-3 rounded-lg border border-gray-700 overflow-hidden">
+                <div className="grid grid-cols-2 gap-2 min-w-0">
+                  <div className="flex flex-col gap-1 min-w-0">
                     <label className="text-xs text-gray-400 font-semibold">Desde:</label>
                     <input
                       type="date"
                       value={startDate}
                       onChange={e => setStartDate(e.target.value)}
-                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm w-full"
+                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm w-full min-w-0 box-border"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 min-w-0">
                     <label className="text-xs text-gray-400 font-semibold">Hasta:</label>
                     <input
                       type="date"
                       value={endDate}
                       onChange={e => setEndDate(e.target.value)}
-                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm w-full"
+                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm w-full min-w-0 box-border"
                       min={startDate}
                     />
                   </div>
                 </div>
-                <div className="flex flex-1 gap-2 mt-2 md:mt-0">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Buscar equipo, liga o país..."
-                    className="flex-1 bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
+                    className="flex-1 bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm min-w-0"
                     onKeyDown={e => e.key === 'Enter' && handleSearch()}
                   />
                   <button
                     onClick={handleSearch}
-                    className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 rounded-lg flex items-center justify-center font-bold text-sm transition"
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 rounded-lg flex items-center justify-center font-bold text-sm transition shrink-0"
                   >
                     Buscar
                   </button>
