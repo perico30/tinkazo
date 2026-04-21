@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ExternalMatch, searchLiveScoreEvents, fetchLiveScoreEvents } from '../../utils/apiDeportes';
 import type { Jornada, Match, Team } from '../../types';
 import ImageUpload from './ImageUpload';
@@ -167,7 +168,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
     return groups;
   }, [externalMatches]);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-[#020617] sm:bg-black/80 z-[9999] flex items-stretch sm:items-center sm:justify-center" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="bg-gray-800 sm:rounded-lg w-full sm:max-w-4xl flex flex-col sm:max-h-[90vh]">
         {/* Header */}
@@ -435,7 +436,8 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
