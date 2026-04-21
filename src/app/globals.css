@@ -1,0 +1,533 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== TINKAZO — Mobile-First PWA Styles ===== */
+
+/* --- Mobile-First Base Reset --- */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html {
+  /* Prevent pull-to-refresh and overscroll bounce */
+  overscroll-behavior-y: none;
+  /* Smooth scrolling for anchor links */
+  scroll-behavior: smooth;
+  /* Prevent text size adjust on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #020617; /* slate-950 */
+  background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  /* iOS safe area support */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  /* Prevent rubber-band scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure all interactive elements meet 44px minimum touch target */
+button, a, [role="button"], input[type="submit"], input[type="button"] {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Exception: tiny inline elements that are NOT primary touch targets */
+.touch-target-sm {
+  min-height: auto !important;
+}
+
+/* Safe area utilities */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Bottom navigation safe area — critical for iPhone X+ */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+/* Padding-bottom for content behind BottomNav */
+.content-with-bottomnav {
+  padding-bottom: max(env(safe-area-inset-bottom, 1rem), 7rem);
+}
+
+/* Input focus prevention of zoom on iOS (16px minimum) */
+input, select, textarea {
+  font-size: 16px;
+  touch-action: manipulation;
+}
+
+/* --- Premium Stat Cards --- */
+.stat-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.4));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:active {
+  transform: scale(0.97);
+}
+.stat-card-purple {
+  border-left: 3px solid #a855f7;
+  box-shadow: 0 0 20px -5px rgba(168, 85, 247, 0.15);
+}
+.stat-card-cyan {
+  border-left: 3px solid #22d3ee;
+  box-shadow: 0 0 20px -5px rgba(34, 211, 238, 0.15);
+}
+.stat-card-green {
+  border-left: 3px solid #34d399;
+  box-shadow: 0 0 20px -5px rgba(52, 211, 153, 0.15);
+}
+.stat-card-amber {
+  border-left: 3px solid #fbbf24;
+  box-shadow: 0 0 20px -5px rgba(251, 191, 36, 0.15);
+}
+.stat-card .stat-value {
+  text-shadow: 0 0 20px rgba(255,255,255,0.1);
+}
+
+/* --- Hero Section --- */
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.15) 0%, rgba(168, 85, 247, 0.1) 40%, transparent 70%);
+  filter: blur(60px);
+  animation: pulse-glow 4s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes pulse-glow {
+  0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+.hero-title {
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #22d3ee, #a855f7, #ec4899, #22d3ee);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 5s ease infinite;
+  position: relative;
+  z-index: 1;
+  line-height: 1.1;
+}
+
+@media (min-width: 640px) {
+  .hero-title { font-size: 3rem; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* --- Empty State --- */
+.empty-divider {
+  height: 2px;
+  width: 80px;
+  margin: 1.5rem auto 0;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.3), transparent);
+  border-radius: 1px;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* --- Background Styles --- */
+.body-bg-space {
+  background-image: radial-gradient(ellipse at top, #1e1b4b 20%, #020617 100%);
+}
+
+.body-bg-business {
+  background-color: #0a192f;
+  background-image: radial-gradient(circle at 80% 20%, rgba(100, 255, 218, 0.1), transparent 40%);
+}
+.body-bg-business::before {
+  content: '';
+  position: absolute;
+  bottom: -150px;
+  left: -100px;
+  width: 400px;
+  height: 400px;
+  background-image: linear-gradient(180deg, #f09, #ffae00);
+  border-radius: 9999px;
+  transform: rotate(-45deg);
+  filter: blur(80px);
+  opacity: 0.15;
+  z-index: 0;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(90deg, #22d3ee, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Glassmorphism utility */
+.glass-card {
+  background-color: var(--glass-bg, rgba(15, 23, 42, 0.6));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* Gradient border utility */
+.gradient-border {
+  position: relative;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  z-index: 1;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: -1;
+  margin: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--border-color-start, #22d3ee), var(--border-color-end, #a855f7));
+}
+
+/* Feature card style */
+.feature-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 30px -5px color-mix(in srgb, var(--glow-color, #a855f7) 20%, transparent);
+}
+.feature-card:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 15px -8px color-mix(in srgb, var(--glow-color, #a855f7) 40%, transparent);
+}
+
+/* --- Jackpot Card Styles --- */
+.jackpot-card {
+  position: relative;
+  border-radius: 1.5rem;
+  padding: 1.5rem 1rem;
+  aspect-ratio: 24 / 7;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  color: white;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4), 0 0 15px -5px var(--glow-color, #a855f7);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.jackpot-card:active {
+  transform: scale(0.95);
+  box-shadow: 0 5px 15px -5px rgba(0,0,0,0.5), 0 0 10px -5px var(--glow-color, #a855f7);
+}
+.jackpot-card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.jackpot-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  background-color: rgba(2, 6, 23, 0.6);
+}
+.jackpot-card-content {
+  position: relative;
+  z-index: 3;
+}
+
+/* Gradient button styles */
+.btn-gradient, .btn-gradient-purple {
+  transition: all 0.2s ease;
+}
+.btn-gradient {
+  background-image: linear-gradient(90deg, #22d3ee, #8b5cf6);
+  box-shadow: 0 4px 15px -5px rgba(139, 92, 246, 0.6);
+}
+.btn-gradient:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px -5px rgba(34, 211, 238, 0.7);
+}
+.btn-gradient-purple {
+  background-image: linear-gradient(90deg, #a855f7, #ec4899);
+  box-shadow: 0 4px 15px -5px rgba(236, 72, 153, 0.6);
+}
+.btn-gradient-purple:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px -5px rgba(168, 85, 247, 0.7);
+}
+
+/* Carousel Animation */
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-scroll {
+  animation: scroll var(--animation-duration, 30s) linear infinite;
+}
+.group:hover .animate-scroll, .animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Updated Header */
+.header-accent {
+  background-color: rgba(2, 6, 23, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+/* Updated Sidebar */
+.sidebar-bg {
+  background-color: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.active-tab-gradient {
+  position: relative;
+  background: linear-gradient(90deg, #22d3ee, #a855f7);
+  color: #ffffff;
+  font-weight: bold;
+  box-shadow: 0 0 15px -3px rgba(34, 211, 238, 0.5);
+}
+.active-tab-gradient::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 4px;
+  border-radius: 2px;
+  background-color: #e5e7eb;
+}
+
+.inactive-tab {
+  color: #d1d5db;
+  transition: all 0.2s ease-in-out;
+}
+
+.inactive-tab:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  transform: translateX(4px);
+}
+
+/* --- Jornada Card --- */
+.jornada-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 318 / 144;
+  border-radius: 12px;
+  overflow: hidden;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.jornada-card:active {
+  transform: scale(0.97);
+  box-shadow: 0 5px 15px -5px rgba(0,0,0,0.5);
+}
+.jornada-card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.jornada-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+.jornada-card-content {
+  position: relative;
+  z-index: 3;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+.jornada-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.jornada-card-header .info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 2px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.jornada-card-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.jornada-card-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.jornada-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.jornada-prize {
+  text-align: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  padding: 1px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  min-width: 50px;
+}
+.jornada-prize-label {
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0px;
+}
+.jornada-prize-amount {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  line-height: 1.2;
+}
+.jornada-play-button {
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: bold;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jornada-play-button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.jornada-play-button:disabled {
+  background-color: #6b7280;
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+/* Scrollbar hidden */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- Mobile-first responsive helpers --- */
+
+/* Stack to row on tablet+ */
+.mobile-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+@media (min-width: 640px) {
+  .mobile-stack {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+/* Full bleed on mobile, contained on desktop */
+.mobile-full-bleed {
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .mobile-full-bleed {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}

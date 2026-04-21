@@ -1,0 +1,26 @@
+{
+  "pages": {
+    "/page": [
+      "static/chunks/Downloads_tinkazo-main (1)_tinkazo-main_src_app_globals_10d59edb.css",
+      "static/chunks/Downloads_tinkazo-main (1)_tinkazo-main_62be1ac7._.js",
+      "static/chunks/20e37_next_31ee359e._.js",
+      "static/chunks/20e37_@supabase_postgrest-js_dist_index_mjs_b3ee1152._.js",
+      "static/chunks/20e37_@supabase_auth-js_dist_module_c7aef81a._.js",
+      "static/chunks/20e37_82a2e11c._.js",
+      "static/chunks/Downloads_tinkazo-main (1)_tinkazo-main_src_app_layout_tsx_d36ee697._.js",
+      "static/chunks/20e37_next_dist_client_components_builtin_global-error_7074ee61.js",
+      "static/chunks/Downloads_tinkazo-main (1)_tinkazo-main_388860bf._.js",
+      "static/chunks/20e37_4e5be3fc._.js",
+      "static/chunks/Downloads_tinkazo-main (1)_tinkazo-main_src_app_page_tsx_7074ee61._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1e159f65._.js",
+      "static/chunks/20e37_next_dist_compiled_react-dom_91fcf140._.js",
+      "static/chunks/20e37_next_dist_compiled_next-devtools_index_9a71d2f6.js",
+      "static/chunks/20e37_next_dist_compiled_53657929._.js",
+      "static/chunks/20e37_next_dist_client_28ee4546._.js",
+      "static/chunks/20e37_next_dist_4c8f22c6._.js",
+      "static/chunks/20e37_@swc_helpers_cjs_79b2c10f._.js",
+      "static/chunks/Downloads_tinkazo-main (1)_tinkazo-main_a0ff3932._.js",
+      "static/chunks/turbopack-Downloads_tinkazo-main (1)_tinkazo-main_37e64a4f._.js"
+    ]
+  }
+}

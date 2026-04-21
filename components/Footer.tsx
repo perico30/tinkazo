@@ -20,11 +20,11 @@ const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
   };
 
   return (
-    <footer className="bg-slate-950/30 text-gray-400 py-4 sm:py-8 px-4 sm:px-6 lg:px-8 mt-8 sm:mt-16 border-t border-slate-800">
+    <footer className="bg-slate-950/30 text-gray-400 py-4 sm:py-8 px-4 sm:px-6 lg:px-8 mt-8 sm:mt-16 border-t border-slate-800 safe-bottom">
       <div className="container mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <p className="text-[10px] sm:text-sm order-3 md:order-1">{config.copyright}</p>
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 order-1 md:order-2">
+        <div className="flex flex-col items-center space-y-3">
+          {/* Social Icons */}
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             {config.socialLinks.map((link) => (
               <a 
                 key={link.platform}
@@ -42,17 +42,20 @@ const Footer: React.FC<FooterProps> = ({ config, onLegalClick }) => {
               </a>
             ))}
           </div>
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 order-2 md:order-3 mt-4 md:mt-0 w-full md:w-auto">
+          {/* Legal Buttons */}
+          <div className="flex flex-wrap justify-center gap-2">
              {(config.legalLinks || []).map((link) => (
                 <button 
                   key={link.title} 
                   onClick={() => onLegalClick(link)} 
-                  className="bg-transparent hover:bg-slate-800/50 text-gray-500 hover:text-gray-300 transition-colors px-3 py-1.5 rounded-full text-[11px] sm:text-xs border border-gray-800"
+                  className="bg-slate-800 hover:bg-slate-700 text-white transition-colors px-3 py-1 rounded-md text-[10px] sm:text-xs font-medium"
                 >
                     {link.title}
                 </button>
             ))}
           </div>
+          {/* Copyright */}
+          <p className="text-[10px] sm:text-xs text-gray-500">{config.copyright}</p>
         </div>
       </div>
     </footer>

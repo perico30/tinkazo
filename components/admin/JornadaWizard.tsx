@@ -191,22 +191,26 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-cyan-400 mb-2">Paso 1: Filtra los Partidos Disponibles</h3>
               <div className="flex flex-col md:flex-row gap-2 mb-4 bg-gray-900/50 p-3 rounded-lg border border-gray-700">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-400 font-semibold">Desde:</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                    className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
-                  />
-                  <label className="text-sm text-gray-400 font-semibold">Hasta:</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm"
-                    min={startDate}
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-400 font-semibold">Desde:</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={e => setStartDate(e.target.value)}
+                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm w-full"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-400 font-semibold">Hasta:</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={e => setEndDate(e.target.value)}
+                      className="bg-gray-700 p-2 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-sm w-full"
+                      min={startDate}
+                    />
+                  </div>
                 </div>
                 <div className="flex flex-1 gap-2 mt-2 md:mt-0">
                   <input
