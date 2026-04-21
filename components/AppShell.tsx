@@ -40,12 +40,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const renderMainContent = () => {
     if (!isConfigLoaded) {
       return (
-        <div className="bg-[#020617] flex-1 flex flex-col justify-center items-center z-50">
-           {appConfig.logoUrl && (
-               <img src={appConfig.logoUrl} alt="Tinkazo Logo" className="h-16 w-auto mb-6 animate-pulse opacity-50 relative z-10" />
-           )}
-           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500 mb-4 relative z-10"></div>
-           <p className="text-cyan-400 font-medium uppercase tracking-[0.2em] text-xs relative z-10">Conectando...</p>
+        <div className="fixed inset-0 bg-[#020617] flex flex-col justify-center items-center z-50">
+           {/* Spinning soccer ball loading */}
+           <div className="relative mb-8">
+             <div className="absolute inset-[-24px] bg-cyan-500/15 rounded-full blur-3xl animate-pulse"></div>
+             <img 
+               src="/soccer-ball.png" 
+               alt="Cargando" 
+               className="relative w-32 h-32 object-contain animate-spin-slow drop-shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+             />
+           </div>
+           <p className="text-cyan-400 font-medium uppercase tracking-[0.2em] text-sm animate-pulse">Conectando...</p>
         </div>
       );
     }
