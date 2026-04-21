@@ -168,10 +168,10 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
   }, [externalMatches]);
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg max-w-4xl w-full flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="bg-gray-800 rounded-t-2xl sm:rounded-lg w-full sm:max-w-4xl flex flex-col max-h-full sm:max-h-[90vh]">
         {/* Header */}
-        <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-lg">
+        <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-2xl sm:rounded-t-lg shrink-0">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <span className="bg-cyan-500 text-gray-900 w-8 h-8 rounded-full flex items-center justify-center">
               {step}
@@ -186,7 +186,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0">
           {step === 1 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-cyan-400 mb-2">Paso 1: Filtra los Partidos Disponibles</h3>
@@ -399,7 +399,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-gray-900 border-t border-gray-700 flex justify-between rounded-b-lg">
+        <div className="p-4 bg-gray-900 border-t border-gray-700 flex justify-between shrink-0 rounded-b-lg">
           <button
             onClick={step === 1 ? onCancel : () => setStep((step - 1) as 1 | 2)}
             className="px-6 py-2 rounded-lg font-semibold bg-gray-700 hover:bg-gray-600 transition-colors"
