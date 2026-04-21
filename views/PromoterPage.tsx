@@ -670,7 +670,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
         </main>
 
         {/* Bottom Nav */}
-        <nav className="absolute bottom-6 left-4 right-4 z-40 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-purple-900/20 overflow-hidden">
+        <nav className="absolute bottom-3 left-4 right-4 z-40 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-purple-900/20 overflow-hidden">
           <div className="flex justify-around items-center h-16 w-full px-1">
             {tabs.map(tab => (
               <button

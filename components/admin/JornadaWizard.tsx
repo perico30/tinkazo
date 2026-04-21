@@ -168,10 +168,10 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
   }, [externalMatches]);
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="bg-gray-800 rounded-t-2xl sm:rounded-lg w-full sm:max-w-4xl flex flex-col max-h-full sm:max-h-[90vh]">
+    <div className="fixed inset-0 bg-[#020617] sm:bg-black/80 z-[9999] flex items-stretch sm:items-center sm:justify-center" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="bg-gray-800 sm:rounded-lg w-full sm:max-w-4xl flex flex-col sm:max-h-[90vh]">
         {/* Header */}
-        <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-2xl sm:rounded-t-lg shrink-0">
+        <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 sm:rounded-t-lg shrink-0">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <span className="bg-cyan-500 text-gray-900 w-8 h-8 rounded-full flex items-center justify-center">
               {step}

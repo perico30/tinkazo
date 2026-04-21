@@ -98,7 +98,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-6 left-4 right-4 z-[999] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-full shadow-[0_8px_40px_rgba(0,0,0,0.5)] md:left-1/2 md:-translate-x-1/2 md:max-w-[420px] md:right-auto md:w-full"
+      className="fixed bottom-3 left-4 right-4 z-[999] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-full shadow-[0_8px_40px_rgba(0,0,0,0.5)] md:left-1/2 md:-translate-x-1/2 md:max-w-[420px] md:right-auto md:w-full"
     >
       <div className="flex items-center justify-around h-[68px] px-2">
         {NAV_ITEMS.map((item) => {
