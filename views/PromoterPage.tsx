@@ -670,7 +670,8 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
         </main>
 
         {/* Bottom Nav */}
-        <nav className="absolute left-3 right-3 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl z-40 shadow-2xl shadow-purple-900/20 overflow-hidden" style={{ bottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}>
+        <nav className="absolute left-0 right-0 bottom-0 z-40" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+          <div className="mx-3 mb-2 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-purple-900/20 overflow-hidden">
           <div className="flex justify-around items-center h-16 w-full px-1">
             {tabs.map(tab => (
               <button
@@ -682,6 +683,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                 <span className="text-[9px] font-medium leading-tight text-center px-1">{tab.label}</span>
               </button>
             ))}
+          </div>
           </div>
         </nav>
       </div>

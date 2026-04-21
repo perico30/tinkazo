@@ -98,10 +98,10 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed left-4 right-4 z-[999] md:left-1/2 md:-translate-x-1/2 md:max-w-[420px] md:w-full md:mx-auto"
-      style={{ bottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}
+      className="fixed left-0 right-0 bottom-0 z-[999]"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="bg-slate-900/85 backdrop-blur-xl border border-slate-700/50 rounded-full shadow-[0_8px_40px_rgba(0,0,0,0.5)] h-[68px] flex items-center justify-around px-2">
+      <div className="mx-3 mb-2 bg-slate-900/85 backdrop-blur-xl border border-slate-700/50 rounded-full shadow-[0_8px_40px_rgba(0,0,0,0.5)] h-[68px] flex items-center justify-around px-2 md:max-w-[420px] md:mx-auto">
         {NAV_ITEMS.map((item) => {
           // --- Central JUGAR button ---
           if (item.isCenter) {
