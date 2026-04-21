@@ -31,7 +31,7 @@ const SellerTicketsTab: React.FC<SellerTicketsTabProps> = ({ cartones, jornadas,
                 const resultsProcessed = jornada?.resultsProcessed;
                 const isWinner = carton.prizeWon && carton.prizeWon > 0;
                 
-                let statusElement = null;
+                let statusElement: any = null;
                 let liveHits = 0;
                 let earlyLost = false;
                 let misses = 0;

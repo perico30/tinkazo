@@ -157,7 +157,7 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
                         const currentPrediction = predictions[match.id];
                         
                         let finalResult = match.result;
-                        let liveMatchInfo = null;
+                        let liveMatchInfo: any = null;
 
                         if (!jornada.resultsProcessed && !finalResult) {
                              const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name, e.startDate, match.dateTime));

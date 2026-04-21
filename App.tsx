@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';

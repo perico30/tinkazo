@@ -330,7 +330,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
 
     return (
         <div className="max-w-6xl mx-auto">
-            {modalUser && <EditUserModal user={modalUser} role={activeSubTab} sellers={sellers} onClose={() => setModalUser(null)} onSave={handleSaveUser} />}
+            {modalUser && <EditUserModal user={modalUser} role={activeSubTab as 'client' | 'seller'} sellers={sellers} onClose={() => setModalUser(null)} onSave={handleSaveUser} />}
             {rechargeModalUser && onRechargeUser && <RechargeModal user={rechargeModalUser} onClose={() => setRechargeModalUser(null)} onRecharge={onRechargeUser} />}
             {isAddSellerModalOpen && <AddSellerModal onClose={() => setIsAddSellerModalOpen(false)} onSave={handleAddSeller} />}
             
