@@ -328,7 +328,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
           onLogoutClick={onLogout}
         />
 
-        <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
+        <main className="flex-1 overflow-y-auto no-scrollbar pb-28">
           <div className="bg-gray-800/80 p-2 text-center border-b border-gray-800 sticky top-0 z-10 backdrop-blur-md">
             <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">
               🎪 Promotor: {promoterProfile?.displayName || currentUser.username}
@@ -670,8 +670,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
         </main>
 
         {/* Bottom Nav */}
-        <nav className="absolute left-0 right-0 bottom-0 z-40" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-          <div className="mx-3 mb-2 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-purple-900/20 overflow-hidden">
+        <nav className="absolute bottom-6 left-4 right-4 z-40 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-purple-900/20 overflow-hidden">
           <div className="flex justify-around items-center h-16 w-full px-1">
             {tabs.map(tab => (
               <button
@@ -683,7 +682,6 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                 <span className="text-[9px] font-medium leading-tight text-center px-1">{tab.label}</span>
               </button>
             ))}
-          </div>
           </div>
         </nav>
       </div>

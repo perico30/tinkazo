@@ -98,10 +98,9 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed left-0 right-0 bottom-0 z-[999]"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed bottom-6 left-4 right-4 z-[999] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-full shadow-[0_8px_40px_rgba(0,0,0,0.5)] md:left-1/2 md:-translate-x-1/2 md:max-w-[420px] md:right-auto md:w-full"
     >
-      <div className="mx-3 mb-2 bg-slate-900/85 backdrop-blur-xl border border-slate-700/50 rounded-full shadow-[0_8px_40px_rgba(0,0,0,0.5)] h-[68px] flex items-center justify-around px-2 md:max-w-[420px] md:mx-auto">
+      <div className="flex items-center justify-around h-[68px] px-2">
         {NAV_ITEMS.map((item) => {
           // --- Central JUGAR button ---
           if (item.isCenter) {
@@ -109,11 +108,11 @@ export default function BottomNav() {
               <button
                 key={item.id}
                 onClick={getOnClick(item.id)}
-                className="flex flex-col items-center justify-center -mt-6 flex-1 min-h-0"
+                className="flex flex-col items-center justify-center -mt-5 flex-1 min-h-0"
                 aria-label="Jugar"
               >
-                <div className="w-[52px] h-[52px] rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 ring-4 ring-slate-900 border border-cyan-400/30 shadow-[0_0_25px_rgba(34,211,238,0.4),0_8px_20px_rgba(139,92,246,0.3)] flex items-center justify-center active:scale-90 transition-transform">
-                  <PlusIcon className="w-7 h-7 text-white" />
+                <div className="w-[48px] h-[48px] rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 ring-4 ring-slate-900 border border-cyan-400/30 shadow-[0_0_25px_rgba(34,211,238,0.4),0_8px_20px_rgba(139,92,246,0.3)] flex items-center justify-center active:scale-90 transition-transform">
+                  <PlusIcon className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-[9px] uppercase font-black tracking-widest text-cyan-400 mt-1 leading-none">
                   JUGAR

@@ -47,17 +47,17 @@ button, a, [role="button"], input[type="submit"], input[type="button"] {
   min-height: auto !important;
 }
 
-/* Safe area utilities */
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
-/* Bottom navigation safe area — critical for iPhone X+ */
-.bottom-nav-safe {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+/* Safe area utilities — iOS PWA pattern */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  .pt-safe {
+    padding-top: max(2.5rem, env(safe-area-inset-top));
+  }
+  .h-safe-bottom {
+    height: env(safe-area-inset-bottom, 1rem);
+  }
 }
 
 /* Padding-bottom for content behind BottomNav */
