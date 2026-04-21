@@ -232,7 +232,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
         </main>
 
         {/* Bottom Nav */}
-        <nav className="absolute left-4 right-4 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-[2rem] z-40 shadow-2xl shadow-cyan-900/20 overflow-hidden bottom-nav-safe" style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
+        <nav className="absolute left-3 right-3 bg-[#020617]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl z-40 shadow-2xl shadow-cyan-900/20 overflow-hidden" style={{ bottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}>
            <div className="flex justify-around items-center h-16 w-full px-1 overflow-x-auto no-scrollbar">
               {tabs.map(tab => (
                  <button
