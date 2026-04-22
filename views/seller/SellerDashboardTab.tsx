@@ -51,7 +51,7 @@ const SellerDashboardTab: React.FC<SellerDashboardTabProps> = ({ currentUser, co
                                 ></div>
 
                                 {(isGordito || hasBotin) && (
-                                    <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-[4]">
+                                    <div className="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-[4]">
                                         {isGordito && (
                                             <div className="flex items-center gap-1 bg-green-500/90 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
                                                 <StarIcon className="h-3 w-3" />
