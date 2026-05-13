@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import type { AppConfig, Carton } from '../../types';
 import TicketIcon from '../../components/icons/TicketIcon';
 import SearchIcon from '../../components/icons/SearchIcon';
+import TrashIcon from '../../components/icons/TrashIcon';
 
 interface AdminCartonesTabProps {
   config: AppConfig;
   onViewCarton: (carton: Carton) => void;
+  onDeleteCarton: (cartonId: string) => void;
 }
 
-const AdminCartonesTab: React.FC<AdminCartonesTabProps> = ({ config, onViewCarton }) => {
+const AdminCartonesTab: React.FC<AdminCartonesTabProps> = ({ config, onViewCarton, onDeleteCarton }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredCartones = config.cartones.filter((carton) => {
@@ -76,12 +78,21 @@ const AdminCartonesTab: React.FC<AdminCartonesTabProps> = ({ config, onViewCarto
                     <span className="text-[10px] text-gray-500">{new Date(carton.purchaseDate).toLocaleDateString('es-ES')}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => onViewCarton(carton)}
-                  className="text-cyan-400 bg-cyan-400/10 px-2.5 py-1 rounded-lg text-[10px] font-bold hover:bg-cyan-400/20 transition shrink-0"
-                >
-                  Ver
-                </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => onViewCarton(carton)}
+                      className="text-cyan-400 bg-cyan-400/10 px-2.5 py-1 rounded-lg text-[10px] font-bold hover:bg-cyan-400/20 transition shrink-0"
+                    >
+                      Ver
+                    </button>
+                    <button
+                      onClick={() => onDeleteCarton(carton.id)}
+                      className="text-red-400 bg-red-400/10 px-2.5 py-1 rounded-lg text-[10px] font-bold hover:bg-red-400/20 transition shrink-0"
+                      title="Eliminar Cartón"
+                    >
+                      <TrashIcon className="h-3 w-3" />
+                    </button>
+                  </div>
               </div>
             );
           })}
@@ -131,14 +142,24 @@ const AdminCartonesTab: React.FC<AdminCartonesTabProps> = ({ config, onViewCarto
                     <td className="px-4 py-3 truncate max-w-[150px]">{getJornadaName(carton.jornadaId)}</td>
                     <td className="px-4 py-3">{new Date(carton.purchaseDate).toLocaleString()}</td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => onViewCarton(carton)}
-                        className="text-cyan-400 hover:text-cyan-300 bg-cyan-400/10 hover:bg-cyan-400/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1 font-medium"
-                        title="Ver Detalles"
-                      >
-                        <SearchIcon className="h-4 w-4" />
-                        <span>Ver Cartón</span>
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => onViewCarton(carton)}
+                          className="text-cyan-400 hover:text-cyan-300 bg-cyan-400/10 hover:bg-cyan-400/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1 font-medium"
+                          title="Ver Detalles"
+                        >
+                          <SearchIcon className="h-4 w-4" />
+                          <span>Ver</span>
+                        </button>
+                        <button
+                          onClick={() => onDeleteCarton(carton.id)}
+                          className="text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1 font-medium"
+                          title="Eliminar Cartón"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

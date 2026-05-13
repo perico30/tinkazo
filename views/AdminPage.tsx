@@ -98,6 +98,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
     setViewingCarton(carton);
   };
 
+  const handleDeleteCarton = (cartonId: string) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este cartón? Esta acción no se puede deshacer.')) {
+      setDraftConfig(prev => ({
+        ...prev,
+        cartones: prev.cartones.filter(c => c.id !== cartonId)
+      }));
+      alert('Cartón eliminado temporalmente. Recuerda presionar "Guardar Cambios" para que sea permanente.');
+    }
+  };
+
   const tabs: { id: AdminTab; label: string; icon: React.FC<{className?: string}> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'jornadas', label: 'Jornadas', icon: CalendarIcon },
@@ -112,7 +122,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
       case 'dashboard':
         return <DashboardTab config={draftConfig} />;
       case 'cartones':
-        return <AdminCartonesTab config={draftConfig} onViewCarton={handleViewCarton} />;
+        return <AdminCartonesTab config={draftConfig} onViewCarton={handleViewCarton} onDeleteCarton={handleDeleteCarton} />;
       case 'config':
         return <ConfigurationTab config={draftConfig} setConfig={setDraftConfig} />;
        case 'jornadas':
@@ -156,7 +166,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
     }
   };
 
-  const isConfigTabActive = ['config', 'jornadas', 'users'].includes(activeTab);
+  const isConfigTabActive = ['config', 'jornadas', 'users', 'cartones'].includes(activeTab);
 
   return (
     <>
