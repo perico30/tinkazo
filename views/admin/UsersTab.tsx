@@ -22,15 +22,17 @@ const EditUserModal: React.FC<{
     user: RegisteredUser;
     role: 'client' | 'seller';
     sellers: RegisteredUser[];
+    promoters: RegisteredUser[];
     onClose: () => void;
     onSave: (user: RegisteredUser) => void;
-}> = ({ user, role, sellers, onClose, onSave }) => {
+}> = ({ user, role, sellers, promoters, onClose, onSave }) => {
     
     const [formData, setFormData] = useState({
         username: user.username || '',
         phone: user.phone || '',
         country: user.country || COUNTRIES[0].code,
         assignedSellerId: user.assignedSellerId || '',
+        referredBy: user.referredBy || '',
         role: user.role || 'client'
     });
 
@@ -90,6 +92,15 @@ const EditUserModal: React.FC<{
                                 <select name="assignedSellerId" value={formData.assignedSellerId || ''} onChange={handleInputChange} className="w-full bg-gray-700 p-2 rounded">
                                     <option value="">Sin Asignar</option>
                                     {sellers.map(s => <option key={s.id} value={s.id}>{s.username}</option>)}
+                                </select>
+                            </div>
+                        )}
+                        {formData.role === 'seller' && (
+                            <div>
+                                <label className="block mb-1 text-sm text-gray-400">Asignar Promotor</label>
+                                <select name="referredBy" value={formData.referredBy || ''} onChange={handleInputChange} className="w-full bg-gray-700 p-2 rounded">
+                                    <option value="">Sin Promotor</option>
+                                    {promoters.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
                                 </select>
                             </div>
                         )}
@@ -216,6 +227,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
     const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
     const sellers = useMemo(() => config.users.filter(u => u.role === 'seller'), [config.users]);
+    const promoters = useMemo(() => config.users.filter(u => u.role === 'promoter'), [config.users]);
 
     const handleAddSeller = async (sellerData: any) => {
         try {
@@ -275,6 +287,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                 country: user.country,
                 role: user.role,
                 assigned_seller_id: user.assignedSellerId || null,
+                referred_by: user.referredBy || null,
             }).eq('id', user.id);
 
             if (error) throw error;
@@ -335,7 +348,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
 
     return (
         <div className="max-w-6xl mx-auto">
-            {modalUser && <EditUserModal user={modalUser} role={activeSubTab as 'client' | 'seller'} sellers={sellers} onClose={() => setModalUser(null)} onSave={handleSaveUser} />}
+            {modalUser && <EditUserModal user={modalUser} role={activeSubTab as 'client' | 'seller'} sellers={sellers} promoters={promoters} onClose={() => setModalUser(null)} onSave={handleSaveUser} />}
             {rechargeModalUser && onRechargeUser && <RechargeModal user={rechargeModalUser} onClose={() => setRechargeModalUser(null)} onRecharge={onRechargeUser} />}
             {isAddSellerModalOpen && <AddSellerModal onClose={() => setIsAddSellerModalOpen(false)} onSave={handleAddSeller} />}
             
