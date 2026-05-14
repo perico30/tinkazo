@@ -23,7 +23,7 @@ export default function HomeRoute() {
         onRegisterClick={ctx.navigateToRegister}
         onHomeClick={ctx.navigateToHome}
         onAdminClick={ctx.navigateToAdmin}
-        onSellerPanelClick={ctx.navigateToSellerPanel}
+        onSellerPanelClick={ctx.userRole === 'promoter' ? ctx.navigateToPromoterPanel : ctx.navigateToSellerPanel}
         onClientPanelClick={ctx.navigateToClientPanel}
         onLogoutClick={ctx.handleLogout}
         onLegalClick={ctx.handleLegalClick}
