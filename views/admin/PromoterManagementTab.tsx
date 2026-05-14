@@ -129,12 +129,16 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
 
       const newBalance = profile.guaranteeBalance + amount;
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('promoter_profiles')
         .update({ guarantee_balance: newBalance })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
 
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error('La base de datos no se actualizó (0 filas afectadas). Esto suele ocurrir porque faltan las políticas de seguridad (RLS) para permitir a los administradores actualizar la tabla promoter_profiles.');
+      }
 
       // Create a transaction record
       await supabase.from('transactions').insert({
