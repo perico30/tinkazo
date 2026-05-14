@@ -190,22 +190,15 @@ const CountdownTimerInline: React.FC<{ firstMatchDateStr: string }> = ({ firstMa
 
 
 const WelcomeMessage: React.FC<{ title: string; description: string; activeJornadasCount: number }> = ({ title, description, activeJornadasCount }) => (
-  <section className="relative flex flex-col items-center justify-center text-center pt-8 pb-12 px-4 overflow-hidden min-h-[280px] sm:min-h-[350px] mb-8 sm:mb-16">
+  <section className="relative flex flex-col items-center justify-center text-center pt-4 pb-6 px-4 overflow-hidden min-h-[150px] sm:min-h-[200px] mb-4 sm:mb-8">
     {/* Animated glow background */}
     <div className="hero-glow" />
     
     {/* Title with animated gradient */}
-    <h1 className="hero-title mb-4 sm:mb-6">{title}</h1>
+    <h1 className="hero-title mb-2 sm:mb-4">{title}</h1>
     
     {/* Subtitle */}
     <p className="text-gray-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed relative z-[1]">{description}</p>
-    
-    {/* Active jornadas badge */}
-    {activeJornadasCount > 0 && (
-      <div className="bg-gradient-to-r from-amber-500/20 to-red-500/20 border border-amber-500/30 rounded-full px-4 py-1.5 mt-4 relative z-[1]">
-        <span className="text-amber-300 text-xs font-bold uppercase tracking-wider">🔥 {activeJornadasCount} jornada{activeJornadasCount > 1 ? 's' : ''} activa{activeJornadasCount > 1 ? 's' : ''} ahora</span>
-      </div>
-    )}
   </section>
 );
 
@@ -623,7 +616,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
             activeJornadasCount={appConfig.jornadas.filter(j => j.status === 'abierta').length}
           />
           
-          <div className="space-y-16">
+          <div className="space-y-8">
             {appConfig.sectionsOrder.map((sectionKey) => {
                if (appConfig.theme.hiddenSections?.includes(sectionKey)) return null;
                return (
