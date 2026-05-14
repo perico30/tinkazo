@@ -338,6 +338,10 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
           <div className="p-4 space-y-4">
             {/* Metrics Cards */}
             <div className="grid grid-cols-2 gap-3">
+              <div className="stat-card bg-gradient-to-r from-blue-900/50 to-indigo-900/50 border border-blue-500/30 col-span-2 p-4 rounded-xl">
+                <h3 className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Saldo Disponible (Para transferir)</h3>
+                <p className="text-3xl font-black text-white stat-value mt-1">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</p>
+              </div>
               <div className="stat-card stat-card-green">
                 <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Garantía Depositada</h3>
                 <p className="text-2xl font-black text-green-400 stat-value mt-1">Bs {Math.floor(guaranteeBalance).toLocaleString('es-ES')}</p>
@@ -499,7 +503,12 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
               <div className="space-y-4">
                 {/* Transfer Balance */}
                 <div className="bg-gray-800 p-4 rounded-lg">
-                  <h3 className="font-bold text-cyan-400 mb-3">💸 Transferir Saldo a Cliente</h3>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-cyan-400">💸 Transferir Saldo a Cliente</h3>
+                    <span className="text-xs font-bold text-green-400 bg-green-900/30 border border-green-500/30 px-2 py-1 rounded-lg">
+                      Mi Saldo: Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}
+                    </span>
+                  </div>
                   <div className="space-y-2">
                     <select
                       value={transferClientId}
