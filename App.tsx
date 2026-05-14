@@ -1142,7 +1142,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         showNotification('Error: Usuario no encontrado.');
         return;
     }
-    if ((seller.balance || 0) < amount) {
+    if (seller.role !== 'promoter' && (seller.balance || 0) < amount) {
         showNotification('Saldo insuficiente para transferir.');
         return;
     }

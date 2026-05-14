@@ -371,7 +371,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                 </div>
 
                 {activeSubTab === 'promoter' ? (
-                  <PromoterManagementTab config={config} setConfig={setConfig} />
+                  <PromoterManagementTab config={config} setConfig={setConfig} onRechargeClick={onRechargeUser ? (user) => setRechargeModalUser(user) : undefined} />
                 ) : (
                   <>
                 <div className="mb-4 bg-blue-900/30 border border-blue-500/50 rounded p-3 text-sm text-blue-200">

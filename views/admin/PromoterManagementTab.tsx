@@ -5,9 +5,10 @@ import { supabase } from '../../supabaseClient';
 interface PromoterManagementTabProps {
   config: AppConfig;
   setConfig: React.Dispatch<React.SetStateAction<AppConfig>>;
+  onRechargeClick?: (user: RegisteredUser) => void;
 }
 
-const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, setConfig }) => {
+const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, setConfig, onRechargeClick }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');

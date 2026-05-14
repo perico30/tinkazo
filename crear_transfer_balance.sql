@@ -8,6 +8,7 @@ CREATE OR REPLACE FUNCTION transfer_balance(
 ) RETURNS VOID AS $$
 DECLARE
   v_seller_balance DECIMAL;
+  v_seller_role TEXT;
   v_client_username TEXT;
   v_seller_username TEXT;
 BEGIN
@@ -16,11 +17,11 @@ BEGIN
     RAISE EXCEPTION 'El monto debe ser mayor a 0.';
   END IF;
 
-  -- 2. Asegurar que el vendedor tenga saldo y bloquear filas para evitar errores en transacciones simultáneas
-  SELECT balance, username INTO v_seller_balance, v_seller_username 
+  -- 2. Asegurar que el vendedor tenga saldo (si no es promotor)
+  SELECT balance, username, role INTO v_seller_balance, v_seller_username, v_seller_role 
   FROM public.users WHERE id = p_seller_id FOR UPDATE;
 
-  IF v_seller_balance < p_amount THEN
+  IF v_seller_role != 'promoter' AND v_seller_balance < p_amount THEN
     RAISE EXCEPTION 'Saldo insuficiente.';
   END IF;
 
@@ -31,7 +32,8 @@ BEGIN
       RAISE EXCEPTION 'El cliente no existe o fue eliminado.';
   END IF;
 
-  -- 3. Restar al vendedor y registrar su transacción
+  -- 3. Restar al vendedor y registrar su transacción 
+  -- (A los promotores también se les resta para llevar un historial contable negativo de cuánto han emitido, pero no se les bloquea)
   UPDATE public.users SET balance = balance - p_amount WHERE id = p_seller_id;
   INSERT INTO public.transactions(user_id, amount, type, description)
   VALUES (p_seller_id, -p_amount, 'transfer_out', 'Transferencia manual enviada a ' || v_client_username);
