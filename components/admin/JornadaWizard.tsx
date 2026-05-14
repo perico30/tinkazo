@@ -9,9 +9,10 @@ import TeamLogo, { getCachedLogoUrl } from './TeamLogo';
 interface JornadaWizardProps {
   onCancel: () => void;
   onSave: (jornada: Jornada, newTeams: Team[]) => void;
+  isAdmin?: boolean;
 }
 
-const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
+const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave, isAdmin = false }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -363,20 +364,22 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave }) => {
             <div className="space-y-6 max-w-2xl mx-auto">
               <h3 className="text-lg font-semibold text-cyan-400 mb-2">Paso 3: Detalles Finales y Estilos</h3>
 
-              <div className="bg-gray-700/50 p-4 rounded-lg mb-6">
-                <label className="block text-sm mb-2 text-yellow-500 font-bold">¿Qué partido aplicará para el Pozo "Gordito"?</label>
-                <select
-                  value={botinMatchId || ''}
-                  onChange={e => setBotinMatchId(e.target.value)}
-                  className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600"
-                >
-                  <option value="">Ninguno</option>
-                  {selectedMatches.map(m => (
-                    <option key={m.id} value={m.id}>{m.team1.name} vs {m.team2.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-400 mt-2">Los jugadores tendrán que acertar el marcador exacto de este partido para llevarse el Pozo Gordito.</p>
-              </div>
+              {isAdmin && (
+                <div className="bg-gray-700/50 p-4 rounded-lg mb-6">
+                  <label className="block text-sm mb-2 text-yellow-500 font-bold">¿Qué partido aplicará para el "Botín"?</label>
+                  <select
+                    value={botinMatchId || ''}
+                    onChange={e => setBotinMatchId(e.target.value)}
+                    className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600"
+                  >
+                    <option value="">Ninguno</option>
+                    {selectedMatches.map(m => (
+                      <option key={m.id} value={m.id}>{m.team1.name} vs {m.team2.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-2">Los jugadores tendrán que acertar el marcador exacto de este partido para llevarse el Botín.</p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-6">
                 <div>

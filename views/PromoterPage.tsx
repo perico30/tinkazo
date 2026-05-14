@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { AppConfig, RegisteredUser, Carton, Prediction, Jornada, Team, PromoterProfile } from '../types';
 import JornadaWizard from '../components/admin/JornadaWizard';
 import ImageUpload from '../components/admin/ImageUpload';
@@ -26,7 +26,15 @@ interface PromoterPageProps {
 type PromoterTab = 'dashboard' | 'jornadas' | 'clients' | 'finance' | 'settings';
 
 const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada }) => {
-  const [activeTab, setActiveTab] = useState<PromoterTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<PromoterTab>(() => {
+    return (localStorage.getItem('tinkazoPromoterTab') as PromoterTab) || 'dashboard';
+  });
+  
+  // Save activeTab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('tinkazoPromoterTab', activeTab);
+  }, [activeTab]);
+
   const [showJornadaWizard, setShowJornadaWizard] = useState(false);
   const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
   const [transferClientId, setTransferClientId] = useState('');

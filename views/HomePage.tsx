@@ -427,8 +427,13 @@ const JornadasSection: React.FC<{
                 ></div>
                 
 
-                {(isGordito || hasBotin) && (
+                {(isGordito || hasBotin || jornada.visibility === 'private') && (
                   <div className="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-[4]">
+                      {jornada.visibility === 'private' && (
+                          <div className="flex items-center gap-1 bg-gray-900/90 text-yellow-400 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg backdrop-blur-sm border border-yellow-500/50 uppercase tracking-widest">
+                              <span>🔒 Privada</span>
+                          </div>
+                      )}
                       {isGordito && (
                           <div className="flex items-center gap-1 bg-green-500/90 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
                               <StarIcon className="h-3 w-3" />

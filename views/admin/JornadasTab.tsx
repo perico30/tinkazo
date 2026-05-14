@@ -391,7 +391,8 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
             {showWizard && (
                 <JornadaWizard 
                     onCancel={() => setShowWizard(false)} 
-                    onSave={handleSaveWizard} 
+                    onSave={handleSaveWizard}
+                    isAdmin={true}
                 />
             )}
 
