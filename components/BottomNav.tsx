@@ -67,11 +67,8 @@ export default function BottomNav() {
     showPurchaseSheet,
   } = useApp();
 
-  // --- Visibility: ONLY for logged-in clients on non-panel pages ---
-  const hiddenPaths = ['/admin', '/seller', '/promoter', '/login', '/register'];
-  const isClient = currentUser && userRole === 'client';
-  const isOnHiddenPath = hiddenPaths.some(p => pathname.startsWith(p));
-  if (!isClient || isOnHiddenPath || showPurchaseSheet) return null;
+  // The user found the bottom nav annoying, so it is completely disabled.
+  return null;
 
   // --- Active state ---
   const getIsActive = (id: string): boolean => {

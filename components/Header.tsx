@@ -31,6 +31,7 @@ const Header: React.FC<HeaderProps> = ({
   onRegisterClick,
   onAdminClick,
   onSellerPanelClick,
+  onClientPanelClick,
   onLogoutClick,
   hideNavButtons = false,
 }) => {
@@ -116,21 +117,33 @@ const Header: React.FC<HeaderProps> = ({
 
           /* ═══════════ CLIENT (logged in) ═══════════ */
           ) : currentUser ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Compact Balance Badge */}
-              <div className="flex flex-col items-center bg-gradient-to-r from-cyan-500/10 to-cyan-500/5 border border-cyan-500/30 px-3 py-1 rounded-xl">
-                <span className="text-[8px] text-gray-400 uppercase tracking-widest leading-none">Saldo</span>
-                <span className="text-sm font-black text-cyan-300 leading-tight">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</span>
+              <div className="flex flex-col items-center bg-cyan-900/40 border border-cyan-800/80 px-1.5 py-0.5 rounded-md min-w-[35px]">
+                <span className="text-[7px] text-gray-400 font-bold leading-none uppercase tracking-widest">Saldo</span>
+                <span className="text-[10px] sm:text-sm font-black text-cyan-300 leading-tight">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</span>
               </div>
+
+              {/* Mi Panel */}
+              {onClientPanelClick && (
+                <button
+                  onClick={onClientPanelClick}
+                  className="flex flex-col items-center justify-center gap-0.5 px-1.5 py-0.5 sm:px-3 sm:py-1.5 bg-gray-800/40 border border-gray-700/50 rounded-lg transition-colors text-white"
+                  title="Panel de Cliente"
+                >
+                  <GearIcon className="h-3 w-3 sm:h-5 sm:w-5" />
+                  <span className="text-[7px] sm:text-[10px] font-bold uppercase tracking-wider">Mi Panel</span>
+                </button>
+              )}
 
               {/* Icon-only Logout */}
               <button
                 onClick={onLogoutClick}
-                className="btn-gradient rounded-full p-2 shadow-lg active:scale-90 transition-all min-h-0"
+                className="btn-gradient rounded-lg p-1.5 sm:p-2 shadow-lg active:scale-90 transition-all"
                 aria-label="Cerrar sesión"
                 title="Cerrar sesión"
               >
-                <LogoutIcon className="h-4 w-4 text-white" />
+                <LogoutIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-white" />
               </button>
             </div>
 

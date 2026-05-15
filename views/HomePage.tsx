@@ -654,7 +654,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col ${props.showBottomNav ? 'content-with-bottomnav' : ''}`}>
       <Header 
         appName={appConfig.appName}
         logoUrl={appConfig.logoUrl}
@@ -674,7 +674,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
       
       {isPopupVisible && <WelcomePopup config={appConfig.welcomePopup} onClose={closePopup} primaryColor={appConfig.theme.primaryColor} />}
 
-      <main className={`flex-grow ${props.showBottomNav ? 'content-with-bottomnav' : ''}`}>
+      <main className="flex-grow">
         <div className="container mx-auto px-4 py-2 sm:py-8">
           
           <WelcomeMessage 

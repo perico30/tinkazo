@@ -28,7 +28,7 @@ export default function HomeRoute() {
         onLogoutClick={ctx.handleLogout}
         onLegalClick={ctx.handleLegalClick}
         onPlayJornada={ctx.handlePlayJornada}
-        showBottomNav={!!ctx.currentUser && ctx.userRole === 'client'}
+        showBottomNav={false}
       />
       <BottomSheet
         isOpen={ctx.showPurchaseSheet}

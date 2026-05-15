@@ -6,7 +6,6 @@ import GearIcon from '../components/icons/GearIcon';
 import WalletIcon from '../components/icons/WalletIcon';
 import TicketIcon from '../components/icons/TicketIcon';
 import TrophyIcon from '../components/icons/TrophyIcon';
-import ClientDashboardTab from './client/ClientDashboardTab';
 import ClientRechargeTab from './client/ClientRechargeTab';
 import ClientTicketsTab from './client/ClientTicketsTab';
 import ClientGainsTab from './client/ClientGainsTab';
@@ -30,7 +29,7 @@ interface ClientPageProps {
   onPlayJornada: (jornada: any) => void;
 }
 
-type ClientTab = 'dashboard' | 'finance' | 'tickets' | 'profile';
+type ClientTab = 'finance' | 'tickets' | 'profile';
 
 const HeaderCard: React.FC<{ title: string; value: string; accentClass?: string; onRechargeClick?: () => void; onWithdrawClick?: () => void }> = ({ title, value, accentClass = '', onRechargeClick, onWithdrawClick }) => (
     <div className={`stat-card ${accentClass} flex-1`}>
@@ -46,7 +45,7 @@ const HeaderCard: React.FC<{ title: string; value: string; accentClass?: string;
 );
 
 const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUser, onUpdateCarton, onDeleteCarton, onRequestWithdrawal, onRequestRecharge, onLogout, onExit, onPlayJornada }) => {
-  const [activeTab, setActiveTab] = useState<ClientTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<ClientTab>('tickets');
   const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -54,9 +53,8 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
   const handleCloseCartonModal = () => setViewingCarton(null);
 
   const tabs: { id: ClientTab; label: string; icon: React.FC<{className?: string}> }[] = [
-    { id: 'dashboard', label: 'Inicio', icon: HomeIcon },
-    { id: 'finance', label: 'Financiero', icon: WalletIcon },
     { id: 'tickets', label: 'Mis cartones', icon: TicketIcon },
+    { id: 'finance', label: 'Financiero', icon: WalletIcon },
     { id: 'profile', label: 'Configuración', icon: GearIcon },
   ];
 
@@ -66,8 +64,6 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, config, onUpdateUs
 
   const renderTabContent = () => {
     switch(activeTab) {
-      case 'dashboard':
-        return <ClientDashboardTab currentUser={currentUser} config={config} onPlayJornada={onPlayJornada} />;
       case 'finance':
         return (
             <div className="space-y-6">
