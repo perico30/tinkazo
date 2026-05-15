@@ -190,15 +190,43 @@ const CountdownTimerInline: React.FC<{ firstMatchDateStr: string }> = ({ firstMa
 
 
 const WelcomeMessage: React.FC<{ title: string; description: string; activeJornadasCount: number }> = ({ title, description, activeJornadasCount }) => (
-  <section className="relative flex flex-col items-center justify-center text-center pt-4 pb-6 px-4 overflow-hidden min-h-[150px] sm:min-h-[200px] mb-4 sm:mb-8">
+  <section className="relative flex flex-col items-center justify-center text-center pt-8 pb-10 px-4 overflow-hidden min-h-[250px] sm:min-h-[300px] mb-4 sm:mb-8">
     {/* Animated glow background */}
     <div className="hero-glow" />
     
     {/* Title with animated gradient */}
-    <h1 className="hero-title mb-2 sm:mb-4">{title}</h1>
+    <h1 className="hero-title mb-4 sm:mb-6">{title}</h1>
     
     {/* Subtitle */}
-    <p className="text-gray-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed relative z-[1]">{description}</p>
+    <p className="text-white font-bold text-lg sm:text-2xl lg:text-3xl max-w-4xl mx-auto leading-relaxed tracking-wide drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] relative z-[1]">
+      {description}
+    </p>
+
+    {/* Instructions & Actions */}
+    <div className="relative z-[1] mt-8 flex flex-col items-center gap-5 w-full">
+      
+      {/* 1X2 Instructions Badge */}
+      <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-5 bg-black/50 border border-white/20 backdrop-blur-md px-5 sm:px-8 py-2.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+         <div className="flex items-center gap-2">
+            <span className="text-green-400 font-black text-xl drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]">1</span>
+            <span className="text-white text-sm sm:text-base font-semibold tracking-wide">= Gana Local</span>
+         </div>
+         
+         <span className="text-gray-400 font-bold hidden sm:inline">|</span>
+         
+         <div className="flex items-center gap-2">
+            <span className="text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">X</span>
+            <span className="text-white text-sm sm:text-base font-semibold tracking-wide">= Empate</span>
+         </div>
+         
+         <span className="text-gray-400 font-bold hidden sm:inline">|</span>
+         
+         <div className="flex items-center gap-2">
+            <span className="text-cyan-400 font-black text-xl drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">2</span>
+            <span className="text-white text-sm sm:text-base font-semibold tracking-wide">= Gana Visitante</span>
+         </div>
+      </div>
+    </div>
   </section>
 );
 
@@ -230,20 +258,27 @@ const JackpotsSection: React.FC<{ gorditoJackpot: JackpotConfig; botinJackpot: J
         return (
           <div
             key={index}
-            className="jackpot-card"
+            className="jackpot-card group relative"
             style={{
-              '--glow-color': jackpot.colors.primary,
-              backgroundColor: jackpot.colors.backgroundColor, // Always keep the gradient/color!
+              backgroundColor: jackpot.colors.backgroundColor,
+              border: `2px solid ${jackpot.colors.primary}`,
+              boxShadow: `0 0 25px ${hexToRgba(jackpot.colors.primary, 0.6)}, inset 0 0 20px ${hexToRgba(jackpot.colors.primary, 0.4)}`
             } as React.CSSProperties}
           >
             {isImage && (
-              <img src={jackpot.backgroundImage} alt={jackpot.title} className="jackpot-card-bg" />
+              <img src={jackpot.backgroundImage} alt={jackpot.title} className="jackpot-card-bg group-hover:scale-105 transition-transform duration-700" />
             )}
-            <div className="jackpot-card-content">
-              <h2 className="text-xl font-semibold mb-2 uppercase tracking-widest" style={{ color: jackpot.colors.primary }}>
+            
+            <div className="jackpot-card-content z-[3] flex flex-col items-center justify-center h-full gap-1">
+              {/* Main detail text (e.g. ¡ACERTÁ LOS 14 PARTIDOS!) */}
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-yellow-400 uppercase tracking-widest"
+                  style={{ textShadow: '-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 4px 8px rgba(0,0,0,0.8), 0 0 15px rgba(250,204,21,0.6)' }}>
                 {jackpot.detail}
               </h2>
-              <p className="text-5xl font-extrabold tracking-tighter" style={{ color: jackpot.colors.primary }}>
+              
+              {/* Amount (e.g. Bs 1.000) */}
+              <p className="text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tighter"
+                 style={{ textShadow: `-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 5px 15px rgba(0,0,0,0.9), 0 0 40px ${jackpot.colors.backgroundColor}` }}>
                 {jackpot.amount}
               </p>
             </div>
@@ -367,7 +402,7 @@ const JornadasSection: React.FC<{
 
   return (
     <section className="mb-8">
-      <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center gradient-text uppercase">Jornadas Disponibles</h2>
+      <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-6 sm:mb-8 text-center gradient-text uppercase tracking-wide">Jornadas Disponibles</h2>
       
       {/* Access Code Input - only show when private jornadas exist */}
       {hasPrivateJornadas && (
@@ -410,31 +445,33 @@ const JornadasSection: React.FC<{
             const hasBotin = !!jornada.botinMatchId;
 
             return (
-              <div key={jornada.id} className="jornada-card">
-                {jornada.styling.backgroundImage && (
-                  <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
-                )}
-                <div 
+              <div key={jornada.id} className="relative group chameleon-border-wrapper">
+                <div className="jornada-card" style={{ backgroundColor: jornada.styling.backgroundColor }}>
+                  {jornada.styling.backgroundImage && (
+                    <img src={jornada.styling.backgroundImage} alt={jornada.name} className="jornada-card-bg" />
+                  )}
+                 <div 
                   className="jornada-card-overlay"
-                  style={{ backgroundColor: hexToRgba(jornada.styling.backgroundColor, 0.7) }}
+                  style={{ 
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.85) 100%)'
+                  }}
                 ></div>
                 
-
                 {(isGordito || hasBotin || jornada.visibility === 'private') && (
                   <div className="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-[4]">
                       {jornada.visibility === 'private' && (
-                          <div className="flex items-center gap-1 bg-gray-900/90 text-yellow-400 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg backdrop-blur-sm border border-yellow-500/50 uppercase tracking-widest">
+                          <div className="flex items-center gap-1 bg-gradient-to-r from-gray-900 to-gray-800 text-yellow-400 text-[10px] font-bold px-3 py-1 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.4)] backdrop-blur-sm border border-yellow-500/50 uppercase tracking-widest">
                               <span>🔒 Privada</span>
                           </div>
                       )}
                       {isGordito && (
-                          <div className="flex items-center gap-1 bg-green-500/90 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
+                          <div className="flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] backdrop-blur-sm">
                               <StarIcon className="h-3 w-3" />
                               <span>Gordito Activado</span>
                           </div>
                       )}
                       {hasBotin && (
-                          <div className="flex items-center gap-1 bg-yellow-400/90 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
+                          <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-xs font-bold px-2 py-1 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.6)] backdrop-blur-sm">
                               <StarIcon className="h-3 w-3" />
                               <span>Botin Activado</span>
                           </div>
@@ -447,60 +484,90 @@ const JornadasSection: React.FC<{
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         {playable ? (
-                          <div className="flex items-center gap-1 bg-green-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                            Disponible
+                          <div className="flex items-center gap-1.5 bg-[#16a34a] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.7)] uppercase tracking-wider">
+                            <span className="w-2 h-2 rounded-full bg-[#86efac] animate-pulse"></span>
+                            DISPONIBLE
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1 bg-red-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10 uppercase tracking-widest">
+                          <div className="flex items-center gap-1.5 bg-[#dc2626] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.7)] uppercase tracking-wider">
                             Cerrada
                           </div>
                         )}
-                        <div className="info">
+                        <div className="info border-transparent bg-black/60 shadow-lg text-[11px]">
                           <SoccerIcon className="h-4 w-4" />
                           <span>{jornada.matches.length} Partidos</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-cyan-400/30 w-fit">
-                          <TicketIcon className="h-3 w-3" />
+                      <div className="flex items-center gap-1 bg-[#0ea5e9] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.7)] w-fit mt-1">
                           <span>Bs. {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
-                      {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="League" className="h-5 w-auto rounded" />}
+                      {jornada.flagIconUrl && <img src={jornada.flagIconUrl} alt="League" className="h-5 w-auto rounded shadow-lg" />}
                       {getFirstMatchDateStr(jornada) && playable && (
-                        <div className="flex items-center gap-1 bg-black/60 text-white text-[10px] font-mono font-bold px-2 py-1 rounded-full shadow-lg backdrop-blur-sm border border-white/10">
+                        <div className="flex items-center gap-1 bg-gray-900/80 text-cyan-300 text-[10px] font-mono font-bold px-2 py-1 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.4)] backdrop-blur-sm border border-cyan-500/30">
                           ⏳ <CountdownTimerInline firstMatchDateStr={getFirstMatchDateStr(jornada)!} />
                         </div>
                       )}
                     </div>
                   </header>
                   <div className="jornada-card-body">
-                    <h3 className="jornada-card-title">{jornada.name}</h3>
-                    {jornada.promoterName && (
-                      <div className="flex items-center gap-1 bg-purple-600/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full w-fit mt-1 backdrop-blur-sm border border-purple-400/30">
-                        🎪 {jornada.promoterName}
-                      </div>
-                    )}
+                    <h3 className="jornada-card-title drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{jornada.name}</h3>
+                    {/* Always show the author badge */}
+                    <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-full w-fit mt-1 backdrop-blur-sm border border-purple-300/50 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                      🎪 {jornada.promoterId ? (jornada.promoterName || 'Promotor') : 'LA CASA'}
+                    </div>
                   </div>
                   <footer className="jornada-card-footer">
-                    <div className="bg-[#020617]/50 border border-white/10 rounded-full px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-inner">
-                        <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">1er:</span>
-                        <span className="text-[11px] font-black text-cyan-400">{jornada.firstPrize}</span>
-                        <span className="text-gray-600 font-bold">|</span>
-                        <span className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">2do:</span>
-                        <span className="text-[11px] font-black text-indigo-400">{jornada.secondPrize}</span>
+                    <div className="btn-gradient rounded-full px-4 py-1.5 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.6)] text-white"
+                         style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px rgba(0,0,0,0.8)' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">1er:</span>
+                        <span className="text-[13px] font-black">{jornada.firstPrize}</span>
+                        <span className="font-bold mx-1 opacity-70">|</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">2do:</span>
+                        <span className="text-[13px] font-black">{jornada.secondPrize}</span>
                     </div>
-                     <button 
-                        onClick={() => onPlayJornada(jornada)}
-                        disabled={!currentUser || !playable}
-                        className="jornada-play-button"
-                        style={{ color: jornada.styling.backgroundColor }}
-                        title={!currentUser ? 'Debes iniciar sesión para jugar' : !playable ? 'La venta para esta jornada ha cerrado' : `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}`}
-                    >
-                        {!playable ? 'Cerrado' : 'Jugar'}
-                    </button>
+                    
+                    {(() => {
+                      // Determine if the user is authorized to play this specific jornada
+                      const isLaCasaJornada = !jornada.promoterId;
+                      const isLaCasaClient = currentUser && !currentUser.referredBy;
+                      const isPromoterJornada = !!jornada.promoterId;
+                      const isCorrectPromoterClient = currentUser && currentUser.referredBy === jornada.promoterId;
+                      
+                      const isAuthorizedClient = (isLaCasaJornada && isLaCasaClient) || (isPromoterJornada && isCorrectPromoterClient);
+                      
+                      let tooltipTitle = '';
+                      if (!currentUser) tooltipTitle = 'Debes iniciar sesión para jugar';
+                      else if (!playable) tooltipTitle = 'La venta para esta jornada ha cerrado';
+                      else if (!isAuthorizedClient) {
+                         tooltipTitle = isLaCasaJornada 
+                           ? 'Esta jornada es exclusiva para clientes oficiales de La Casa'
+                           : 'Esta jornada es exclusiva para los clientes de este promotor';
+                      } else {
+                         tooltipTitle = `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}`;
+                      }
+
+                      const canPlay = playable && currentUser && isAuthorizedClient;
+
+                      return (
+                        <button 
+                            onClick={() => {
+                              if (canPlay) onPlayJornada(jornada);
+                            }}
+                            disabled={!canPlay}
+                            className={`jornada-play-button ${canPlay ? 'btn-gradient text-white font-black tracking-wide border-none' : 'bg-gray-500 text-gray-300 border-none opacity-80 cursor-not-allowed'}`}
+                            style={canPlay ? {
+                              textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px rgba(0,0,0,0.8)'
+                            } : {}}
+                            title={tooltipTitle}
+                        >
+                            {!playable ? 'CERRADO' : 'JUGAR AHORA'}
+                        </button>
+                      );
+                    })()}
                   </footer>
+                </div>
                 </div>
               </div>
             );
@@ -521,7 +588,7 @@ const TutorialsSection: React.FC<{ videos: VideoTutorial[]; title: string; }> = 
     return (
         <>
             {selectedVideoUrl && <VideoModal videoUrl={selectedVideoUrl} onClose={() => setSelectedVideoUrl(null)} />}
-            <section>
+            <section id="tutorials-section" className="scroll-mt-24">
                 <h2 className="text-4xl font-bold mb-8 text-center gradient-text">{title}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                     {videos.map(video => {

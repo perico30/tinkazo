@@ -813,6 +813,22 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
         }
     }
 
+    // --- AUTORIZACIÓN POR PROMOTOR (Opción 2) ---
+    const isLaCasaJornada = !jornada.promoterId;
+    const isLaCasaClient = !currentUser.referredBy;
+    const isPromoterJornada = !!jornada.promoterId;
+    const isCorrectPromoterClient = currentUser.referredBy === jornada.promoterId;
+    
+    if (isLaCasaJornada && !isLaCasaClient) {
+        showNotification('Acceso denegado: Tu cuenta está vinculada a un promotor. Solo puedes usar tu saldo en las jornadas de tu promotor.');
+        return;
+    }
+    
+    if (isPromoterJornada && !isCorrectPromoterClient) {
+        showNotification('Acceso denegado: Solo puedes participar en las jornadas de tu propio promotor oficial.');
+        return;
+    }
+
     // FIX: Using Secure Supabase RPC
     try {
         const { data: ticketId, error: rpcError } = await supabase.rpc('purchase_carton', {
