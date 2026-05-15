@@ -26,7 +26,7 @@ interface PromoterPageProps {
 
 type PromoterTab = 'dashboard' | 'jornadas' | 'clients' | 'finance' | 'settings';
 
-import ClientRechargesTab from '../components/seller/ClientRechargesTab';
+import ClientRechargesTab from './seller/ClientRechargesTab';
 
 const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada, onProcessClientRecharge }) => {
   const [activeTab, setActiveTab] = useState<PromoterTab>(() => {
