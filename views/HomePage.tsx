@@ -206,24 +206,24 @@ const WelcomeMessage: React.FC<{ title: string; description: string; activeJorna
     <div className="relative z-[1] mt-8 flex flex-col items-center gap-5 w-full">
       
       {/* 1X2 Instructions Badge */}
-      <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-5 bg-black/50 border border-white/20 backdrop-blur-md px-5 sm:px-8 py-2.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
-         <div className="flex items-center gap-2">
-            <span className="text-green-400 font-black text-xl drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]">1</span>
-            <span className="text-white text-sm sm:text-base font-semibold tracking-wide">= Gana Local</span>
+      <div className="flex flex-nowrap justify-center items-center gap-2 sm:gap-5 bg-black/50 border border-white/20 backdrop-blur-md px-3 sm:px-8 py-2 sm:py-2.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.6)] w-fit max-w-[95vw] overflow-hidden">
+         <div className="flex items-center gap-1 sm:gap-2 whitespace-nowrap">
+            <span className="text-green-400 font-black text-sm sm:text-xl drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]">1</span>
+            <span className="text-white text-[9px] min-[360px]:text-[10px] sm:text-base font-semibold tracking-wide">= Local</span>
          </div>
          
-         <span className="text-gray-400 font-bold hidden sm:inline">|</span>
+         <span className="text-gray-400 font-bold text-xs sm:text-base">|</span>
          
-         <div className="flex items-center gap-2">
-            <span className="text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">X</span>
-            <span className="text-white text-sm sm:text-base font-semibold tracking-wide">= Empate</span>
+         <div className="flex items-center gap-1 sm:gap-2 whitespace-nowrap">
+            <span className="text-yellow-400 font-black text-sm sm:text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">X</span>
+            <span className="text-white text-[9px] min-[360px]:text-[10px] sm:text-base font-semibold tracking-wide">= Empate</span>
          </div>
          
-         <span className="text-gray-400 font-bold hidden sm:inline">|</span>
+         <span className="text-gray-400 font-bold text-xs sm:text-base">|</span>
          
-         <div className="flex items-center gap-2">
-            <span className="text-cyan-400 font-black text-xl drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">2</span>
-            <span className="text-white text-sm sm:text-base font-semibold tracking-wide">= Gana Visitante</span>
+         <div className="flex items-center gap-1 sm:gap-2 whitespace-nowrap">
+            <span className="text-cyan-400 font-black text-sm sm:text-xl drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">2</span>
+            <span className="text-white text-[9px] min-[360px]:text-[10px] sm:text-base font-semibold tracking-wide">= Visita</span>
          </div>
       </div>
     </div>
