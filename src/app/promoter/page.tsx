@@ -18,6 +18,7 @@ export default function PromoterRoute() {
       onLogout={ctx.handleLogout}
       onExit={ctx.navigateToHome}
       onPlayJornada={ctx.handlePlayJornada}
+      onProcessClientRecharge={ctx.handleProcessClientRecharge}
     />
   );
 }

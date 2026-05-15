@@ -21,11 +21,14 @@ interface PromoterPageProps {
   onLogout: () => void;
   onExit: () => void;
   onPlayJornada: (jornada: Jornada) => void;
+  onProcessClientRecharge: (requestId: string, action: 'approve' | 'reject', sellerId: string) => Promise<void>;
 }
 
 type PromoterTab = 'dashboard' | 'jornadas' | 'clients' | 'finance' | 'settings';
 
-const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada }) => {
+import ClientRechargesTab from '../components/seller/ClientRechargesTab';
+
+const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada, onProcessClientRecharge }) => {
   const [activeTab, setActiveTab] = useState<PromoterTab>(() => {
     return (localStorage.getItem('tinkazoPromoterTab') as PromoterTab) || 'dashboard';
   });
@@ -594,6 +597,9 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                     </div>
                   )}
                 </div>
+
+                {/* Solicitudes de Recarga de Clientes */}
+                <ClientRechargesTab currentUser={currentUser} config={config} onProcessClientRecharge={onProcessClientRecharge} />
 
                 {/* Revenue Breakdown */}
                 <div className="bg-gray-800 p-4 rounded-lg">

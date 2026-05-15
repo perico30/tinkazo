@@ -924,7 +924,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const seller = appConfig.users.find(u => u.id === sellerId);
         const client = appConfig.users.find(u => u.id === clientId);
         if (!seller || !client) { showNotification('Error: Usuario no encontrado.'); return; }
-        if ((seller.balance || 0) < amount) { showNotification('Saldo insuficiente para transferir.'); return; }
+        if (seller.role !== 'promoter' && (seller.balance || 0) < amount) { showNotification('Saldo insuficiente para transferir.'); return; }
         try {
             const { error: rpcError } = await supabase.rpc('transfer_balance', { p_seller_id: sellerId, p_client_id: clientId, p_amount: amount });
             if (rpcError) throw rpcError;
