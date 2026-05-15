@@ -364,7 +364,7 @@ input, select, textarea {
 .jornada-card {
   position: relative;
   width: 100%;
-  aspect-ratio: 318 / 144;
+  min-height: 160px; /* Adapts to content, prevents clipping on mobile */
   border-radius: 12px;
   overflow: hidden;
   color: white;
@@ -470,10 +470,12 @@ input, select, textarea {
 }
 .jornada-card-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Center them when they wrap */
+  flex-wrap: wrap; /* Allows wrapping on very narrow mobile screens */
   align-items: center;
   gap: 8px;
   margin-top: auto;
+  padding-top: 8px; /* Give a little breathing room from the title */
 }
 .jornada-prize {
   text-align: center;
