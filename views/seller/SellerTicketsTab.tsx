@@ -33,10 +33,10 @@ const SellerTicketsTab: React.FC<SellerTicketsTabProps> = ({ cartones, jornadas,
                 
                 let statusElement: any = null;
                 let liveHits = 0;
-                let earlyLost = false;
                 let misses = 0;
+                let matchesWithResult = 0;
+                let earlyLost = false;
                 
-                // Calculate live hits and early lost
                 if (jornada) {
                     jornada.matches.forEach(match => {
                         let finalResult = match.result;
@@ -53,6 +53,7 @@ const SellerTicketsTab: React.FC<SellerTicketsTabProps> = ({ cartones, jornadas,
                         }
 
                         if (finalResult) {
+                            matchesWithResult++;
                             if (carton.predictions[match.id] === finalResult) {
                                 liveHits++;
                             } else {
@@ -65,6 +66,24 @@ const SellerTicketsTab: React.FC<SellerTicketsTabProps> = ({ cartones, jornadas,
                     if (misses > maxAllowedMisses) {
                         earlyLost = true;
                     }
+                }
+
+                const totalMatches = jornada?.matches.length || 0;
+                let displayHits = liveHits;
+                let displayMisses = misses;
+                let displayFinished = matchesWithResult;
+
+                if (resultsProcessed && typeof carton.hits === 'number') {
+                    displayHits = carton.hits;
+                    displayMisses = Math.max(0, totalMatches - carton.hits);
+                    displayFinished = totalMatches;
+                } else if (jornada) {
+                    let allFinished = true;
+                    const now = new Date().getTime();
+                    jornada.matches.forEach(m => {
+                        if (new Date(m.dateTime).getTime() + 2 * 60 * 60 * 1000 > now) allFinished = false;
+                    });
+                    if (allFinished) displayFinished = totalMatches;
                 }
 
                 if (resultsProcessed || earlyLost) {
@@ -122,11 +141,22 @@ const SellerTicketsTab: React.FC<SellerTicketsTabProps> = ({ cartones, jornadas,
                                 </p>
                                 {statusElement}
                             </div>
-                            {typeof carton.hits === 'number' ? (
-                                <p className="mt-1 text-base font-bold text-cyan-300">Aciertos: {carton.hits}</p>
-                            ) : jornada?.status === 'en_juego' ? (
-                                <p className="mt-1 text-sm font-semibold text-yellow-400">Aciertos en vivo: {liveHits}/{jornada.matches.length}</p>
-                            ) : null}
+                            <div className="mt-3 flex items-center">
+                                <div className="flex items-center bg-gray-900/50 rounded-full border border-gray-700/50 shadow-inner overflow-hidden">
+                                    <div className="px-3 py-1 flex items-center gap-1.5 bg-green-500/10 text-green-400 text-xs font-bold border-r border-gray-700/50">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                        {displayHits} Aciertos
+                                    </div>
+                                    <div className="px-3 py-1 flex items-center gap-1.5 bg-red-500/10 text-red-400 text-xs font-bold border-r border-gray-700/50">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                        {displayMisses} Fallos
+                                    </div>
+                                    <div className="px-3 py-1 flex items-center gap-1.5 bg-blue-500/10 text-blue-400 text-xs font-bold">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                                        {displayFinished} finalizados
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <button 
                             onClick={() => onViewCarton(carton)}

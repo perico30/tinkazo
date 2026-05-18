@@ -751,11 +751,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 type: 'ticket_purchase' as const, description: 'Compra de cartón para la jornada',
                 createdAt: new Date().toISOString()
             };
+
+            let updatedPromoterProfiles = appConfig.promoterProfiles;
+            const transactionsToUpdate = [newTx, ...appConfig.transactions];
+
+            const promoter = appConfig.promoterProfiles.find(p => p.userId === jornada.promoterId);
+            if (promoter) {
+                const commissionRate = promoter.adminCommissionPct || 0;
+                const commissionAmount = price * (commissionRate / 100);
+                if (commissionAmount > 0) {
+                    updatedPromoterProfiles = updatedPromoterProfiles.map(p => 
+                        p.userId === promoter.userId 
+                        ? { ...p, guaranteeBalance: p.guaranteeBalance - commissionAmount }
+                        : p
+                    );
+                    const newCommissionTx = {
+                        id: `temp-com-${Date.now()}`, 
+                        userId: promoter.userId, 
+                        amount: -commissionAmount,
+                        type: 'commission' as const, 
+                        description: `Comisión administrador por cartón en jornada ${jornada.name}`,
+                        createdAt: new Date().toISOString()
+                    };
+                    transactionsToUpdate.unshift(newCommissionTx);
+                }
+            }
+
             updateConfig({
                 ...appConfig,
                 users: appConfig.users.map(u => u.id === currentUser.id ? { ...u, balance: newBalance } : u),
                 cartones: [newCarton, ...appConfig.cartones],
-                transactions: [newTx, ...appConfig.transactions]
+                transactions: transactionsToUpdate,
+                promoterProfiles: updatedPromoterProfiles
             });
 
             showNotification('¡Cartón comprado con éxito!');

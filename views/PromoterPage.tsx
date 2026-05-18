@@ -11,6 +11,8 @@ import WalletIcon from '../components/icons/WalletIcon';
 import TicketIcon from '../components/icons/TicketIcon';
 import GearIcon from '../components/icons/GearIcon';
 import { supabase } from '../supabaseClient';
+import { useLiveScores } from '../hooks/useLiveScores';
+import { isMatchMatch } from '../utils/apiDeportes';
 
 interface PromoterPageProps {
   currentUser: RegisteredUser;
@@ -29,6 +31,7 @@ type PromoterTab = 'dashboard' | 'jornadas' | 'clients' | 'finance' | 'settings'
 import ClientRechargesTab from './seller/ClientRechargesTab';
 
 const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada, onProcessClientRecharge }) => {
+  const { liveEvents } = useLiveScores();
   const [activeTab, setActiveTab] = useState<PromoterTab>(() => {
     return (localStorage.getItem('tinkazoPromoterTab') as PromoterTab) || 'dashboard';
   });
@@ -43,6 +46,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
   const [transferClientId, setTransferClientId] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
   const [editingJornada, setEditingJornada] = useState<Jornada | null>(null);
+  const [expandedClient, setExpandedClient] = useState<string | null>(null);
 
   // Edit jornada form state
   const [editName, setEditName] = useState('');
@@ -564,17 +568,124 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                     <p className="text-sm text-gray-500 text-center py-4">No tienes clientes referidos aún.</p>
                   ) : (
                     <div className="space-y-2">
-                      {myClients.map(c => (
-                        <div key={c.id} className="flex justify-between items-center bg-gray-900/50 p-3 rounded-lg">
-                          <div>
-                            <span className="font-semibold text-sm">{c.username}</span>
-                            <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>
-                              {c.status === 'active' ? 'Activo' : 'Pendiente'}
-                            </span>
-                          </div>
-                          <span className="text-sm font-bold text-cyan-300">Bs {Math.floor(c.balance || 0)}</span>
-                        </div>
-                      ))}
+                      {myClients.map(c => {
+                          const clientCartones = config.cartones.filter(cart => cart.userId === c.id);
+                          const isExpanded = expandedClient === c.id;
+
+                          return (
+                            <div key={c.id} className="bg-gray-900/50 rounded-lg overflow-hidden">
+                                <div className="flex justify-between items-center p-3">
+                                  <div>
+                                    <span className="font-semibold text-sm">{c.username}</span>
+                                    <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>
+                                      {c.status === 'active' ? 'Activo' : 'Pendiente'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                      <span className="text-sm font-bold text-cyan-300">Bs {Math.floor(c.balance || 0)}</span>
+                                      <button 
+                                        onClick={() => setExpandedClient(isExpanded ? null : c.id)}
+                                        className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-1 rounded hover:bg-purple-500/30 transition flex items-center gap-1"
+                                      >
+                                          <TicketIcon className="w-3 h-3" />
+                                          Cartones ({clientCartones.length})
+                                      </button>
+                                  </div>
+                                </div>
+                                {isExpanded && (
+                                    <div className="p-3 bg-gray-800/50 border-t border-gray-700/50">
+                                        {clientCartones.length === 0 ? (
+                                            <p className="text-xs text-gray-500 text-center py-2">Este cliente no ha comprado cartones.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {clientCartones.map(cart => {
+                                                    const jornada = config.jornadas.find(j => j.id === cart.jornadaId);
+                                                    
+                                                    const totalMatches = jornada?.matches.length || 0;
+                                                    let liveHits = 0;
+                                                    let misses = 0;
+                                                    let matchesWithResult = 0;
+
+                                                    if (jornada) {
+                                                        jornada.matches.forEach(match => {
+                                                            let finalResult = match.result;
+
+                                                            if (!jornada.resultsProcessed && !finalResult) {
+                                                                const localTeam = config.teams.find(t => t.id === match.localTeamId);
+                                                                const visitorTeam = config.teams.find(t => t.id === match.visitorTeamId);
+                                                                const liveMatch = liveEvents.find(e => isMatchMatch(e.id, e.team1.name, e.team2.name, match.id, localTeam?.name, visitorTeam?.name, e.startDate, match.dateTime));
+                                                                if (liveMatch && (liveMatch.status === 'FT' || liveMatch.status === 'AET' || liveMatch.status === 'AP')) {
+                                                                    if (liveMatch.score1! > liveMatch.score2!) finalResult = '1';
+                                                                    else if (liveMatch.score1! < liveMatch.score2!) finalResult = '2';
+                                                                    else finalResult = 'X';
+                                                                }
+                                                            }
+
+                                                            if (finalResult) {
+                                                                matchesWithResult++;
+                                                                if (cart.predictions[match.id] === finalResult) {
+                                                                    liveHits++;
+                                                                } else {
+                                                                    misses++;
+                                                                }
+                                                            }
+                                                        });
+                                                    }
+
+                                                    let displayHits = liveHits;
+                                                    let displayMisses = misses;
+                                                    let displayFinished = matchesWithResult;
+
+                                                    if (jornada?.resultsProcessed && typeof cart.hits === 'number') {
+                                                        displayHits = cart.hits;
+                                                        displayMisses = Math.max(0, totalMatches - cart.hits);
+                                                        displayFinished = totalMatches;
+                                                    } else if (jornada) {
+                                                        let allFinished = true;
+                                                        const now = new Date().getTime();
+                                                        jornada.matches.forEach(m => {
+                                                            if (new Date(m.dateTime).getTime() + 2 * 60 * 60 * 1000 > now) allFinished = false;
+                                                        });
+                                                        if (allFinished) displayFinished = totalMatches;
+                                                    }
+
+                                                    return (
+                                                        <div key={cart.id} onClick={() => setViewingCarton(cart)} className="flex flex-col gap-2 text-xs bg-gray-800 p-2 rounded border border-gray-700 cursor-pointer hover:bg-gray-700 transition">
+                                                            <div className="flex justify-between items-center">
+                                                                <div className="truncate pr-2">
+                                                                    <span className="font-bold text-cyan-400">{jornada?.name || 'Jornada Desconocida'}</span>
+                                                                    <span className="text-gray-500 ml-2">{new Date(cart.purchaseDate).toLocaleDateString()}</span>
+                                                                </div>
+                                                                <div className="text-gray-300 whitespace-nowrap">
+                                                                    Ver detalles &gt;
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center mt-1">
+                                                                <div className="flex items-center bg-gray-900/50 rounded-full border border-gray-700/50 shadow-inner overflow-hidden">
+                                                                    <div className="px-2 py-0.5 flex items-center gap-1 bg-green-500/10 text-green-400 text-[10px] font-bold border-r border-gray-700/50">
+                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                                                        {displayHits} Aciertos
+                                                                    </div>
+                                                                    <div className="px-2 py-0.5 flex items-center gap-1 bg-red-500/10 text-red-400 text-[10px] font-bold border-r border-gray-700/50">
+                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                        {displayMisses} Fallos
+                                                                    </div>
+                                                                    <div className="px-2 py-0.5 flex items-center gap-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold">
+                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                                                                        {displayFinished} / {totalMatches} finalizados
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                          );
+                      })}
                     </div>
                   )}
                 </div>
