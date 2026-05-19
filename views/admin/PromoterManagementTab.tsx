@@ -29,16 +29,17 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
     config.promoterProfiles.find(p => p.userId === userId);
 
   const getCartonesForPromoter = (userId: string) => {
-    const promoterJornadas = config.jornadas.filter(j => j.promoterId === userId);
-    return config.cartones.filter(c => promoterJornadas.some(j => j.id === c.jornadaId));
+    // Count cartones bought by clients referred by this promoter
+    const clientIds = config.users.filter(u => u.referredBy === userId).map(u => u.id);
+    return config.cartones.filter(c => clientIds.includes(c.userId));
   };
 
   const getRevenueForPromoter = (userId: string) => {
-    const promoterJornadas = config.jornadas.filter(j => j.promoterId === userId);
+    const clientIds = config.users.filter(u => u.referredBy === userId).map(u => u.id);
     return config.cartones
-      .filter(c => promoterJornadas.some(j => j.id === c.jornadaId))
+      .filter(c => clientIds.includes(c.userId))
       .reduce((sum, c) => {
-        const jornada = promoterJornadas.find(j => j.id === c.jornadaId);
+        const jornada = config.jornadas.find(j => j.id === c.jornadaId);
         return sum + (jornada?.cartonPrice || 0);
       }, 0);
   };
@@ -313,9 +314,9 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
         </div>
       )}
 
-      {/* Commission Summary */}
+      {/* Summary */}
       <div className="bg-gradient-to-r from-green-900/30 to-cyan-900/30 border border-green-500/30 p-4 rounded-lg">
-        <h3 className="font-bold text-green-400 mb-3">💰 Resumen de Comisiones</h3>
+        <h3 className="font-bold text-green-400 mb-3">💰 Resumen General</h3>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-2xl font-bold text-white">{promoterUsers.length}</div>
@@ -323,22 +324,17 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
           </div>
           <div>
             <div className="text-2xl font-bold text-cyan-400">
-              {config.jornadas.filter(j => j.promoterId).length}
+              {promoterUsers.reduce((total, u) => total + getCartonesForPromoter(u.id).length, 0)}
             </div>
-            <div className="text-xs text-gray-400">Jornadas de Promotores</div>
+            <div className="text-xs text-gray-400">Cartones Vendidos</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-green-400">
               Bs {Math.floor(
-                promoterUsers.reduce((total, u) => {
-                  const profile = getPromoterProfile(u.id);
-                  const revenue = getRevenueForPromoter(u.id);
-                  const commission = revenue * ((profile?.adminCommissionPct || 10) / 100);
-                  return total + commission;
-                }, 0)
+                promoterUsers.reduce((total, u) => total + getRevenueForPromoter(u.id), 0)
               ).toLocaleString('es-ES')}
             </div>
-            <div className="text-xs text-gray-400">Tu Comisión Total</div>
+            <div className="text-xs text-gray-400">Ingresos Generados</div>
           </div>
         </div>
       </div>
@@ -409,12 +405,12 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
                           <div className="font-bold text-green-400">Bs {Math.floor(profile?.guaranteeBalance || 0).toLocaleString('es-ES')}</div>
                         </div>
                         <div className="bg-gray-900/50 p-2 rounded">
-                          <div className="text-gray-400">Cartones</div>
+                          <div className="text-gray-400">Cartones Vendidos</div>
                           <div className="font-bold text-white">{cartones.length}</div>
                         </div>
                         <div className="bg-gray-900/50 p-2 rounded">
-                          <div className="text-gray-400">Tu Comisión</div>
-                          <div className="font-bold text-cyan-400">Bs {Math.floor(commission).toLocaleString('es-ES')}</div>
+                          <div className="text-gray-400">Ingresos Generados</div>
+                          <div className="font-bold text-cyan-400">Bs {Math.floor(revenue).toLocaleString('es-ES')}</div>
                         </div>
                         <div className="bg-gray-900/50 p-2 rounded">
                           <div className="text-gray-400">Clientes</div>

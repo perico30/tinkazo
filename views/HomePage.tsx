@@ -517,13 +517,7 @@ const JornadasSection: React.FC<{
 
                     
                     {(() => {
-                      // Determine if the user is authorized to play this specific jornada
-                      const isLaCasaJornada = !jornada.promoterId;
-                      const isLaCasaClient = currentUser && !currentUser.referredBy;
-                      const isPromoterJornada = !!jornada.promoterId;
-                      const isCorrectPromoterClient = currentUser && currentUser.referredBy === jornada.promoterId;
-                      
-                      const isAuthorizedClient = (isLaCasaJornada && isLaCasaClient) || (isPromoterJornada && isCorrectPromoterClient);
+                      const isAuthorizedClient = !!currentUser;
                       
                       let tooltipTitle = '';
                       if (!currentUser) tooltipTitle = 'Debes iniciar sesión para jugar';

@@ -950,13 +950,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 const { data: { publicUrl } } = supabase.storage.from('tinkazo_public').getPublicUrl(fileName);
                 finalProofUrl = publicUrl;
             }
-            const { error } = await supabase.from('recharge_requests').insert({ user_id: userId, amount, requester_role: 'client', proof_of_payment_url: finalProofUrl });
+            const { data, error } = await supabase.from('recharge_requests').insert({ user_id: userId, amount, requester_role: 'client', proof_of_payment_url: finalProofUrl }).select().single();
             if (error) throw error;
-            showNotification('Solicitud de recarga enviada.');
+            // Update local state immediately so history shows it
+            if (data) {
+                updateConfig({
+                    ...appConfig,
+                    rechargeRequests: [{
+                        id: data.id,
+                        userId: data.user_id,
+                        amount: parseFloat(data.amount),
+                        requesterRole: data.requester_role,
+                        status: data.status,
+                        requestDate: data.request_date,
+                        proofOfPaymentUrl: data.proof_of_payment_url,
+                        processedDate: data.processed_date,
+                        processedBy: data.processed_by
+                    }, ...appConfig.rechargeRequests]
+                });
+            }
+            showNotification('¡Solicitud de recarga enviada! Revisa el historial.');
         } catch (error: any) {
             showNotification(error.message || 'Error al enviar recarga');
         }
-    }, [showNotification]);
+    }, [showNotification, appConfig, updateConfig]);
 
     const handleRequestSellerRecharge = useCallback(async (userId: string, amount: number, proofOfPaymentUrl: string) => {
         try {
@@ -983,21 +1000,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const request = appConfig.rechargeRequests.find(r => r.id === requestId);
         if (!request || request.status !== 'pending') { alert('Error: La solicitud no es válida o ya fue procesada.'); return; }
         try {
-            const { error: reqError } = await supabase.rpc('process_client_recharge', { p_request_id: requestId, p_seller_id: sellerId, p_action: action });
-            if (reqError) {
-                console.error("RPC Error:", reqError);
-                if (reqError.message.includes('Insufficient seller balance')) throw new Error('Como vendedor, no tienes saldo suficiente para aprobar esta recarga.');
-                throw new Error('Error de validación segura al verificar los saldos.');
+            const isPromoter = appConfig.promoterProfiles.some(p => p.userId === sellerId);
+            
+            if (isPromoter && action === 'approve') {
+                // Promoter flow: debit from guarantee_balance
+                const profile = appConfig.promoterProfiles.find(p => p.userId === sellerId);
+                if (!profile || (profile.guaranteeBalance || 0) < request.amount) {
+                    throw new Error('Saldo insuficiente para aprobar esta recarga.');
+                }
+                const newGuarantee = (profile.guaranteeBalance || 0) - request.amount;
+                // Update recharge request status
+                const { error: reqError } = await supabase.from('recharge_requests').update({ status: 'approved', processed_date: new Date().toISOString(), processed_by: sellerId }).eq('id', requestId);
+                if (reqError) throw reqError;
+                // Debit from promoter guarantee_balance
+                await supabase.from('promoter_profiles').update({ guarantee_balance: newGuarantee }).eq('user_id', sellerId);
+                // Credit client balance
+                const client = appConfig.users.find(u => u.id === request.userId);
+                if (client) {
+                    await supabase.from('users').update({ balance: (client.balance || 0) + request.amount }).eq('id', client.id);
+                }
+                // Record transactions
+                await supabase.from('transactions').insert({ user_id: sellerId, amount: -request.amount, type: 'transfer_out', description: `Recarga aprobada para ${client?.username || 'cliente'}` });
+                await supabase.from('transactions').insert({ user_id: request.userId, amount: request.amount, type: 'recharge', reference_id: requestId, description: 'Recarga aprobada por promotor' });
+            } else if (isPromoter && action === 'reject') {
+                const { error: reqError } = await supabase.from('recharge_requests').update({ status: 'rejected', processed_date: new Date().toISOString(), processed_by: sellerId }).eq('id', requestId);
+                if (reqError) throw reqError;
+            } else {
+                // Seller flow: use existing RPC
+                const { error: reqError } = await supabase.rpc('process_client_recharge', { p_request_id: requestId, p_seller_id: sellerId, p_action: action });
+                if (reqError) {
+                    if (reqError.message.includes('Insufficient seller balance')) throw new Error('Como vendedor, no tienes saldo suficiente para aprobar esta recarga.');
+                    throw new Error('Error de validación segura al verificar los saldos.');
+                }
             }
+            
+            // Refresh seller/promoter balance
             if (action === 'approve' && currentUser?.id === sellerId) {
-                const { data: updatedSeller } = await supabase.from('users').select('balance').eq('id', sellerId).single();
-                if (updatedSeller) setCurrentUser(prevUser => prevUser ? { ...prevUser, balance: parseFloat(updatedSeller.balance) } : null);
+                if (isPromoter) {
+                    const { data: updatedProfile } = await supabase.from('promoter_profiles').select('guarantee_balance').eq('user_id', sellerId).single();
+                    // Realtime will pick up the profile change
+                } else {
+                    const { data: updatedSeller } = await supabase.from('users').select('balance').eq('id', sellerId).single();
+                    if (updatedSeller) setCurrentUser(prevUser => prevUser ? { ...prevUser, balance: parseFloat(updatedSeller.balance) } : null);
+                }
             }
+            // Update local state
+            updateConfig({
+                ...appConfig,
+                rechargeRequests: appConfig.rechargeRequests.map(r => 
+                    r.id === requestId ? { ...r, status: action === 'approve' ? 'approved' as const : 'rejected' as const } : r
+                )
+            });
             showNotification(`La solicitud del cliente ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'} exitosamente.`);
         } catch (error: any) {
             showNotification(error.message || 'Error procesando recarga');
         }
-    }, [appConfig.rechargeRequests, currentUser, showNotification]);
+    }, [appConfig, currentUser, showNotification, updateConfig]);
 
     const handleProcessSellerRecharge = useCallback(async (requestId: string, action: 'approve' | 'reject') => {
         const request = appConfig.rechargeRequests.find(r => r.id === requestId);
@@ -1007,23 +1065,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             const { error: reqError } = await supabase.from('recharge_requests').update({ status: newStatus, processed_date: new Date().toISOString(), processed_by: currentUser?.id }).eq('id', requestId);
             if (reqError) throw reqError;
             if (action === 'approve') {
-                const commissionPercentage = appConfig.sellerCommissionPercentage || 0;
-                const commissionAmount = request.amount * (commissionPercentage / 100);
-                const totalAmountToCredit = request.amount + commissionAmount;
-                const seller = appConfig.users.find(u => u.id === request.userId);
-                if (seller) {
-                    await supabase.from('users').update({ balance: (seller.balance || 0) + totalAmountToCredit }).eq('id', seller.id);
-                    await supabase.from('transactions').insert({ user_id: seller.id, amount: request.amount, type: 'recharge', reference_id: request.id, description: 'Recarga aprobada por admin' });
+                const user = appConfig.users.find(u => u.id === request.userId);
+                const promoterProfile = appConfig.promoterProfiles.find(p => p.userId === request.userId);
+                
+                if (promoterProfile) {
+                    // It's a promoter: update guarantee_balance
+                    const newBalance = (promoterProfile.guaranteeBalance || 0) + request.amount;
+                    await supabase.from('promoter_profiles').update({ guarantee_balance: newBalance }).eq('user_id', request.userId);
+                    await supabase.from('transactions').insert({ user_id: request.userId, amount: request.amount, type: 'recharge', reference_id: request.id, description: 'Recarga aprobada por admin' });
+                } else if (user) {
+                    // It's a seller: update balance + commission
+                    const commissionPercentage = appConfig.sellerCommissionPercentage || 0;
+                    const commissionAmount = request.amount * (commissionPercentage / 100);
+                    const totalAmountToCredit = request.amount + commissionAmount;
+                    await supabase.from('users').update({ balance: (user.balance || 0) + totalAmountToCredit }).eq('id', user.id);
+                    await supabase.from('transactions').insert({ user_id: user.id, amount: request.amount, type: 'recharge', reference_id: request.id, description: 'Recarga aprobada por admin' });
                     if (commissionAmount > 0) {
-                        await supabase.from('transactions').insert({ user_id: seller.id, amount: commissionAmount, type: 'commission', reference_id: request.id, description: `Comisión por recarga (${commissionPercentage}%)` });
+                        await supabase.from('transactions').insert({ user_id: user.id, amount: commissionAmount, type: 'commission', reference_id: request.id, description: `Comisión por recarga (${commissionPercentage}%)` });
                     }
                 }
             }
-            showNotification(`La solicitud del vendedor ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
+            // Update local state immediately
+            updateConfig({
+                ...appConfig,
+                rechargeRequests: appConfig.rechargeRequests.map(r => 
+                    r.id === requestId ? { ...r, status: action === 'approve' ? 'approved' as const : 'rejected' as const } : r
+                )
+            });
+            showNotification(`La solicitud ha sido ${action === 'approve' ? 'aprobada' : 'rechazada'}.`);
         } catch (error: any) {
             showNotification(error.message || 'Error procesando recarga admin');
         }
-    }, [appConfig.rechargeRequests, appConfig.users, appConfig.sellerCommissionPercentage, currentUser, showNotification]);
+    }, [appConfig, currentUser, showNotification, updateConfig]);
 
     const handleTransferBalance = useCallback(async (sellerId: string, clientId: string, amount: number) => {
         if (amount <= 0) return;

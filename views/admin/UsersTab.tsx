@@ -336,10 +336,13 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
             .filter(user => user.username.toLowerCase().includes(searchQuery.toLowerCase()));
     }, [config.users, activeSubTab, searchQuery]);
 
-    const getSellerName = (sellerId?: string | null) => {
-        if (!sellerId) return <span className="text-gray-500 italic">Sin Asignar</span>;
-        const seller = sellers.find(s => s.id === sellerId);
-        return seller ? seller.username : <span className="text-red-400 italic">Vendedor no encontrado</span>;
+    const getPromoterName = (user: RegisteredUser) => {
+        const referredBy = user.referredBy;
+        if (!referredBy) return <span className="text-gray-500 italic">Sin Asignar</span>;
+        const promoterProfile = config.promoterProfiles.find(p => p.userId === referredBy);
+        if (promoterProfile) return promoterProfile.displayName;
+        const promoterUser = config.users.find(u => u.id === referredBy);
+        return promoterUser ? promoterUser.username : <span className="text-red-400 italic">No encontrado</span>;
     }
 
     const toggleExpand = (userId: string) => {
@@ -421,8 +424,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                             </div>
                                             {activeSubTab === 'client' && (
                                                 <div className="bg-slate-900/40 rounded-lg p-2 col-span-2">
-                                                    <span className="text-gray-500 uppercase tracking-wider text-[10px]">Vendedor Asignado</span>
-                                                    <p className="font-semibold text-white text-xs">{getSellerName(user.assignedSellerId)}</p>
+                                                    <span className="text-gray-500 uppercase tracking-wider text-[10px]">Promotor Asignado</span>
+                                                    <p className="font-semibold text-white text-xs">{getPromoterName(user)}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -464,7 +467,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                             <tr>
                                 <th scope="col" className="px-6 py-3">Usuario</th>
                                 <th scope="col" className="px-6 py-3">Correo</th>
-                                {activeSubTab === 'client' && <th scope="col" className="px-6 py-3">Vendedor Asignado</th>}
+                                {activeSubTab === 'client' && <th scope="col" className="px-6 py-3">Promotor Asignado</th>}
                                 <th scope="col" className="px-6 py-3">Saldo</th>
                                 <th scope="col" className="px-6 py-3">Estado</th>
                                 <th scope="col" className="px-6 py-3 text-right">Acciones</th>
@@ -475,7 +478,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                 <tr key={user.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
                                     <td className="px-6 py-4 font-medium whitespace-nowrap">{user.username}</td>
                                     <td className="px-6 py-4">{user.email}</td>
-                                    {activeSubTab === 'client' && <td className="px-6 py-4">{getSellerName(user.assignedSellerId)}</td>}
+                                    {activeSubTab === 'client' && <td className="px-6 py-4">{getPromoterName(user)}</td>}
                                     <td className="px-6 py-4 font-semibold">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 text-xs font-bold rounded-full ${user.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>

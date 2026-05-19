@@ -11,7 +11,6 @@ const RechargesTab: React.FC<RechargesTabProps> = ({ config, onProcessSellerRech
 
     const rechargeHistory = useMemo(() => {
         return config.rechargeRequests
-            .filter(r => r.requesterRole === 'seller')
             .sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
     }, [config.rechargeRequests]);
     
@@ -36,7 +35,7 @@ const RechargesTab: React.FC<RechargesTabProps> = ({ config, onProcessSellerRech
                 </div>
             )}
             <div className="bg-gray-800 p-4 rounded-lg">
-                <h2 className="font-semibold text-lg mb-4">Historial de Recargas de Vendedores ({rechargeHistory.length})</h2>
+                <h2 className="font-semibold text-lg mb-4">Historial de Recargas ({rechargeHistory.length})</h2>
                 {/* ═══ MOBILE CARDS (< md) ═══ */}
                 <div className="md:hidden space-y-3">
                     {rechargeHistory.map(req => {
@@ -89,7 +88,8 @@ const RechargesTab: React.FC<RechargesTabProps> = ({ config, onProcessSellerRech
                         <thead className="text-[11px] text-gray-300 uppercase tracking-wider bg-slate-800/80">
                             <tr>
                                 <th scope="col" className="px-6 py-3">Fecha</th>
-                                <th scope="col" className="px-6 py-3">Vendedor</th>
+                                <th scope="col" className="px-6 py-3">Solicitante</th>
+                                <th scope="col" className="px-6 py-3">Rol</th>
                                 <th scope="col" className="px-6 py-3">Monto</th>
                                 <th scope="col" className="px-6 py-3">Comprobante</th>
                                 <th scope="col" className="px-6 py-3">Estado</th>
@@ -103,6 +103,7 @@ const RechargesTab: React.FC<RechargesTabProps> = ({ config, onProcessSellerRech
                                     <tr key={req.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
                                         <td className="px-6 py-4">{new Date(req.requestDate).toLocaleString()}</td>
                                         <td className="px-6 py-4 font-medium whitespace-nowrap">{user?.username || 'N/A'}</td>
+                                        <td className="px-6 py-4"><span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${req.requesterRole === 'seller' ? 'bg-purple-500/20 text-purple-300' : 'bg-cyan-500/20 text-cyan-300'}`}>{req.requesterRole === 'seller' ? 'Promotor/Vendedor' : 'Cliente'}</span></td>
                                         <td className="px-6 py-4 font-semibold">Bs {req.amount.toFixed(2)}</td>
                                         <td className="px-6 py-4">
                                             <button onClick={() => setViewingProof(req.proofOfPaymentUrl || null)} className="text-cyan-400 hover:underline text-xs font-semibold disabled:text-gray-500 disabled:no-underline" disabled={!req.proofOfPaymentUrl}>Ver Comprobante</button>

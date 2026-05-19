@@ -39,6 +39,8 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ config, setConfig }) => {
             return total + (jornada?.cartonPrice || 0);
         }, 0);
 
+        const gananciasCasa = ingresosTotales * 0.30;
+
         const retirosCompletados = config.withdrawalRequests
             .filter(req => req.status === 'completed')
             .reduce((total, req) => total + req.amount, 0);
@@ -53,6 +55,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ config, setConfig }) => {
         return {
             cartonesVendidos,
             ingresosTotales,
+            gananciasCasa,
             retirosCompletados,
             retirosPendientes,
             recargasPendientes,
@@ -191,7 +194,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ config, setConfig }) => {
             </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
           <SmallMetricCard 
             title="Cartones Vendidos" 
             primaryValue={metrics.cartonesVendidos.toLocaleString('es-ES')} 
@@ -205,6 +208,14 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ config, setConfig }) => {
             icon={<BanknotesIcon className="h-5 w-5" />} 
             iconBgClass="bg-cyan-500/10 text-cyan-400"
             accentClass="stat-card-cyan"
+          />
+          <SmallMetricCard 
+            title="Ganancias (30%)" 
+            primaryValue={`Bs ${Math.floor(metrics.gananciasCasa).toLocaleString('es-ES')}`} 
+            secondaryValue="Comisión de La Casa"
+            icon={<BanknotesIcon className="h-5 w-5" />} 
+            iconBgClass="bg-green-500/10 text-green-400"
+            accentClass="stat-card-green"
           />
           <SmallMetricCard 
             title="Usuarios Registrados" 

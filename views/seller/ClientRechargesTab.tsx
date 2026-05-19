@@ -11,7 +11,7 @@ const ClientRechargesTab: React.FC<ClientRechargesTabProps> = ({ currentUser, co
     const [viewingProof, setViewingProof] = useState<string | null>(null);
     
     const myClientIds = useMemo(() => {
-        return config.users.filter(u => u.assignedSellerId === currentUser.id).map(c => c.id);
+        return config.users.filter(u => u.assignedSellerId === currentUser.id || u.referredBy === currentUser.id).map(c => c.id);
     }, [config.users, currentUser.id]);
 
     const clientRequests = useMemo(() => {
