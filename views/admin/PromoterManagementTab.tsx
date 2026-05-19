@@ -147,8 +147,8 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
         amount: amount,
         type: 'guarantee_deposit',
         description: amount > 0 
-          ? `Depósito de garantía: +Bs ${amount}` 
-          : `Ajuste de garantía: Bs ${amount}`
+          ? `Depósito de saldo: +Bs ${amount}` 
+          : `Ajuste de saldo: Bs ${amount}`
       });
 
       // Update local state immediately
@@ -159,7 +159,7 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
         )
       }));
 
-      alert(`Garantía actualizada: ${amount > 0 ? '+' : ''}Bs ${amount}`);
+      alert(`Saldo actualizado: ${amount > 0 ? '+' : ''}Bs ${amount}`);
       setEditingGuarantee(null);
       setGuaranteeAmount('');
     } catch (error: any) {
@@ -388,7 +388,7 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
                       {/* Stats Grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                         <div className="bg-gray-900/50 p-2 rounded">
-                          <div className="text-gray-400">Garantía</div>
+                          <div className="text-gray-400">Saldo</div>
                           <div className="font-bold text-green-400">Bs {Math.floor(profile?.guaranteeBalance || 0).toLocaleString('es-ES')}</div>
                         </div>
                         <div className="bg-gray-900/50 p-2 rounded">
@@ -438,7 +438,7 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
                           onClick={() => setEditingGuarantee(user.id)}
                           className="w-full py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500/30 rounded-lg text-sm text-green-300 font-bold transition"
                         >
-                          💰 Ajustar Garantía
+                          💰 Ajustar Saldo
                         </button>
                       )}
 
