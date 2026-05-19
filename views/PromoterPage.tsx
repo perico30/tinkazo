@@ -131,8 +131,8 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
   };
 
   // Guarantee & commission calculations
-  const commissionRate = promoterProfile?.commissionRate ?? 20;
-  const guaranteeBalance = promoterProfile?.guaranteeDeposit ?? 0;
+  const commissionRate = promoterProfile?.adminCommissionPct ?? 20;
+  const guaranteeBalance = promoterProfile?.guaranteeBalance ?? 0;
   const commissionConsumed = useMemo(() => {
     return config.transactions
       .filter(t => t.userId === currentUser.id && t.type === 'commission')
