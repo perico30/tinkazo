@@ -62,7 +62,7 @@ export default function AuthCallbackPage() {
         console.log('Auth callback: session established for', session.user.email);
 
         // Check if user already exists in our users table (by ID or email)
-        let existingUser = null;
+        let existingUser: any = null;
         
         const { data: byId } = await supabase
           .from('users')
