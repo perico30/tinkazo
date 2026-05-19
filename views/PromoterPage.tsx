@@ -130,6 +130,21 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
     }
   };
 
+  // Guarantee & commission calculations
+  const commissionRate = promoterProfile?.commissionRate ?? 20;
+  const guaranteeBalance = promoterProfile?.guaranteeDeposit ?? 0;
+  const commissionConsumed = useMemo(() => {
+    return config.transactions
+      .filter(t => t.userId === currentUser.id && t.type === 'commission')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  }, [config.transactions, currentUser.id]);
+  const guaranteeRemaining = guaranteeBalance - commissionConsumed;
+
+  // Jornadas linked to this promoter
+  const myJornadas = useMemo(() => {
+    return config.jornadas.filter(j => j.promoterId === currentUser.id || !j.promoterId);
+  }, [config.jornadas, currentUser.id]);
+
   const tabs: { id: PromoterTab; label: string; icon: React.FC<{className?: string}> }[] = [
     { id: 'dashboard', label: 'Inicio', icon: HomeIcon },
     { id: 'clients', label: 'Clientes', icon: UsersIcon },
