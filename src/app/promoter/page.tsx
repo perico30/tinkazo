@@ -19,6 +19,7 @@ export default function PromoterRoute() {
       onExit={ctx.navigateToHome}
       onPlayJornada={ctx.handlePlayJornada}
       onProcessClientRecharge={ctx.handleProcessClientRecharge}
+      onUpdateCarton={ctx.handleUpdateCarton}
     />
   );
 }

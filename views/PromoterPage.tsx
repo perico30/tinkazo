@@ -24,13 +24,14 @@ interface PromoterPageProps {
   onExit: () => void;
   onPlayJornada: (jornada: Jornada) => void;
   onProcessClientRecharge: (requestId: string, action: 'approve' | 'reject', sellerId: string) => Promise<void>;
+  onUpdateCarton: (cartonId: string, newPredictions: { [matchId: string]: Prediction }, newBotinPrediction: { localScore: number; visitorScore: number; } | null) => void;
 }
 
 type PromoterTab = 'dashboard' | 'clients' | 'finance' | 'settings';
 
 import ClientRechargesTab from './seller/ClientRechargesTab';
 
-const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada, onProcessClientRecharge }) => {
+const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada, onProcessClientRecharge, onUpdateCarton }) => {
   const { liveEvents } = useLiveScores();
   const [activeTab, setActiveTab] = useState<PromoterTab>(() => {
     return (localStorage.getItem('tinkazoPromoterTab') as PromoterTab) || 'dashboard';
@@ -163,8 +164,8 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
           appName={config.appName}
           logoUrl={config.logoUrl}
           onClose={() => setViewingCarton(null)}
-          onSave={() => {}}
-          isReadOnly={true}
+          onSave={onUpdateCarton}
+          isReadOnly={viewingCarton.userId !== currentUser.id}
         />
       )}
       <div className="relative flex flex-col h-full bg-gray-900 text-white overflow-hidden">
@@ -180,6 +181,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
           onRegisterClick={() => {}}
           onAdminClick={() => {}}
           onLogoutClick={onLogout}
+          effectiveBalance={guaranteeBalance}
         />
 
         <main className="flex-1 overflow-y-auto no-scrollbar pb-28">
@@ -232,6 +234,52 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                     <div className="flex justify-between"><span className="text-gray-400">Clientes referidos</span><span className="font-bold">{myClients.length}</span></div>
                     <div className="flex justify-between border-t border-gray-700 pt-2"><span className="text-gray-400">Tus comisiones ganadas</span><span className="font-bold text-green-400">+Bs {Math.floor(totalCommissionsEarned).toLocaleString('es-ES')}</span></div>
                   </div>
+                </div>
+
+                {/* Mis Cartones */}
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <h3 className="font-bold text-cyan-400 mb-3">🎫 Mis Cartones ({config.cartones.filter(c => c.userId === currentUser.id).length})</h3>
+                  {config.cartones.filter(c => c.userId === currentUser.id).length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">No has comprado cartones aún.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {config.cartones.filter(c => c.userId === currentUser.id).map(cart => {
+                        const jornada = config.jornadas.find(j => j.id === cart.jornadaId);
+                        const totalMatches = jornada?.matches.length || 0;
+                        let displayHits = 0;
+                        let displayMisses = 0;
+
+                        if (jornada?.resultsProcessed && typeof cart.hits === 'number') {
+                          displayHits = cart.hits;
+                          displayMisses = Math.max(0, totalMatches - cart.hits);
+                        } else if (jornada) {
+                          jornada.matches.forEach(match => {
+                            if (match.result) {
+                              if (cart.predictions[match.id] === match.result) displayHits++;
+                              else displayMisses++;
+                            }
+                          });
+                        }
+
+                        return (
+                          <div key={cart.id} onClick={() => setViewingCarton(cart)} className="flex flex-col gap-2 text-xs bg-gray-900/50 p-3 rounded-lg border border-gray-700 cursor-pointer hover:bg-gray-700/50 transition">
+                            <div className="flex justify-between items-center">
+                              <div className="truncate pr-2">
+                                <span className="font-bold text-cyan-400">{jornada?.name || 'Jornada'}</span>
+                                <span className="text-gray-500 ml-2">{new Date(cart.purchaseDate).toLocaleDateString()}</span>
+                              </div>
+                              <span className="text-gray-400 whitespace-nowrap">Ver &gt;</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[10px] font-bold rounded-full">✓ {displayHits}</span>
+                              <span className="px-2 py-0.5 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-full">✗ {displayMisses}</span>
+                              <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full">{totalMatches} partidos</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -417,54 +465,19 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
 
             {activeTab === 'finance' && (
               <div className="space-y-4">
-                {/* Guarantee Info */}
+                {/* Balance Summary */}
                 <div className="bg-gradient-to-r from-purple-900/50 to-cyan-900/50 border border-purple-500/30 p-4 rounded-lg">
-                  <h3 className="font-bold text-white mb-3">💰 Estado de Garantía</h3>
+                  <h3 className="font-bold text-white mb-3">💰 Mi Saldo</h3>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-300">Depósito total</span><span className="font-bold text-green-400">Bs {Math.floor(guaranteeBalance).toLocaleString('es-ES')}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-300">Comisión consumida ({commissionRate}%)</span><span className="font-bold text-yellow-400">-Bs {Math.floor(commissionConsumed).toLocaleString('es-ES')}</span></div>
-                    <div className="flex justify-between border-t border-gray-600 pt-2"><span className="text-white font-bold">Garantía restante</span><span className={`font-bold text-lg ${guaranteeRemaining > 0 ? 'text-cyan-400' : 'text-red-400'}`}>Bs {Math.floor(guaranteeRemaining).toLocaleString('es-ES')}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-300">Saldo disponible</span><span className="font-bold text-lg text-green-400">Bs {Math.floor(guaranteeBalance).toLocaleString('es-ES')}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-300">Comisiones ganadas</span><span className="font-bold text-cyan-400">+Bs {Math.floor(totalCommissionsEarned).toLocaleString('es-ES')}</span></div>
                   </div>
-                  {guaranteeRemaining <= 0 && (
-                    <div className="mt-3 bg-red-900/30 border border-red-500/50 p-2 rounded text-xs text-red-300">
-                      ⚠️ Tu garantía se ha agotado. Contacta al administrador para depositar más y seguir operando.
-                    </div>
-                  )}
                 </div>
 
                 {/* Solicitudes de Recarga de Clientes */}
                 <ClientRechargesTab currentUser={currentUser} config={config} onProcessClientRecharge={onProcessClientRecharge} />
 
-                {/* Revenue Breakdown */}
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <h3 className="font-bold text-cyan-400 mb-3">📊 Desglose de Ingresos por Jornada</h3>
-                  {myJornadas.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">No hay jornadas para mostrar.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {myJornadas.map(j => {
-                        const cartones = getCartonesForJornada(j.id);
-                        const revenue = cartones.length * j.cartonPrice;
-                        const commission = revenue * (commissionRate / 100);
-                        return (
-                          <div key={j.id} className="bg-gray-900/50 p-3 rounded-lg">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-semibold text-sm">{j.name}</span>
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                                j.status === 'abierta' ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'
-                              }`}>{j.status}</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-1 text-[11px] mt-1">
-                              <div><span className="text-gray-400">Ventas: </span><span className="text-white font-bold">{cartones.length}</span></div>
-                              <div><span className="text-gray-400">Ingreso: </span><span className="text-green-400 font-bold">Bs {Math.floor(revenue)}</span></div>
-                              <div><span className="text-gray-400">Comisión: </span><span className="text-yellow-400 font-bold">Bs {Math.floor(commission)}</span></div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+
 
                 {/* Transaction History */}
                 <div className="bg-gray-800 p-4 rounded-lg">

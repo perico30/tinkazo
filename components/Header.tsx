@@ -18,6 +18,7 @@ interface HeaderProps {
   onClientPanelClick?: () => void;
   onLogoutClick: () => void;
   hideNavButtons?: boolean;
+  effectiveBalance?: number;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -34,6 +35,7 @@ const Header: React.FC<HeaderProps> = ({
   onClientPanelClick,
   onLogoutClick,
   hideNavButtons = false,
+  effectiveBalance,
 }) => {
   return (
     <header 
@@ -90,7 +92,10 @@ const Header: React.FC<HeaderProps> = ({
               <div className="flex flex-col items-center bg-cyan-900/40 border border-cyan-800/80 px-1.5 py-0.5 rounded-md min-w-[35px]">
                 <span className="text-[7px] text-gray-400 font-bold leading-none uppercase tracking-widest">Saldo</span>
                 <span className="text-[10px] sm:text-sm font-black text-cyan-300 leading-tight">
-                  {userRole === 'promoter' ? '∞' : `Bs ${Math.floor(currentUser.balance || 0)}`}
+                  {userRole === 'promoter' && effectiveBalance !== undefined
+                    ? `Bs ${Math.floor(effectiveBalance).toLocaleString('de-DE')}`
+                    : `Bs ${Math.floor(currentUser.balance || 0).toLocaleString('de-DE')}`
+                  }
                 </span>
               </div>
 

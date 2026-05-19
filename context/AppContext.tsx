@@ -482,7 +482,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                         username: userData.username,
                         role: 'client',
                         phone: userData.phone,
-                        country: userData.country
                     }
                 }
             });
@@ -497,7 +496,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                     email: userData.email,
                     role: 'client',
                     phone: userData.phone,
-                    country: userData.country,
+                    country: 'BO',
                     status: autoActivate ? 'active' : 'pending',
                     balance: 0,
                     assigned_seller_id: assignedSellerId,
@@ -719,7 +718,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const handlePurchaseCarton = useCallback(async (jornadaId: string, predictions: { [matchId: string]: Prediction }, price: number, botinPrediction: { localScore: number; visitorScore: number; } | null) => {
         if (!currentUser) { showNotification('Error: No se encontró el usuario.'); return; }
-        if ((currentUser.balance || 0) < price) { showNotification('Saldo insuficiente. Por favor, recarga tu cuenta.'); return; }
+        
+        // For promoters, use guaranteeBalance from promoter_profiles instead of users.balance
+        let effectiveBalance = currentUser.balance || 0;
+        if (currentUser.role === 'promoter') {
+            const profile = appConfig.promoterProfiles.find(p => p.userId === currentUser.id);
+            effectiveBalance = profile?.guaranteeBalance ?? 0;
+        }
+        if (effectiveBalance < price) { showNotification('Saldo insuficiente. Por favor, recarga tu cuenta.'); return; }
 
         const jornada = appConfig.jornadas.find(j => j.id === jornadaId);
         if (!jornada) { showNotification('Error: Jornada no encontrada.'); return; }
@@ -742,9 +748,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             });
             if (rpcError) throw rpcError;
 
-            const newBalance = (currentUser.balance || 0) - price;
             const newTicketId = ticketId || `temp-ticket-${Date.now()}`;
-            setCurrentUser(prev => prev ? { ...prev, balance: newBalance } : null);
             const newCarton = {
                 id: newTicketId, userId: currentUser.id, jornadaId: jornadaId,
                 predictions: predictions, botinPrediction: botinPrediction,
@@ -758,17 +762,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
             const newGlobalJackpot = (appConfig.globalJackpot || 0) + (price * 0.50);
 
-            let updatedUsers = appConfig.users.map(u => u.id === currentUser.id ? { ...u, balance: newBalance } : u);
+            let updatedUsers = appConfig.users;
+            let updatedPromoterProfiles = appConfig.promoterProfiles;
             const transactionsToUpdate = [newTx, ...appConfig.transactions];
 
-            if (currentUser.referredBy) {
+            if (currentUser.role === 'promoter') {
+                // Promoter: deduct from promoterProfiles.guaranteeBalance (NOT users.balance)
+                updatedPromoterProfiles = appConfig.promoterProfiles.map(p =>
+                    p.userId === currentUser.id
+                        ? { ...p, guaranteeBalance: (p.guaranteeBalance || 0) - price }
+                        : p
+                );
+
+                // Promoter earns 20% commission on their own purchase too
+                const commissionAmount = price * 0.20;
+                updatedPromoterProfiles = updatedPromoterProfiles.map(p =>
+                    p.userId === currentUser.id
+                        ? { ...p, guaranteeBalance: (p.guaranteeBalance || 0) + commissionAmount }
+                        : p
+                );
+                const newCommissionTx = {
+                    id: `temp-com-${Date.now()}`, 
+                    userId: currentUser.id, 
+                    amount: commissionAmount,
+                    type: 'commission' as const, 
+                    description: `Comisión por compra propia de cartón`,
+                    createdAt: new Date().toISOString()
+                };
+                transactionsToUpdate.unshift(newCommissionTx);
+            } else {
+                // Client: deduct from users.balance as normal
+                const newBalance = (currentUser.balance || 0) - price;
+                setCurrentUser(prev => prev ? { ...prev, balance: newBalance } : null);
+                updatedUsers = appConfig.users.map(u => u.id === currentUser.id ? { ...u, balance: newBalance } : u);
+            }
+
+            // Commission for promoter when a CLIENT buys through their referral
+            if (currentUser.role !== 'promoter' && currentUser.referredBy) {
                 const promoterUser = appConfig.users.find(u => u.id === currentUser.referredBy && u.role === 'promoter');
                 if (promoterUser) {
                     const commissionAmount = price * 0.20;
-                    updatedUsers = updatedUsers.map(u => 
-                        u.id === promoterUser.id 
-                        ? { ...u, balance: (u.balance || 0) + commissionAmount }
-                        : u
+                    // Add commission to promoter's guaranteeBalance
+                    updatedPromoterProfiles = updatedPromoterProfiles.map(p =>
+                        p.userId === promoterUser.id
+                            ? { ...p, guaranteeBalance: (p.guaranteeBalance || 0) + commissionAmount }
+                            : p
                     );
                     const newCommissionTx = {
                         id: `temp-com-${Date.now()}`, 
@@ -786,9 +824,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 ...appConfig,
                 globalJackpot: newGlobalJackpot,
                 users: updatedUsers,
+                promoterProfiles: updatedPromoterProfiles,
                 cartones: [newCarton, ...appConfig.cartones],
                 transactions: transactionsToUpdate
             });
+
+            // Persist global_jackpot and promoter commission to Supabase immediately
+            await supabase.from('app_config').update({ 
+                global_jackpot: newGlobalJackpot 
+            }).eq('id', 'main');
+
+            // If promoter bought, persist their commission to promoter_profiles and transactions
+            if (currentUser.role === 'promoter') {
+                const updatedProfile = updatedPromoterProfiles.find(p => p.userId === currentUser.id);
+                if (updatedProfile) {
+                    await supabase.from('promoter_profiles').update({ 
+                        guarantee_balance: updatedProfile.guaranteeBalance 
+                    }).eq('user_id', currentUser.id);
+                }
+                
+                // Persist the commission transaction
+                const commissionAmount = price * 0.20;
+                await supabase.from('transactions').insert({
+                    user_id: currentUser.id,
+                    amount: commissionAmount,
+                    type: 'commission',
+                    description: 'Comisión por compra propia de cartón'
+                });
+            }
 
             showNotification('¡Cartón comprado con éxito!');
             navigateToHome();
@@ -811,11 +874,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         try {
             const { error } = await supabase.from('tickets').update({ predictions: newPredictions, botin_prediction: newBotinPrediction }).eq('id', cartonId);
             if (error) throw error;
+            
+            // Update local state so UI reflects changes immediately
+            updateConfig({
+                ...appConfig,
+                cartones: appConfig.cartones.map(c => 
+                    c.id === cartonId 
+                        ? { ...c, predictions: newPredictions, botinPrediction: newBotinPrediction }
+                        : c
+                )
+            });
+            
             showNotification('¡Cartón actualizado con éxito!');
         } catch (error: any) {
             showNotification(error.message || 'Error al actualizar cartón');
         }
-    }, [appConfig.cartones, appConfig.jornadas, showNotification]);
+    }, [appConfig, updateConfig, showNotification]);
 
     const handleDeleteCarton = useCallback(async (cartonId: string) => {
         if (!window.confirm('¿Estás seguro de que deseas eliminar este cartón perdido? Esta acción no se puede deshacer.')) return;

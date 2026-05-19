@@ -12,6 +12,18 @@ export default function HomeRoute() {
     ? ctx.appConfig.cartones.filter(c => c.userId === ctx.currentUser!.id).length
     : 0;
 
+  // Calculate effective balance for promoters (they use guaranteeBalance from promoter_profiles)
+  const effectiveBalance = (() => {
+    if (ctx.currentUser && ctx.userRole === 'promoter') {
+      const profile = ctx.appConfig.promoterProfiles.find(p => p.userId === ctx.currentUser!.id);
+      return profile?.guaranteeBalance ?? ctx.currentUser.balance ?? 0;
+    }
+    return ctx.currentUser?.balance ?? 0;
+  })();
+
+  // Create a modified currentUser with the effective balance for the purchase page
+  const purchaseUser = ctx.currentUser ? { ...ctx.currentUser, balance: effectiveBalance } : null;
+
   return (
     <>
       <HomePage
@@ -29,16 +41,17 @@ export default function HomeRoute() {
         onLegalClick={ctx.handleLegalClick}
         onPlayJornada={ctx.handlePlayJornada}
         showBottomNav={false}
+        effectiveBalance={effectiveBalance}
       />
       <BottomSheet
         isOpen={ctx.showPurchaseSheet}
         onClose={ctx.navigateToHome}
       >
-        {ctx.jornadaToPlay && ctx.currentUser && (
+        {ctx.jornadaToPlay && purchaseUser && (
           <PurchaseCartonPage
             jornada={ctx.jornadaToPlay}
             teams={ctx.appConfig.teams}
-            currentUser={ctx.currentUser}
+            currentUser={purchaseUser}
             onPurchase={ctx.handlePurchaseCarton}
             onExit={ctx.navigateToHome}
           />

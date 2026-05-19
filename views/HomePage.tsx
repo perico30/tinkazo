@@ -66,6 +66,7 @@ interface HomePageProps {
   onLegalClick: (link: LegalLink) => void;
   onPlayJornada: (jornada: Jornada) => void;
   showBottomNav?: boolean;
+  effectiveBalance?: number;
 }
 
 
@@ -657,6 +658,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
         onClientPanelClick={onClientPanelClick}
         onLogoutClick={onLogoutClick}
         hideNavButtons={props.showBottomNav}
+        effectiveBalance={props.effectiveBalance}
       />
       
       {isPopupVisible && <WelcomePopup config={appConfig.welcomePopup} onClose={closePopup} primaryColor={appConfig.theme.primaryColor} />}
