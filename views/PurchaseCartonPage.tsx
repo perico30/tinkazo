@@ -169,7 +169,7 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                     )}
 
                     <div className="bg-gray-800 rounded-lg shadow-lg p-3 sm:p-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="space-y-3 sm:space-y-4">
                             {sortedMatches.map(match => {
                                 const localTeam = getTeam(match.localTeamId);
                                 const visitorTeam = getTeam(match.visitorTeamId);
@@ -177,44 +177,39 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                                 
                                 return (
                                     <div key={match.id} className="bg-gray-700/50 p-3 sm:p-4 rounded-lg">
-                                        <div className="flex items-center gap-2 sm:gap-3">
-                                            {/* Local Team */}
-                                            <div className="flex flex-col items-center gap-1 min-w-[50px] sm:min-w-[70px]">
+                                        {/* Teams Row */}
+                                        <div className="flex items-center justify-center gap-3 sm:gap-6">
+                                            <div className="flex flex-col items-center gap-1 w-20 sm:w-24">
                                                 {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />}
                                                 <span className="text-[9px] sm:text-xs font-semibold text-center leading-tight line-clamp-2">{localTeam?.name || 'N/A'}</span>
                                             </div>
-
-                                            {/* VS + Date */}
-                                            <div className="flex flex-col items-center justify-center flex-shrink-0">
+                                            <div className="flex flex-col items-center justify-center">
                                                 <span className="text-gray-400 font-bold text-xs sm:text-sm">VS</span>
                                                 <span className="text-[8px] sm:text-[10px] text-gray-500 mt-0.5 whitespace-nowrap">
                                                     {new Date(match.dateTime).toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
-
-                                            {/* Visitor Team */}
-                                            <div className="flex flex-col items-center gap-1 min-w-[50px] sm:min-w-[70px]">
+                                            <div className="flex flex-col items-center gap-1 w-20 sm:w-24">
                                                 {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />}
                                                 <span className="text-[9px] sm:text-xs font-semibold text-center leading-tight line-clamp-2">{visitorTeam?.name || 'N/A'}</span>
                                             </div>
-
-                                            {/* Predictions */}
-                                            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
-                                                {isBotinMatchAndPlaying ? (
-                                                    <div className="text-center">
-                                                        <p className="text-[8px] sm:text-xs text-purple-300">Auto</p>
-                                                        <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-0.5 cursor-default`}>
-                                                            {predictions[match.id]}
-                                                        </div>
+                                        </div>
+                                        {/* Prediction Buttons Row */}
+                                        <div className="flex items-center justify-center gap-3 sm:gap-4 mt-2 pt-2 border-t border-gray-600/30">
+                                            {isBotinMatchAndPlaying ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] sm:text-xs text-purple-300">Predicción Automática:</span>
+                                                    <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} cursor-default`}>
+                                                        {predictions[match.id]}
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
-                                                        <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}>X</button>
-                                                        <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
-                                                    </>
-                                                )}
-                                            </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
+                                                    <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}>X</button>
+                                                    <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 );
