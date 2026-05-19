@@ -41,7 +41,7 @@ export default function AuthCallbackPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Try getting session multiple times
-        let session = null;
+        let session: any = null;
         for (let i = 0; i < 3; i++) {
           const { data, error } = await supabase.auth.getSession();
           if (data?.session) {
