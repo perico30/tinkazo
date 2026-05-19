@@ -230,26 +230,23 @@ const WelcomeMessage: React.FC<{ title: string; description: string; activeJorna
   </section>
 );
 
-const JackpotsSection: React.FC<{ gorditoJackpot: JackpotConfig; botinJackpot: JackpotConfig; botinAmount: number; }> = ({ gorditoJackpot, botinJackpot, botinAmount }) => {
+const JackpotsSection: React.FC<{ gorditoJackpot: JackpotConfig; botinJackpot: JackpotConfig; globalJackpot: number; gorditoAmount: number; }> = ({ gorditoJackpot, botinJackpot, globalJackpot, gorditoAmount }) => {
     
-    // Create a render-specific Botin object with the dynamic amount
-    const botinToRender: JackpotConfig = {
+    // Global Jackpot (Main Focus, uses old Botin styles for familiarity but we can enhance it)
+    const globalToRender: JackpotConfig = {
         ...botinJackpot,
-        amount: `Bs ${Math.floor(botinAmount).toLocaleString('es-ES')}`,
+        detail: botinJackpot.detail || 'GRAN POZO ACUMULADO',
+        amount: `Bs ${Math.floor(globalJackpot).toLocaleString('de-DE')}`,
     };
     
-    // Ensure Gordito has 'Bs' prefix and correct formatting if it is numeric
-    const cleanGorditoNumber = gorditoJackpot.amount.replace(/[^0-9]/g, '');
-    const formattedGorditoAmount = cleanGorditoNumber 
-        ? `Bs ${Number(cleanGorditoNumber).toLocaleString('es-ES')}` 
-        : gorditoJackpot.amount;
-
+    // Gordito (Uses old Gordito styles, but dynamic amount from the 'botinAmount' pool)
     const gorditoToRender: JackpotConfig = {
         ...gorditoJackpot,
-        amount: formattedGorditoAmount
+        detail: gorditoJackpot.detail || 'PREMIO GORDITO',
+        amount: `Bs ${Math.floor(gorditoAmount).toLocaleString('de-DE')}`
     };
 
-    const jackpotsToRender = [gorditoToRender, botinToRender];
+    const jackpotsToRender = [globalToRender, gorditoToRender];
 
     return (
     <section className="grid md:grid-cols-2 gap-8">
@@ -499,7 +496,7 @@ const JornadasSection: React.FC<{
                         </div>
                       </div>
                       <div className="flex items-center gap-1 bg-[#0ea5e9] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.7)] w-fit mt-1">
-                          <span>Bs. {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span>
+                          <span>Bs. {Math.floor(jornada.cartonPrice).toLocaleString('de-DE')}</span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
@@ -513,20 +510,10 @@ const JornadasSection: React.FC<{
                   </header>
                   <div className="jornada-card-body">
                     <h3 className="jornada-card-title drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{jornada.name}</h3>
-                    {/* Always show the author badge */}
-                    <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-full w-fit mt-1 backdrop-blur-sm border border-purple-300/50 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
-                      🎪 {jornada.promoterId ? (jornada.promoterName || 'Promotor') : 'LA CASA'}
-                    </div>
+
                   </div>
                   <footer className="jornada-card-footer">
-                    <div className="btn-gradient rounded-full px-4 py-1.5 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.6)] text-white"
-                         style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px rgba(0,0,0,0.8)' }}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider">1er:</span>
-                        <span className="text-[13px] font-black">{jornada.firstPrize}</span>
-                        <span className="font-bold mx-1 opacity-70">|</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider">2do:</span>
-                        <span className="text-[13px] font-black">{jornada.secondPrize}</span>
-                    </div>
+
                     
                     {(() => {
                       // Determine if the user is authorized to play this specific jornada
@@ -545,7 +532,7 @@ const JornadasSection: React.FC<{
                            ? 'Esta jornada es exclusiva para clientes oficiales de La Casa'
                            : 'Esta jornada es exclusiva para los clientes de este promotor';
                       } else {
-                         tooltipTitle = `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}`;
+                         tooltipTitle = `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('de-DE')}`;
                       }
 
                       const canPlay = playable && currentUser && isAuthorizedClient;
@@ -556,7 +543,7 @@ const JornadasSection: React.FC<{
                               if (canPlay) onPlayJornada(jornada);
                             }}
                             disabled={!canPlay}
-                            className={`jornada-play-button ${canPlay ? 'btn-gradient text-white font-black tracking-wide border-none' : 'bg-gray-500 text-gray-300 border-none opacity-80 cursor-not-allowed'}`}
+                            className={`w-auto mx-auto py-1 px-6 rounded-full text-[10px] sm:text-xs flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${canPlay ? 'btn-gradient text-white font-black tracking-wide border-none shadow-md' : 'bg-gray-500 text-gray-300 border-none opacity-80 cursor-not-allowed'}`}
                             style={canPlay ? {
                               textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px rgba(0,0,0,0.8)'
                             } : {}}
@@ -639,7 +626,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
   };
 
   const sectionComponents = {
-    jackpots: <JackpotsSection gorditoJackpot={appConfig.gorditoJackpot} botinJackpot={appConfig.botinJackpot} botinAmount={appConfig.botinAmount} />,
+    jackpots: <JackpotsSection gorditoJackpot={appConfig.gorditoJackpot} botinJackpot={appConfig.botinJackpot} globalJackpot={appConfig.globalJackpot || 0} gorditoAmount={appConfig.botinAmount || 0} />,
     carousel: <CarouselSection images={appConfig.carouselImages} />,
     jornadas: <JornadasSection 
                 jornadas={appConfig.jornadas} 

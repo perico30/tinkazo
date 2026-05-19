@@ -120,7 +120,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
   const renderTabContent = () => {
     switch(activeTab) {
       case 'dashboard':
-        return <DashboardTab config={draftConfig} />;
+        return <DashboardTab config={draftConfig} setConfig={setDraftConfig} />;
       case 'cartones':
         return <AdminCartonesTab config={draftConfig} onViewCarton={handleViewCarton} onDeleteCarton={handleDeleteCarton} />;
       case 'config':
@@ -166,7 +166,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialConfig, onSave, onLogout, 
     }
   };
 
-  const isConfigTabActive = ['config', 'jornadas', 'users', 'cartones'].includes(activeTab);
+  const isConfigTabActive = ['dashboard', 'config', 'jornadas', 'users', 'cartones'].includes(activeTab);
 
   return (
     <>

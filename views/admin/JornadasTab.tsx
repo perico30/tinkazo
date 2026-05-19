@@ -500,7 +500,7 @@ const JornadasTab: React.FC<JornadasTabProps> = ({ config, setConfig }) => {
                                 </div>
                                 {/* Botin */}
                                 <div className="p-3 border-t border-gray-700 bg-gray-900/40">
-                                   <label htmlFor={`botin-match-${jornada.id}`} className="block mb-1 text-xs font-medium text-cyan-300">Partido del Botín</label>
+                                   <label htmlFor={`botin-match-${jornada.id}`} className="block mb-1 text-xs font-medium text-cyan-300">Partido del Gordito</label>
                                     <select
                                         id={`botin-match-${jornada.id}`}
                                         value={jornada.botinMatchId || ''}

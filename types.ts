@@ -101,6 +101,7 @@ export interface Jornada {
     backgroundImage: string;
   };
   resultsProcessed?: boolean;
+  globalPrizeProcessed?: boolean;
   promoterId?: string | null;
   promoterName?: string;
   visibility?: 'public' | 'private';
@@ -143,6 +144,8 @@ export interface PrizeDetails {
   jornada?: { tier: 1 | 2; winnersCount: number };
   botin?: { winnersCount: number };
   gordito?: { winnersCount: number };
+  global15?: { tier: 1; winnersCount: number; amount: number };
+  global14?: { tier: 2; winnersCount: number; amount: number };
 }
 
 export interface Carton {
@@ -213,6 +216,8 @@ export interface AppConfig {
   tutorialsSectionTitle: string;
   teams: Team[];
   jornadas: Jornada[];
+  globalJackpot: number;
+  seedJackpot: number;
   gorditoJornadaId?: string | null;
   users: RegisteredUser[];
   cartones: Carton[];

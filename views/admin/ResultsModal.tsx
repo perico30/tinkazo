@@ -80,7 +80,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ jornada, teams, onClose, on
             const botinResultString = isBotinJornada ? `${botinScores.local}-${botinScores.visitor}` : undefined;
             onSave(jornada.id, results, botinResultString);
         } else {
-            alert('Debes ingresar el resultado para todos los partidos, incluyendo el marcador exacto del Botín si aplica.');
+            alert('Debes ingresar el resultado para todos los partidos, incluyendo el marcador exacto del Gordito si aplica.');
         }
     };
 
@@ -184,7 +184,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ jornada, teams, onClose, on
                                 </div>
                                 {isBotinMatch && (
                                     <div className="mt-4 pt-4 border-t border-purple-700 text-center">
-                                        <h4 className="text-sm font-semibold text-purple-300 mb-2">🌟 Resultado Exacto (Botín) 🌟</h4>
+                                        <h4 className="text-sm font-semibold text-purple-300 mb-2">🌟 Resultado Exacto (Gordito) 🌟</h4>
                                         <div className="flex items-center justify-center gap-3">
                                             <input type="number" min="0" value={botinScores.local} onChange={e => setBotinScores(p => ({ ...p, local: e.target.value }))} className="w-20 text-center bg-gray-700 p-2 rounded text-xl font-bold" placeholder="L" />
                                             <span className="text-xl font-bold text-gray-400">-</span>

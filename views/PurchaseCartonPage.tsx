@@ -91,17 +91,13 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
 
 
     const getPredictionButtonClass = (matchId: string, prediction: Prediction) => {
-        const base = 'w-12 h-12 md:w-10 md:h-10 flex items-center justify-center font-bold text-xl md:text-lg rounded-md transition-all';
+        const base = 'w-[40px] h-[20px] md:w-[45px] md:h-[22px] flex items-center justify-center font-bold text-[10px] md:text-xs rounded-full transition-all border';
         const isSelected = predictions[matchId] === prediction;
 
         if (isSelected) {
-            switch(prediction) {
-                case '1': return `${base} bg-green-500 text-white ring-2 ring-white`;
-                case 'X': return `${base} bg-yellow-500 text-gray-900 ring-2 ring-white`;
-                case '2': return `${base} bg-red-500 text-white ring-2 ring-white`;
-            }
+            return `${base} bg-[#357427] border-[#357427] text-white shadow-md`;
         }
-        return `${base} bg-gray-600 hover:bg-gray-500`;
+        return `${base} bg-white border-[#d7d7d7] text-gray-400 hover:bg-[#e6e6e6] hover:text-gray-600 shadow-sm`;
     };
 
     return (
@@ -137,7 +133,7 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                     
                     {botinMatch && (
                         <div className="mb-4 bg-purple-900/40 border border-purple-600/60 rounded-lg shadow-md p-3 sm:p-5 relative overflow-hidden">
-                            <h3 className="text-sm sm:text-xl font-bold text-center text-purple-300 mb-1">🌟 ¡Partido del Botín! 🌟</h3>
+                            <h3 className="text-sm sm:text-xl font-bold text-center text-purple-300 mb-1">🌟 ¡El Gordito! 🌟</h3>
                             <p className="text-center text-[10px] sm:text-sm text-gray-300 mb-3 leading-tight max-w-sm mx-auto">
                                 Acierta el resultado exacto. ¡No extra costo!
                             </p>
@@ -224,14 +220,14 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                                                 {isBotinMatchAndPlaying ? (
                                                     <div className="text-center">
                                                         <p className="text-xs text-purple-300">Predicción Automática</p>
-                                                        <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-1`}>
-                                                            {predictions[match.id] === 'X' ? <XIcon className="w-5 h-5"/> : predictions[match.id]}
+                                                        <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-1 cursor-default`}>
+                                                            {predictions[match.id]}
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <>
                                                         <button onClick={() => handlePredictionChange(match.id, '1')} className={getPredictionButtonClass(match.id, '1')}>1</button>
-                                                        <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}><XIcon className="w-5 h-5"/></button>
+                                                        <button onClick={() => handlePredictionChange(match.id, 'X')} className={getPredictionButtonClass(match.id, 'X')}>X</button>
                                                         <button onClick={() => handlePredictionChange(match.id, '2')} className={getPredictionButtonClass(match.id, '2')}>2</button>
                                                     </>
                                                 )}

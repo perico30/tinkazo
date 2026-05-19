@@ -3,8 +3,8 @@ import type { Jornada, JackpotConfig } from '../types';
 
 interface ActiveJornadaHeroProps {
     jornada: Jornada;
-    botinAmount: number;
-    gorditoAmount: string;
+    globalJackpot: number;
+    gorditoAmount: number;
     onPlayClick: (jornada: Jornada) => void;
 }
 
@@ -59,7 +59,7 @@ const CountdownTimer: React.FC<{ targetDate: Date }> = ({ targetDate }) => {
     );
 };
 
-const ActiveJornadaHero: React.FC<ActiveJornadaHeroProps> = ({ jornada, botinAmount, gorditoAmount, onPlayClick }) => {
+const ActiveJornadaHero: React.FC<ActiveJornadaHeroProps> = ({ jornada, globalJackpot, gorditoAmount, onPlayClick }) => {
     
     // Calculate the close time: 10 minutes before the first match
     const scheduledMatches = jornada.matches
@@ -93,18 +93,30 @@ const ActiveJornadaHero: React.FC<ActiveJornadaHeroProps> = ({ jornada, botinAmo
 
                 {/* Pot summary for this active jornada */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 my-6">
-                     {jornada.botinMatchId && (
-                        <div className="text-center">
-                            <p className="text-xs text-purple-300 font-bold tracking-widest uppercase mb-1 drop-shadow-lg">El Botín Acumulado</p>
-                            <p className="text-3xl md:text-4xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Bs {Math.floor(botinAmount).toLocaleString('es-ES')}</p>
+                    {/* Always show Global Jackpot */}
+                    <div className="text-center bg-gray-900/40 p-6 rounded-2xl border border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.2)] backdrop-blur-sm">
+                        <p className="text-xs sm:text-sm text-cyan-300 font-bold tracking-widest uppercase mb-2 drop-shadow-lg flex items-center justify-center gap-2">
+                            <StarIcon className="w-4 h-4" />
+                            Gran Pozo Acumulado
+                            <StarIcon className="w-4 h-4" />
+                        </p>
+                        <p className="text-4xl md:text-5xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]"
+                           style={{ textShadow: '0 0 20px rgba(34,211,238,0.5)' }}>
+                            Bs {Math.floor(globalJackpot || 0).toLocaleString('de-DE')}
+                        </p>
+                    </div>
+
+                    {/* Show Gordito if applicable (based on botinMatchId in backend) */}
+                    {jornada.botinMatchId && (
+                        <div className="text-center bg-gray-900/40 p-4 sm:p-6 rounded-2xl border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.2)] backdrop-blur-sm">
+                            <p className="text-xs text-purple-300 font-bold tracking-widest uppercase mb-2 drop-shadow-lg">
+                                Premio Extra: El Gordito
+                            </p>
+                            <p className="text-2xl md:text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                                Bs {Math.floor(gorditoAmount || 0).toLocaleString('de-DE')}
+                            </p>
                         </div>
-                     )}
-                     {!jornada.botinMatchId && (
-                        <div className="text-center">
-                            <p className="text-xs text-cyan-300 font-bold tracking-widest uppercase mb-1 drop-shadow-lg">Gordito Acumulado</p>
-                            <p className="text-3xl md:text-4xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{gorditoAmount}</p>
-                        </div>
-                     )}
+                    )}
                 </div>
 
                 {closeDate && !isClosed && (

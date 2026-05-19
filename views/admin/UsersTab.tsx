@@ -219,7 +219,7 @@ const AddSellerModal: React.FC<{ onClose: () => void; onSave: (data: any) => voi
 
 
 const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, onRechargeUser, onViewClientTickets }) => {
-    const [activeSubTab, setActiveSubTab] = useState<'client' | 'seller' | 'promoter'>('client');
+    const [activeSubTab, setActiveSubTab] = useState<'client' | 'promoter'>('client');
     const [searchQuery, setSearchQuery] = useState('');
     const [modalUser, setModalUser] = useState<RegisteredUser | null>(null);
     const [rechargeModalUser, setRechargeModalUser] = useState<RegisteredUser | null>(null);
@@ -356,18 +356,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                 <div className="mb-4">
                      <div className="flex border-b border-gray-700 overflow-x-auto no-scrollbar">
                         <button onClick={() => { setActiveSubTab('client'); setSearchQuery(''); setExpandedUserId(null); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'client' ? 'border-b-2 border-cyan-400 text-cyan-300 bg-cyan-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Clientes</button>
-                        <button onClick={() => { setActiveSubTab('seller'); setSearchQuery(''); setExpandedUserId(null); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'seller' ? 'border-b-2 border-cyan-400 text-cyan-300 bg-cyan-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Vendedores</button>
                         <button onClick={() => { setActiveSubTab('promoter'); setSearchQuery(''); setExpandedUserId(null); }} className={`px-3 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${activeSubTab === 'promoter' ? 'border-b-2 border-purple-400 text-purple-300 bg-purple-500/10' : 'text-gray-400 hover:text-gray-200'}`}>Promotores</button>
                     </div>
-                    {activeSubTab === 'seller' && (
-                        <button 
-                            onClick={() => setIsAddSellerModalOpen(true)}
-                            className="mt-3 w-full bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
-                        >
-                            <PlusIcon className="w-4 h-4" />
-                            <span>Nuevo Vendedor</span>
-                        </button>
-                    )}
                 </div>
 
                 {activeSubTab === 'promoter' ? (
@@ -381,7 +371,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
 
                 <input
                     type="text"
-                    placeholder={`Buscar ${activeSubTab === 'client' ? 'cliente' : 'vendedor'}...`}
+                    placeholder="Buscar cliente..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     className="w-full bg-gray-700/80 border border-slate-600 p-2.5 rounded-lg mb-4 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 focus:outline-none transition-colors"
@@ -435,12 +425,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                                     <p className="font-semibold text-white text-xs">{getSellerName(user.assignedSellerId)}</p>
                                                 </div>
                                             )}
-                                            {activeSubTab === 'seller' && user.referralCode && (
-                                                <div className="bg-slate-900/40 rounded-lg p-2 col-span-2">
-                                                    <span className="text-gray-500 uppercase tracking-wider text-[10px]">Código Referido</span>
-                                                    <p className="font-bold text-purple-300 font-mono">{user.referralCode}</p>
-                                                </div>
-                                            )}
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
                                             {user.status === 'pending' && onActivateUser && (
@@ -481,7 +465,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                 <th scope="col" className="px-6 py-3">Usuario</th>
                                 <th scope="col" className="px-6 py-3">Correo</th>
                                 {activeSubTab === 'client' && <th scope="col" className="px-6 py-3">Vendedor Asignado</th>}
-                                {activeSubTab === 'seller' && <th scope="col" className="px-6 py-3">Código Referido</th>}
                                 <th scope="col" className="px-6 py-3">Saldo</th>
                                 <th scope="col" className="px-6 py-3">Estado</th>
                                 <th scope="col" className="px-6 py-3 text-right">Acciones</th>
@@ -493,7 +476,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ config, setConfig, onActivateUser, 
                                     <td className="px-6 py-4 font-medium whitespace-nowrap">{user.username}</td>
                                     <td className="px-6 py-4">{user.email}</td>
                                     {activeSubTab === 'client' && <td className="px-6 py-4">{getSellerName(user.assignedSellerId)}</td>}
-                                    {activeSubTab === 'seller' && <td className="px-6 py-4"><span className="font-mono font-bold text-purple-300">{user.referralCode || '—'}</span></td>}
                                     <td className="px-6 py-4 font-semibold">Bs {Math.floor(user.balance || 0).toLocaleString('es-ES')}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 text-xs font-bold rounded-full ${user.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>

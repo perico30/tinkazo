@@ -14,7 +14,7 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newDisplayName, setNewDisplayName] = useState('');
-  const [newCommission, setNewCommission] = useState('10');
+  const [newCommission, setNewCommission] = useState('20');
   const [newReferralCode, setNewReferralCode] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -108,7 +108,7 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
       setNewEmail('');
       setNewPassword('');
       setNewDisplayName('');
-      setNewCommission('10');
+      setNewCommission('20');
       setNewReferralCode('');
       setNewPhone('');
     } catch (error: any) {
@@ -284,18 +284,7 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
               placeholder="Teléfono"
               className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
             />
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={newCommission}
-                onChange={e => setNewCommission(e.target.value)}
-                placeholder="Comisión %"
-                className="w-20 bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
-                min="0"
-                max="100"
-              />
-              <span className="text-sm text-gray-400">% comisión</span>
-            </div>
+
           </div>
           <button
             onClick={handleCreatePromoter}
@@ -417,7 +406,7 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
                       </div>
 
                       <div className="flex flex-wrap gap-1.5 text-[10px]">
-                        <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">{profile?.adminCommissionPct || 10}% comisión</span>
+                        <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">{profile?.adminCommissionPct || 20}% comisión</span>
                         <span className="px-2 py-0.5 rounded-full bg-gray-600/30 text-gray-400">@{user.username}</span>
                       </div>
 

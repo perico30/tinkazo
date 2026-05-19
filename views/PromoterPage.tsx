@@ -26,7 +26,7 @@ interface PromoterPageProps {
   onProcessClientRecharge: (requestId: string, action: 'approve' | 'reject', sellerId: string) => Promise<void>;
 }
 
-type PromoterTab = 'dashboard' | 'jornadas' | 'clients' | 'finance' | 'settings';
+type PromoterTab = 'dashboard' | 'clients' | 'finance' | 'settings';
 
 import ClientRechargesTab from './seller/ClientRechargesTab';
 
@@ -41,30 +41,15 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
     localStorage.setItem('tinkazoPromoterTab', activeTab);
   }, [activeTab]);
 
-  const [showJornadaWizard, setShowJornadaWizard] = useState(false);
   const [viewingCarton, setViewingCarton] = useState<Carton | null>(null);
   const [transferClientId, setTransferClientId] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
-  const [editingJornada, setEditingJornada] = useState<Jornada | null>(null);
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
-
-  // Edit jornada form state
-  const [editName, setEditName] = useState('');
-  const [editFirstPrize, setEditFirstPrize] = useState('');
-  const [editSecondPrize, setEditSecondPrize] = useState('');
-  const [editCartonPrice, setEditCartonPrice] = useState('');
-  const [editStatus, setEditStatus] = useState<Jornada['status']>('abierta');
 
   // Get this promoter's profile
   const promoterProfile = useMemo(() => 
     config.promoterProfiles.find(p => p.userId === currentUser.id),
     [config.promoterProfiles, currentUser.id]
-  );
-
-  // Get jornadas created by this promoter
-  const myJornadas = useMemo(() =>
-    config.jornadas.filter(j => j.promoterId === currentUser.id),
-    [config.jornadas, currentUser.id]
   );
 
   // Get clients referred by this promoter
@@ -73,83 +58,18 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
     [config.users, currentUser.id]
   );
 
-  // Count cartones sold in promoter's jornadas
+  // Count cartones sold to promoter's clients
   const myCartonesCount = useMemo(() => {
-    const myJornadaIds = myJornadas.map(j => j.id);
-    return config.cartones.filter(c => myJornadaIds.includes(c.jornadaId)).length;
-  }, [config.cartones, myJornadas]);
+    const myClientIds = myClients.map(c => c.id);
+    return config.cartones.filter(c => myClientIds.includes(c.userId)).length;
+  }, [config.cartones, myClients]);
 
-  // Total carton revenue
-  const totalRevenue = useMemo(() => {
-    const myJornadaIds = myJornadas.map(j => j.id);
-    return config.cartones
-      .filter(c => myJornadaIds.includes(c.jornadaId))
-      .reduce((sum, c) => {
-        const jornada = myJornadas.find(j => j.id === c.jornadaId);
-        return sum + (jornada?.cartonPrice || 0);
-      }, 0);
-  }, [config.cartones, myJornadas]);
-
-  // Commission owed to admin
-  const commissionRate = promoterProfile?.adminCommissionPct || 10;
-  const guaranteeBalance = promoterProfile?.guaranteeBalance || 0;
-
-  // Commission consumed from guarantee
-  const commissionConsumed = useMemo(() => {
-    const myJornadaIds = myJornadas.map(j => j.id);
+  // Total commissions earned
+  const totalCommissionsEarned = useMemo(() => {
     return config.transactions
-      .filter(t => t.type === 'commission' && t.description?.includes('promotor') && myJornadaIds.some(id => t.description?.includes(id)))
+      .filter(t => t.userId === currentUser.id && t.type === 'commission')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  }, [config.transactions, myJornadas]);
-
-  const guaranteeRemaining = guaranteeBalance - commissionConsumed;
-
-  // Handle jornada creation
-  const handleCreateJornada = async (jornada: Jornada, newTeams: Team[]) => {
-    jornada.promoterId = currentUser.id;
-    jornada.promoterName = promoterProfile?.displayName || currentUser.username;
-
-    const newConfig = {
-      ...config,
-      jornadas: [...config.jornadas, jornada],
-      teams: [
-        ...config.teams,
-        ...newTeams.filter(nt => !config.teams.find(et => et.id === nt.id))
-      ]
-    };
-
-    await onSave(newConfig);
-    setShowJornadaWizard(false);
-  };
-
-  // Open edit modal
-  const openEditJornada = (j: Jornada) => {
-    setEditingJornada(j);
-    setEditName(j.name);
-    setEditFirstPrize(j.firstPrize);
-    setEditSecondPrize(j.secondPrize);
-    setEditCartonPrice(j.cartonPrice.toString());
-    setEditStatus(j.status);
-  };
-
-  // Save edited jornada
-  const handleSaveEditJornada = async () => {
-    if (!editingJornada) return;
-    const updatedJornada = {
-      ...editingJornada,
-      name: editName,
-      firstPrize: editFirstPrize,
-      secondPrize: editSecondPrize,
-      cartonPrice: Number(editCartonPrice),
-      status: editStatus,
-    };
-    const newConfig = {
-      ...config,
-      jornadas: config.jornadas.map(j => j.id === updatedJornada.id ? updatedJornada : j)
-    };
-    await onSave(newConfig);
-    setEditingJornada(null);
-  };
+  }, [config.transactions, currentUser.id]);
 
   // Handle transfer balance to client
   const handleTransfer = () => {
@@ -354,17 +274,17 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
             {/* Metrics Cards */}
             <div className="grid grid-cols-2 gap-3">
               <div className="stat-card bg-gradient-to-r from-blue-900/50 to-indigo-900/50 border border-blue-500/30 col-span-2 p-4 rounded-xl">
-                <h3 className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Capacidad de Transferencia</h3>
-                <p className="text-3xl font-black text-white stat-value mt-1">ILIMITADA (∞)</p>
+                <h3 className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Gran Pozo Global</h3>
+                <p className="text-3xl font-black text-white stat-value mt-1">Bs {Math.floor(config.globalJackpot || 0).toLocaleString('es-ES')}</p>
               </div>
               <div className="stat-card stat-card-green">
-                <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Garantía Depositada</h3>
-                <p className="text-2xl font-black text-green-400 stat-value mt-1">Bs {Math.floor(guaranteeBalance).toLocaleString('es-ES')}</p>
+                <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Mi Saldo</h3>
+                <p className="text-2xl font-black text-green-400 stat-value mt-1">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</p>
               </div>
               <div className="stat-card stat-card-cyan">
-                <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Garantía Restante</h3>
-                <p className={`text-2xl font-black stat-value mt-1 ${guaranteeRemaining > 0 ? 'text-cyan-400' : 'text-red-400'}`}>
-                  Bs {Math.floor(guaranteeRemaining).toLocaleString('es-ES')}
+                <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Comisión Directa</h3>
+                <p className={`text-2xl font-black stat-value mt-1 text-cyan-400`}>
+                  20%
                 </p>
               </div>
               <div className="stat-card stat-card-purple">
@@ -372,8 +292,8 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                 <p className="text-2xl font-black text-white stat-value mt-1">{myCartonesCount}</p>
               </div>
               <div className="stat-card stat-card-amber">
-                <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Comisión ({commissionRate}%)</h3>
-                <p className="text-2xl font-black text-yellow-400 stat-value mt-1">Bs {Math.floor(commissionConsumed).toLocaleString('es-ES')}</p>
+                <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Comisiones Ganadas</h3>
+                <p className="text-2xl font-black text-yellow-400 stat-value mt-1">Bs {Math.floor(totalCommissionsEarned).toLocaleString('es-ES')}</p>
               </div>
             </div>
 
@@ -390,129 +310,13 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <h3 className="font-bold text-cyan-400 mb-2">📊 Resumen</h3>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-400">Jornadas activas</span><span className="font-bold">{myJornadas.filter(j => j.status === 'abierta').length}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Total jornadas</span><span className="font-bold">{myJornadas.length}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">Clientes referidos</span><span className="font-bold">{myClients.length}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Ingresos por cartones</span><span className="font-bold text-green-400">Bs {Math.floor(totalRevenue).toLocaleString('es-ES')}</span></div>
-                    <div className="flex justify-between border-t border-gray-700 pt-2"><span className="text-gray-400">Tu comisión al Admin</span><span className="font-bold text-yellow-400">-Bs {Math.floor(commissionConsumed).toLocaleString('es-ES')}</span></div>
+                    <div className="flex justify-between border-t border-gray-700 pt-2"><span className="text-gray-400">Tus comisiones ganadas</span><span className="font-bold text-green-400">+Bs {Math.floor(totalCommissionsEarned).toLocaleString('es-ES')}</span></div>
                   </div>
                 </div>
-
-                {/* Active Jornadas Quick View */}
-                {myJornadas.filter(j => j.status === 'abierta').length > 0 && (
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <h3 className="font-bold text-green-400 mb-2">🟢 Jornadas Activas</h3>
-                    {myJornadas.filter(j => j.status === 'abierta').map(j => (
-                      <div key={j.id} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-0">
-                        <span className="font-semibold text-sm">{j.name}</span>
-                        <span className="text-xs bg-cyan-900/50 text-cyan-300 px-2 py-0.5 rounded-full">
-                          {getCartonesForJornada(j.id).length} cartones
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
 
-            {activeTab === 'jornadas' && (
-              <div className="space-y-4">
-                <button
-                  onClick={() => setShowJornadaWizard(true)}
-                  className="w-full py-3 rounded-lg font-bold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 transition-all shadow-lg"
-                >
-                  + Crear Nueva Jornada
-                </button>
-
-                {myJornadas.length === 0 ? (
-                  <div className="text-center py-10 text-gray-500">No has creado ninguna jornada aún.</div>
-                ) : (
-                  <div className="space-y-3">
-                    {myJornadas.map(j => {
-                      const cartones = getCartonesForJornada(j.id);
-                      const revenue = cartones.length * j.cartonPrice;
-                      const hasCartones = cartones.length > 0;
-
-                      return (
-                        <div key={j.id} className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h4 className="font-bold">{j.name}</h4>
-                              <div className="flex gap-1 mt-1 flex-wrap">
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                  j.status === 'abierta' ? 'bg-green-500/20 text-green-300' :
-                                  j.status === 'cerrada' ? 'bg-red-500/20 text-red-300' :
-                                  j.status === 'en_juego' ? 'bg-yellow-500/20 text-yellow-300' :
-                                  'bg-gray-500/20 text-gray-300'
-                                }`}>
-                                  {j.status.charAt(0).toUpperCase() + j.status.slice(1)}
-                                </span>
-                                {j.visibility === 'private' && (
-                                  <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">
-                                    🔒 Privada
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => openEditJornada(j)}
-                              className="px-3 py-1.5 text-xs bg-cyan-900/40 text-cyan-300 rounded-lg border border-cyan-500/30 hover:bg-cyan-900/60 transition font-bold"
-                            >
-                              ✏️ Editar
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2 text-center text-xs mt-3">
-                            <div className="bg-gray-900/50 p-2 rounded">
-                              <div className="text-gray-400">Cartones</div>
-                              <div className="font-bold text-white">{cartones.length}</div>
-                            </div>
-                            <div className="bg-gray-900/50 p-2 rounded">
-                              <div className="text-gray-400">Precio</div>
-                              <div className="font-bold text-cyan-300">Bs {j.cartonPrice}</div>
-                            </div>
-                            <div className="bg-gray-900/50 p-2 rounded">
-                              <div className="text-gray-400">Ingresos</div>
-                              <div className="font-bold text-green-400">Bs {Math.floor(revenue).toLocaleString('es-ES')}</div>
-                            </div>
-                          </div>
-                          <div className="text-xs mt-2 text-gray-400">
-                            Premios: 1ro: {j.firstPrize} | 2do: {j.secondPrize}
-                          </div>
-                          {!hasCartones && j.status === 'abierta' && (
-                            <button
-                              onClick={() => handleDeleteJornada(j.id)}
-                              className="mt-2 w-full py-1.5 text-xs bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition"
-                            >
-                              Eliminar Jornada
-                            </button>
-                          )}
-                          {hasCartones && (
-                            <div className="mt-2">
-                              <h5 className="text-xs font-bold text-gray-400 mb-1">Cartones vendidos:</h5>
-                              <div className="max-h-32 overflow-y-auto space-y-1">
-                                {cartones.map(c => {
-                                  const buyer = config.users.find(u => u.id === c.userId);
-                                  return (
-                                    <div
-                                      key={c.id}
-                                      onClick={() => setViewingCarton(c)}
-                                      className="flex justify-between items-center text-xs bg-gray-900/50 p-2 rounded cursor-pointer hover:bg-gray-700/50"
-                                    >
-                                      <span>{buyer?.username || 'Usuario'}</span>
-                                      <span className="text-gray-400">{new Date(c.purchaseDate).toLocaleDateString('es-ES')}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
 
             {activeTab === 'clients' && (
               <div className="space-y-4">

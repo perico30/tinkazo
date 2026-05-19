@@ -33,8 +33,8 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave, isAdmin
 
   // Form fields
   const [name, setName] = useState('');
-  const [firstPrize, setFirstPrize] = useState('');
-  const [secondPrize, setSecondPrize] = useState('');
+  const [firstPrize] = useState('0');
+  const [secondPrize] = useState('0');
   const [cartonPrice, setCartonPrice] = useState('');
   const [botinMatchId, setBotinMatchId] = useState<string | null>(null);
   const [flagIconUrl, setFlagIconUrl] = useState('');
@@ -86,8 +86,8 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave, isAdmin
   };
 
   const handleNextStep2 = () => {
-    if (!name || !firstPrize || !secondPrize || !cartonPrice) {
-      alert('Por favor completa todos los campos de precios y premios.');
+    if (!name || !cartonPrice) {
+      alert('Por favor completa el nombre de la jornada y el precio del cartón.');
       return;
     }
     setStep(3);
@@ -318,43 +318,9 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave, isAdmin
                   <label className="block text-sm mb-1 text-gray-300">Nombre de la Jornada</label>
                   <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600" placeholder="Ej: Jornada Fin de Semana" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-300">Premio 1er Lugar</label>
-                    <input type="text" value={firstPrize} onChange={e => setFirstPrize(e.target.value)} className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600" placeholder="Ej: Bs 20.000" />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-300">Premio 2do Lugar</label>
-                    <input type="text" value={secondPrize} onChange={e => setSecondPrize(e.target.value)} className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600" placeholder="Ej: Bs 5.000" />
-                  </div>
-                </div>
                 <div>
                   <label className="block text-sm mb-1 text-gray-300">Precio del Cartón (Bs)</label>
                   <input type="number" value={cartonPrice} onChange={e => setCartonPrice(e.target.value)} className="w-full bg-gray-700 p-3 rounded-lg border border-gray-600" placeholder="Ej: 50" min="0" />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1 text-gray-300">Visibilidad de la Jornada</label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setVisibility('public')}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${visibility === 'public' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}
-                    >
-                      🌍 Pública
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVisibility('private')}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${visibility === 'private' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}
-                    >
-                      🔒 Privada
-                    </button>
-                  </div>
-                  {visibility === 'private' && (
-                    <div className="mt-2 bg-yellow-900/20 border border-yellow-500/30 p-3 rounded-lg">
-                      <p className="text-xs text-yellow-300">Solo los jugadores que tengan tu código de referido podrán ver esta jornada.</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -366,7 +332,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave, isAdmin
 
               {isAdmin && (
                 <div className="bg-gray-700/50 p-4 rounded-lg mb-6">
-                  <label className="block text-sm mb-2 text-yellow-500 font-bold">¿Qué partido aplicará para el "Botín"?</label>
+                  <label className="block text-sm mb-2 text-yellow-500 font-bold">¿Qué partido aplicará para "El Gordito"?</label>
                   <select
                     value={botinMatchId || ''}
                     onChange={e => setBotinMatchId(e.target.value)}
@@ -377,7 +343,7 @@ const JornadaWizard: React.FC<JornadaWizardProps> = ({ onCancel, onSave, isAdmin
                       <option key={m.id} value={m.id}>{m.team1.name} vs {m.team2.name}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-400 mt-2">Los jugadores tendrán que acertar el marcador exacto de este partido para llevarse el Botín.</p>
+                  <p className="text-xs text-gray-400 mt-2">Los jugadores tendrán que acertar el marcador exacto de este partido para llevarse El Gordito.</p>
                 </div>
               )}
 

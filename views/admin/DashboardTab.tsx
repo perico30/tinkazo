@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { AppConfig } from '../../types';
+import type { AppConfig, Jornada, Carton, RegisteredUser } from '../../types';
 
 import UsersGroupIcon from '../../components/icons/UsersGroupIcon';
 import BanknotesIcon from '../../components/icons/BanknotesIcon';
@@ -8,6 +8,7 @@ import CreditCardIcon from '../../components/icons/CreditCardIcon';
 
 interface DashboardTabProps {
     config: AppConfig;
+    setConfig: React.Dispatch<React.SetStateAction<AppConfig>>;
 }
 
 const SmallMetricCard: React.FC<{ title: string; primaryValue: string; secondaryValue?: string; icon: React.ReactNode; iconBgClass: string; accentClass: string }> = ({ title, primaryValue, secondaryValue, icon, iconBgClass, accentClass }) => {
@@ -29,7 +30,7 @@ const SmallMetricCard: React.FC<{ title: string; primaryValue: string; secondary
     );
 };
 
-const DashboardTab: React.FC<DashboardTabProps> = ({ config }) => {
+const DashboardTab: React.FC<DashboardTabProps> = ({ config, setConfig }) => {
   const metrics = useMemo(() => {
         const cartonesVendidos = config.cartones.length;
         
@@ -62,8 +63,134 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ config }) => {
         };
     }, [config]);
 
+  const handleDistributeJackpot = () => {
+    if (!window.confirm("¿Estás seguro de que deseas CERRAR EL CICLO y repartir el Pozo Acumulado? Esta acción es irreversible.")) return;
+
+    const newConfig = JSON.parse(JSON.stringify(config)) as AppConfig;
+    
+    // Encontrar jornadas cerradas que no hayan sido pagadas globalmente
+    const jornadasToProcess = newConfig.jornadas.filter((j: Jornada) => j.status === 'cerrada' && j.resultsProcessed && !j.globalPrizeProcessed);
+    
+    if (jornadasToProcess.length === 0) {
+        alert("No hay jornadas cerradas con resultados pendientes de reparto global.");
+        return;
+    }
+
+    const jornadaIds = jornadasToProcess.map((j: Jornada) => j.id);
+    const cartonesToEvaluate = newConfig.cartones.filter((c: Carton) => jornadaIds.includes(c.jornadaId));
+    
+    const winners15 = cartonesToEvaluate.filter((c: Carton) => c.hits === 15);
+    const winners14 = cartonesToEvaluate.filter((c: Carton) => c.hits === 14);
+
+    if (winners15.length === 0 && winners14.length === 0) {
+        // Rollover
+        newConfig.jornadas.forEach((j: Jornada) => {
+            if (jornadaIds.includes(j.id)) j.globalPrizeProcessed = true;
+        });
+        setConfig(newConfig);
+        alert("No hubo ganadores de 15 ni 14 aciertos. El pozo se acumula para la próxima semana (Rollover). Recuerda Guardar Cambios.");
+        return;
+    }
+
+    let currentJackpot = newConfig.globalJackpot || 0;
+    const amountFor15 = currentJackpot * 0.70;
+    const amountFor14 = currentJackpot * 0.30;
+
+    let distributed = 0;
+
+    if (winners15.length > 0) {
+        const prizePerWinner15 = amountFor15 / winners15.length;
+        winners15.forEach((carton: Carton) => {
+            carton.prizeWon = (carton.prizeWon || 0) + prizePerWinner15;
+            carton.prizeDetails = carton.prizeDetails || {};
+            carton.prizeDetails.global15 = { tier: 1, winnersCount: winners15.length, amount: prizePerWinner15 };
+            
+            const user = newConfig.users.find((u: RegisteredUser) => u.id === carton.userId);
+            if (user) user.balance = (user.balance || 0) + prizePerWinner15;
+        });
+        distributed += amountFor15;
+    }
+
+    if (winners14.length > 0) {
+        const prizePerWinner14 = amountFor14 / winners14.length;
+        winners14.forEach((carton: Carton) => {
+            carton.prizeWon = (carton.prizeWon || 0) + prizePerWinner14;
+            carton.prizeDetails = carton.prizeDetails || {};
+            carton.prizeDetails.global14 = { tier: 2, winnersCount: winners14.length, amount: prizePerWinner14 };
+            
+            const user = newConfig.users.find((u: RegisteredUser) => u.id === carton.userId);
+            if (user) user.balance = (user.balance || 0) + prizePerWinner14;
+        });
+        distributed += amountFor14;
+    }
+
+    // Actualizar jornadas
+    newConfig.jornadas.forEach((j: Jornada) => {
+        if (jornadaIds.includes(j.id)) j.globalPrizeProcessed = true;
+    });
+
+    // Actualizar cartones evaluados
+    newConfig.cartones = newConfig.cartones.map((c: Carton) => {
+        const w15 = winners15.find((w: Carton) => w.id === c.id);
+        if (w15) return w15;
+        const w14 = winners14.find((w: Carton) => w.id === c.id);
+        if (w14) return w14;
+        return c;
+    });
+
+    newConfig.globalJackpot = currentJackpot - distributed;
+    setConfig(newConfig);
+    
+    alert(`Se repartieron Bs ${Math.floor(distributed).toLocaleString('es-ES')} entre los ganadores. El pozo restante es Bs ${Math.floor(newConfig.globalJackpot).toLocaleString('es-ES')}. Recuerda presionar Guardar Cambios.`);
+  };
+
   return (
     <div className="space-y-6">
+        {/* Gestión del Pozo Global */}
+        <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 p-4 sm:p-6 rounded-xl shadow-lg border border-blue-500/30">
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    💰 Gran Pozo Acumulado
+                </h3>
+                <button 
+                    onClick={handleDistributeJackpot}
+                    className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-red-900/50 flex items-center gap-2 transition"
+                >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Cerrar Ciclo y Repartir Pozo
+                </button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-6 items-center">
+                <div className="flex-1">
+                    <p className="text-4xl font-black text-cyan-400">Bs {Math.floor(config.globalJackpot || 0).toLocaleString('es-ES')}</p>
+                    <p className="text-sm text-gray-300 mt-2">El pozo aumenta en un 50% del valor de cada cartón vendido.</p>
+                </div>
+                <div className="flex-1 bg-gray-900/50 p-4 rounded-lg w-full">
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Inyectar Pozo Semilla (Bs)</label>
+                    <div className="flex gap-2">
+                        <input 
+                            type="number" 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
+                            value={config.seedJackpot || 0}
+                            onChange={(e) => setConfig({ ...config, seedJackpot: Number(e.target.value) })}
+                        />
+                        <button 
+                            className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold transition shrink-0"
+                            onClick={() => {
+                                const newGlobal = (config.globalJackpot || 0) + Number(config.seedJackpot || 0);
+                                setConfig({ ...config, globalJackpot: newGlobal, seedJackpot: 0 });
+                                alert('Pozo Semilla inyectado en el Pozo Global. Recuerda Guardar Cambios.');
+                            }}
+                        >
+                            Inyectar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <SmallMetricCard 
             title="Cartones Vendidos" 

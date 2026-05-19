@@ -56,12 +56,10 @@ const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps> = ({
                                         <span className="text-gray-400">vs</span>
                                         <span className="font-semibold w-24 truncate text-left">{visitorTeam?.name || 'N/A'}</span>
                                     </div>
-                                    <div className={`w-8 h-8 flex items-center justify-center font-bold rounded ${
-                                        prediction === '1' ? 'bg-green-500 text-white' :
-                                        prediction === 'X' ? 'bg-yellow-500 text-gray-900' :
-                                        prediction === '2' ? 'bg-red-500 text-white' : 'bg-gray-600'
+                                    <div className={`w-[45px] h-[22px] flex items-center justify-center font-bold text-xs rounded-full border ${
+                                        prediction ? 'bg-[#357427] border-[#357427] text-white shadow-md' : 'bg-gray-600 border-transparent text-gray-400'
                                     }`}>
-                                        {prediction === 'X' ? <XIcon className="w-4 h-4" /> : prediction}
+                                        {prediction || '-'}
                                     </div>
                                 </div>
                             );
@@ -70,7 +68,7 @@ const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps> = ({
 
                     {playBotin && botinMatch && (
                         <div className="border-t border-purple-700 pt-4 mt-4">
-                            <h3 className="font-bold text-lg text-purple-300 text-center mb-2">🌟 Predicción del Botín 🌟</h3>
+                            <h3 className="font-bold text-lg text-purple-300 text-center mb-2">🌟 Predicción del Gordito 🌟</h3>
                              <div className="text-center text-2xl font-bold">
                                 <span>{getTeam(botinMatch.localTeamId)?.name} </span>
                                 <span className="text-cyan-400">{botinPrediction.localScore || '0'}</span>
@@ -82,9 +80,9 @@ const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps> = ({
                     )}
 
                     <div className="border-t border-gray-700 pt-4 mt-4 space-y-2 text-sm">
-                        <div className="flex justify-between"><span className="text-gray-400">Costo del Cartón:</span> <span className="font-semibold">Bs {Math.floor(jornada.cartonPrice).toLocaleString('es-ES')}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-400">Saldo Actual:</span> <span className="font-semibold">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</span></div>
-                        <div className="flex justify-between text-base"><span className="text-gray-300">Saldo Restante:</span> <span className={`font-bold ${remainingBalance < 0 ? 'text-red-500' : 'text-green-400'}`}>Bs {Math.floor(remainingBalance).toLocaleString('es-ES')}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-400">Costo del Cartón:</span> <span className="font-semibold">Bs {Math.floor(jornada.cartonPrice).toLocaleString('de-DE')}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-400">Saldo Actual:</span> <span className="font-semibold">Bs {Math.floor(currentUser.balance || 0).toLocaleString('de-DE')}</span></div>
+                        <div className="flex justify-between text-base"><span className="text-gray-300">Saldo Restante:</span> <span className={`font-bold ${remainingBalance < 0 ? 'text-red-500' : 'text-green-400'}`}>Bs {Math.floor(remainingBalance).toLocaleString('de-DE')}</span></div>
                     </div>
                 </div>
 

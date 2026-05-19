@@ -99,7 +99,7 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                         }
 
                         if (details?.botin) {
-                            prizeTexts.push('EL BOTÍN');
+                            prizeTexts.push('EL GORDITO');
                         }
 
                         let prizeText = prizeTexts.join(' + ');
@@ -107,7 +107,7 @@ const ClientTicketsTab: React.FC<ClientTicketsTabProps> = ({ cartones, jornadas,
                         if (prizeText !== '') {
                             prizeText = `GANASTE ${prizeText}`;
                         } else if (details?.botin) {
-                            prizeText = 'GANASTE EL BOTÍN';
+                            prizeText = 'GANASTE EL GORDITO';
                         } else {
                             prizeText = 'GANADOR';
                         }

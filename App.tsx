@@ -91,6 +91,8 @@ const initialAppConfig: AppConfig = {
     tutorialsSectionTitle: 'Tutoriales',
     teams: [],
     jornadas: [],
+    globalJackpot: 0,
+    seedJackpot: 0,
     gorditoJornadaId: null,
     users: [],
     cartones: [],
@@ -428,13 +430,12 @@ const App: React.FC = () => {
   
 const processJornadaResults = (config: AppConfig): AppConfig => {
     const newConfig = JSON.parse(JSON.stringify(config)); // Deep copy
-    const parsePrize = (prizeStr: string) => parseInt(prizeStr.replace(/[^0-9]/g, ""), 10) || 0;
 
     newConfig.jornadas.forEach((jornada: Jornada) => {
         const allMatchesHaveResults = jornada.matches.length > 0 && jornada.matches.every(m => m.result);
 
         if (jornada.status === 'cerrada' && allMatchesHaveResults && !jornada.resultsProcessed) {
-            console.log(`Processing results for jornada: ${jornada.name}`);
+            console.log(`Processing hits for jornada: ${jornada.name}`);
             jornada.resultsProcessed = true;
 
             const cartonesForJornada = newConfig.cartones.filter((c: Carton) => c.jornadaId === jornada.id);
@@ -446,7 +447,6 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                 carton.prizeDetails = {};
                 
                 let isCartonValid = true;
-                // If user played for the Botin, their prediction MUST be correct.
                 if (carton.botinPrediction && jornada.botinResult) {
                     const [localStr, visitorStr] = jornada.botinResult.split('-');
                     const botinAdminResult = { local: parseInt(localStr, 10), visitor: parseInt(visitorStr, 10) };
@@ -456,60 +456,19 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                         carton.botinPrediction.visitorScore !== botinAdminResult.visitor;
 
                     if (predictionIsWrong) {
-                        // The user played for the Botin and failed. The entire carton is lost.
                         isCartonValid = false;
                     }
                 }
 
-                // Calculate hits only if the carton is valid
                 if (isCartonValid) {
                     carton.hits = jornada.matches.reduce((hits, match) => 
                         (match.result && carton.predictions[match.id] === match.result) ? hits + 1 : hits, 0);
                 } else {
-                    // If invalid, hits are 0, so it cannot win any prize.
                     carton.hits = 0; 
                 }
             });
 
-            // 2. Determine Prize Amounts (Handle Gordito)
-            const isGorditoJornada = jornada.id === newConfig.gorditoJornadaId;
-            const firstPrizeAmount = isGorditoJornada 
-                ? parsePrize(newConfig.gorditoJackpot.amount)
-                : parsePrize(jornada.firstPrize);
-            const secondPrizeAmount = parsePrize(jornada.secondPrize);
-
-            // 3. Distribute Jornada Prizes
-            const firstPrizeHits = jornada.matches.length;
-            const secondPrizeHits = jornada.matches.length - 1;
-
-            const firstPrizeWinners = cartonesForJornada.filter((c: Carton) => c.hits === firstPrizeHits);
-            const secondPrizeWinners = cartonesForJornada.filter((c: Carton) => c.hits === secondPrizeHits);
-
-            if (firstPrizeWinners.length > 0) {
-                const prizePerWinner = firstPrizeAmount / firstPrizeWinners.length;
-                firstPrizeWinners.forEach((carton: Carton) => {
-                    carton.prizeWon = (carton.prizeWon || 0) + prizePerWinner;
-                    const prizeDetailKey = isGorditoJornada ? 'gordito' : 'jornada';
-                    carton.prizeDetails![prizeDetailKey as 'gordito' | 'jornada'] = { tier: 1, winnersCount: firstPrizeWinners.length };
-                });
-            } else if (!isGorditoJornada) {
-                // No first prize winners, 70% of sales go to Botin
-                const totalJornadaSales = cartonesForJornada.length * jornada.cartonPrice;
-                const botinContribution = totalJornadaSales * 0.70;
-                newConfig.botinAmount = (newConfig.botinAmount || 0) + botinContribution;
-            }
-
-            if (secondPrizeWinners.length > 0) {
-                const prizePerWinner = secondPrizeAmount / secondPrizeWinners.length;
-                secondPrizeWinners.forEach((carton: Carton) => {
-                    carton.prizeWon = (carton.prizeWon || 0) + prizePerWinner;
-                    if (!carton.prizeDetails?.jornada) { // Don't overwrite if they won 1st prize
-                       carton.prizeDetails!.jornada = { tier: 2, winnersCount: secondPrizeWinners.length };
-                    }
-                });
-            }
-
-            // 4. Distribute Botin Prize
+            // 2. Distribute Botin Prize (First/Second prizes are now Global)
             if (jornada.botinResult && newConfig.botinAmount > 0) {
                 const [localStr, visitorStr] = jornada.botinResult.split('-');
                 const botinResult = { local: parseInt(localStr, 10), visitor: parseInt(visitorStr, 10) };
@@ -532,7 +491,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                 }
             }
             
-            // 5. Update user balances based on total prizeWon
+            // 3. Update user balances based on total prizeWon (only botin at this stage)
             cartonesForJornada.forEach((carton: Carton) => {
                 if (carton.prizeWon && carton.prizeWon > 0) {
                     const user = newConfig.users.find((u: RegisteredUser) => u.id === carton.userId);
@@ -546,7 +505,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
                 }
             });
 
-            // 6. Update the main cartones array in newConfig
+            // 4. Update the main cartones array in newConfig
             newConfig.cartones = newConfig.cartones.map((originalCarton: Carton) => 
                 cartonesForJornada.find(pc => pc.id === originalCarton.id) || originalCarton);
         }
@@ -579,6 +538,8 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
             social_links: processedConfig.footer.socialLinks,
             legal_links: processedConfig.footer.legalLinks,
             sections_order: processedConfig.sectionsOrder,
+            global_jackpot: processedConfig.globalJackpot,
+            seed_jackpot: processedConfig.seedJackpot,
             teams: processedConfig.teams,
             footer_text: processedConfig.footer.copyright
         }).eq('id', 'main');
@@ -644,6 +605,7 @@ const processJornadaResults = (config: AppConfig): AppConfig => {
             flag_icon_url: j.flagIconUrl,
             styling: j.styling,
             results_processed: j.resultsProcessed,
+            global_prize_processed: j.globalPrizeProcessed,
             promoter_id: j.promoterId || null,
             visibility: j.visibility || 'public',
             access_code: j.accessCode || null

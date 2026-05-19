@@ -752,25 +752,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 createdAt: new Date().toISOString()
             };
 
-            let updatedPromoterProfiles = appConfig.promoterProfiles;
+            const newGlobalJackpot = (appConfig.globalJackpot || 0) + (price * 0.50);
+
+            let updatedUsers = appConfig.users.map(u => u.id === currentUser.id ? { ...u, balance: newBalance } : u);
             const transactionsToUpdate = [newTx, ...appConfig.transactions];
 
-            const promoter = appConfig.promoterProfiles.find(p => p.userId === jornada.promoterId);
-            if (promoter) {
-                const commissionRate = promoter.adminCommissionPct || 0;
-                const commissionAmount = price * (commissionRate / 100);
-                if (commissionAmount > 0) {
-                    updatedPromoterProfiles = updatedPromoterProfiles.map(p => 
-                        p.userId === promoter.userId 
-                        ? { ...p, guaranteeBalance: p.guaranteeBalance - commissionAmount }
-                        : p
+            if (currentUser.referredBy) {
+                const promoterUser = appConfig.users.find(u => u.id === currentUser.referredBy && u.role === 'promoter');
+                if (promoterUser) {
+                    const commissionAmount = price * 0.20;
+                    updatedUsers = updatedUsers.map(u => 
+                        u.id === promoterUser.id 
+                        ? { ...u, balance: (u.balance || 0) + commissionAmount }
+                        : u
                     );
                     const newCommissionTx = {
                         id: `temp-com-${Date.now()}`, 
-                        userId: promoter.userId, 
-                        amount: -commissionAmount,
+                        userId: promoterUser.id, 
+                        amount: commissionAmount,
                         type: 'commission' as const, 
-                        description: `Comisión administrador por cartón en jornada ${jornada.name}`,
+                        description: `Comisión por venta de cartón a ${currentUser.username}`,
                         createdAt: new Date().toISOString()
                     };
                     transactionsToUpdate.unshift(newCommissionTx);
@@ -779,10 +780,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
             updateConfig({
                 ...appConfig,
-                users: appConfig.users.map(u => u.id === currentUser.id ? { ...u, balance: newBalance } : u),
+                globalJackpot: newGlobalJackpot,
+                users: updatedUsers,
                 cartones: [newCarton, ...appConfig.cartones],
-                transactions: transactionsToUpdate,
-                promoterProfiles: updatedPromoterProfiles
+                transactions: transactionsToUpdate
             });
 
             showNotification('¡Cartón comprado con éxito!');

@@ -227,7 +227,7 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
 
                     {botinMatch && (
                         <div className="mt-4 border-t-2 border-dashed border-purple-600 pt-4 text-center">
-                            <h4 className="text-lg font-bold text-purple-300 mb-2">🌟 Mi Pronóstico del Botín 🌟</h4>
+                            <h4 className="text-lg font-bold text-purple-300 mb-2">🌟 Mi Pronóstico del Gordito 🌟</h4>
                              <div className="bg-purple-900/30 p-3 rounded-lg flex items-center justify-around mb-2">
                                 <div className="flex flex-col items-center gap-1 w-1/3">
                                     {localBotinTeam && <img src={localBotinTeam.logo} alt={localBotinTeam.name} className="h-8 w-8 object-contain"/>}
@@ -249,7 +249,7 @@ const CartonModal: React.FC<CartonModalProps> = ({ carton, jornada, teams, appNa
                                 carton.botinPrediction ? (
                                     <p className="text-3xl font-bold text-white">{carton.botinPrediction.localScore} - {carton.botinPrediction.visitorScore}</p>
                                 ) : (
-                                    <p className="text-sm text-gray-400 italic">No se participó por el botín.</p>
+                                    <p className="text-sm text-gray-400 italic">No se participó por el Gordito.</p>
                                 )
                             )}
                         </div>
