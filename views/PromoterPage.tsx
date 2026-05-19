@@ -132,7 +132,6 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
 
   const tabs: { id: PromoterTab; label: string; icon: React.FC<{className?: string}> }[] = [
     { id: 'dashboard', label: 'Inicio', icon: HomeIcon },
-    { id: 'jornadas', label: 'Jornadas', icon: CalendarIcon },
     { id: 'clients', label: 'Clientes', icon: UsersIcon },
     { id: 'finance', label: 'Financiero', icon: WalletIcon },
     { id: 'settings', label: 'Ajustes', icon: GearIcon },
