@@ -547,6 +547,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                     botin: processedConfig.botinJackpot,
                     gorditoJornadaId: processedConfig.gorditoJornadaId || null
                 },
+                global_jackpot: processedConfig.globalJackpot,
+                seed_jackpot: processedConfig.seedJackpot,
                 video_tutorials: processedConfig.videoTutorials,
                 carousel_images: processedConfig.carouselImages,
                 recharge_qr_url: processedConfig.recharge.qrCodeUrl,
