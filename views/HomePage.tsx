@@ -522,11 +522,7 @@ const JornadasSection: React.FC<{
                       let tooltipTitle = '';
                       if (!currentUser) tooltipTitle = 'Debes iniciar sesión para jugar';
                       else if (!playable) tooltipTitle = 'La venta para esta jornada ha cerrado';
-                      else if (!isAuthorizedClient) {
-                         tooltipTitle = isLaCasaJornada 
-                           ? 'Esta jornada es exclusiva para clientes oficiales de La Casa'
-                           : 'Esta jornada es exclusiva para los clientes de este promotor';
-                      } else {
+                      else {
                          tooltipTitle = `Jugar por Bs ${Math.floor(jornada.cartonPrice).toLocaleString('de-DE')}`;
                       }
 
