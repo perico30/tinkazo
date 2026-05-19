@@ -103,36 +103,17 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
     return (
         <>
             <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
-                <div className="max-w-4xl mx-auto">
-                    <div className="flex justify-between items-center mb-4">
+                <div className="max-w-5xl mx-auto">
+                    <div className="flex justify-between items-center mb-6">
                         <div>
                             <h1 className="text-xl sm:text-3xl font-bold text-cyan-400">{jornada.name}</h1>
                             <p className="text-[11px] sm:text-base text-gray-400">Realiza tus pronósticos</p>
                         </div>
-                        <button onClick={onExit} className="text-xs sm:text-base text-gray-400 hover:text-white">&times; Salir</button>
-                    </div>
-                    
-                    {/* Tarjetas de Premios Rediseñadas - Sizes Reduced and Side-by-Side mobile */}
-                    <div className="mb-4 grid grid-cols-2 gap-2 sm:gap-4 border-b border-gray-700/50 pb-4">
-                        {/* Box 1: Premio Mayor */}
-                        <div className="bg-gradient-to-br from-cyan-900/60 to-blue-900/40 border border-cyan-500/40 rounded-xl p-2 sm:p-4 flex flex-col items-center justify-center shadow-md relative overflow-hidden text-center">
-                             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-cyan-500/20 blur-xl rounded-full"></div>
-                             <p className="relative z-10 text-cyan-300 font-bold uppercase tracking-widest text-[8px] sm:text-xs mb-0.5">Premio Mayor</p>
-                             <p className="relative z-10 text-xl sm:text-3xl font-black text-white drop-shadow-md mb-0.5">{jornada.firstPrize}</p>
-                             <p className="relative z-10 text-cyan-200/80 font-medium text-[8px] sm:text-sm">todos los aciertos</p>
-                        </div>
-                        
-                        {/* Box 2: Premio Consuelo */}
-                        <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/40 border border-indigo-500/40 rounded-xl p-2 sm:p-4 flex flex-col items-center justify-center shadow-md relative overflow-hidden text-center">
-                             <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-indigo-500/20 blur-xl rounded-full"></div>
-                             <p className="relative z-10 text-indigo-300 font-bold uppercase tracking-widest text-[8px] sm:text-xs mb-0.5">Premio Consuelo</p>
-                             <p className="relative z-10 text-xl sm:text-3xl font-bold text-white drop-shadow-md mb-0.5">{jornada.secondPrize}</p>
-                             <p className="relative z-10 text-indigo-200/80 font-medium text-[8px] sm:text-sm">1 fallo permitido</p>
-                        </div>
+                        <button onClick={onExit} className="text-xs sm:text-base text-gray-400 hover:text-white transition">&times; Salir</button>
                     </div>
                     
                     {botinMatch && (
-                        <div className="mb-4 bg-purple-900/40 border border-purple-600/60 rounded-lg shadow-md p-3 sm:p-5 relative overflow-hidden">
+                        <div className="mb-5 bg-purple-900/40 border border-purple-600/60 rounded-lg shadow-md p-3 sm:p-5 relative overflow-hidden">
                             <h3 className="text-sm sm:text-xl font-bold text-center text-purple-300 mb-1">🌟 ¡El Gordito! 🌟</h3>
                             <p className="text-center text-[10px] sm:text-sm text-gray-300 mb-3 leading-tight max-w-sm mx-auto">
                                 Acierta el resultado exacto. ¡No extra costo!
@@ -187,40 +168,42 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                         </div>
                     )}
 
-                    <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-                        <div className="space-y-4">
+                    <div className="bg-gray-800 rounded-lg shadow-lg p-3 sm:p-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                             {sortedMatches.map(match => {
                                 const localTeam = getTeam(match.localTeamId);
                                 const visitorTeam = getTeam(match.visitorTeamId);
                                 const isBotinMatchAndPlaying = playBotin && botinMatch && match.id === botinMatch.id;
                                 
                                 return (
-                                    <div key={match.id} className="bg-gray-700/50 p-4 rounded-lg">
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                                            {/* Teams */}
-                                            <div className="md:col-span-2 flex items-center justify-between text-center">
-                                                <div className="flex flex-col items-center gap-2 w-1/3">
-                                                    {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="h-10 w-10 object-contain" />}
-                                                    <span className="text-sm font-semibold">{localTeam?.name || 'N/A'}</span>
-                                                </div>
-                                                <div className="flex flex-col items-center justify-center">
-                                                    <span className="text-gray-400 font-bold">VS</span>
-                                                    <span className="text-[10px] text-gray-400 mt-1 whitespace-nowrap">
-                                                        {new Date(match.dateTime).toLocaleString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col items-center gap-2 w-1/3">
-                                                    {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="h-10 w-10 object-contain" />}
-                                                    <span className="text-sm font-semibold">{visitorTeam?.name || 'N/A'}</span>
-                                                </div>
+                                    <div key={match.id} className="bg-gray-700/50 p-3 sm:p-4 rounded-lg">
+                                        <div className="flex items-center gap-2 sm:gap-3">
+                                            {/* Local Team */}
+                                            <div className="flex flex-col items-center gap-1 min-w-[50px] sm:min-w-[70px]">
+                                                {localTeam && <img src={localTeam.logo} alt={localTeam.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />}
+                                                <span className="text-[9px] sm:text-xs font-semibold text-center leading-tight line-clamp-2">{localTeam?.name || 'N/A'}</span>
                                             </div>
-                                            
+
+                                            {/* VS + Date */}
+                                            <div className="flex flex-col items-center justify-center flex-shrink-0">
+                                                <span className="text-gray-400 font-bold text-xs sm:text-sm">VS</span>
+                                                <span className="text-[8px] sm:text-[10px] text-gray-500 mt-0.5 whitespace-nowrap">
+                                                    {new Date(match.dateTime).toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+
+                                            {/* Visitor Team */}
+                                            <div className="flex flex-col items-center gap-1 min-w-[50px] sm:min-w-[70px]">
+                                                {visitorTeam && <img src={visitorTeam.logo} alt={visitorTeam.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />}
+                                                <span className="text-[9px] sm:text-xs font-semibold text-center leading-tight line-clamp-2">{visitorTeam?.name || 'N/A'}</span>
+                                            </div>
+
                                             {/* Predictions */}
-                                            <div className="md:col-span-1 flex justify-center md:justify-end items-center gap-4 md:gap-2 mt-2 md:mt-0">
+                                            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
                                                 {isBotinMatchAndPlaying ? (
                                                     <div className="text-center">
-                                                        <p className="text-xs text-purple-300">Predicción Automática</p>
-                                                        <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-1 cursor-default`}>
+                                                        <p className="text-[8px] sm:text-xs text-purple-300">Auto</p>
+                                                        <div className={`${getPredictionButtonClass(match.id, predictions[match.id])} mx-auto mt-0.5 cursor-default`}>
                                                             {predictions[match.id]}
                                                         </div>
                                                     </div>
@@ -232,8 +215,6 @@ const PurchaseCartonPage: React.FC<PurchaseCartonPageProps> = ({ jornada, teams,
                                                     </>
                                                 )}
                                             </div>
-
-
                                         </div>
                                     </div>
                                 );
