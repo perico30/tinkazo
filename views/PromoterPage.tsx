@@ -198,7 +198,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
               </div>
               <div className="stat-card stat-card-green">
                 <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Mi Saldo</h3>
-                <p className="text-2xl font-black text-green-400 stat-value mt-1">Bs {Math.floor(currentUser.balance || 0).toLocaleString('es-ES')}</p>
+                <p className="text-2xl font-black text-green-400 stat-value mt-1">Bs {Math.floor(guaranteeBalance).toLocaleString('es-ES')}</p>
               </div>
               <div className="stat-card stat-card-cyan">
                 <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Comisión Directa</h3>
@@ -244,7 +244,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="font-bold text-cyan-400">💸 Transferir Saldo a Cliente</h3>
                     <span className="text-xs font-bold text-green-400 bg-green-900/30 border border-green-500/30 px-2 py-1 rounded-lg">
-                      Mi Saldo: ∞
+                      Mi Saldo: Bs {Math.floor(guaranteeBalance).toLocaleString('es-ES')}
                     </span>
                   </div>
                   <div className="space-y-2">
