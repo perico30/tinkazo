@@ -139,12 +139,7 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
 
   return (
     <>
-      {showJornadaWizard && (
-        <JornadaWizard
-          onCancel={() => setShowJornadaWizard(false)}
-          onSave={handleCreateJornada}
-        />
-      )}
+
       {viewingCarton && (
         <CartonModal
           carton={viewingCarton}
@@ -156,96 +151,6 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
           onSave={() => {}}
           isReadOnly={true}
         />
-      )}
-      {/* Edit Jornada Modal */}
-      {editingJornada && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-800 rounded-lg max-w-lg w-full">
-            <div className="p-6 max-h-[80vh] overflow-y-auto space-y-4">
-              <h2 className="text-xl font-bold">✏️ Editar Jornada</h2>
-              <div>
-                <label className="block text-sm mb-1 text-gray-300">Nombre</label>
-                <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full bg-gray-700 p-2 rounded border border-gray-600" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm mb-1 text-gray-300">Premio 1er Lugar</label>
-                  <input type="text" value={editFirstPrize} onChange={e => setEditFirstPrize(e.target.value)} className="w-full bg-gray-700 p-2 rounded border border-gray-600" />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1 text-gray-300">Premio 2do Lugar</label>
-                  <input type="text" value={editSecondPrize} onChange={e => setEditSecondPrize(e.target.value)} className="w-full bg-gray-700 p-2 rounded border border-gray-600" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-300">Precio del Cartón (Bs)</label>
-                <input type="number" value={editCartonPrice} onChange={e => setEditCartonPrice(e.target.value)} className="w-full bg-gray-700 p-2 rounded border border-gray-600" min="0" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-300">Estado</label>
-                <div className="flex flex-wrap gap-2">
-                  {(['abierta', 'en_juego', 'cerrada'] as const).map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setEditStatus(s)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-bold transition ${editStatus === s ? 'bg-cyan-500 text-gray-900' : 'bg-gray-600 hover:bg-gray-500'}`}
-                    >
-                      {s === 'abierta' ? '🟢 Abierta' : s === 'en_juego' ? '🟡 En Juego' : '🔴 Cerrada'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {/* Matches List */}
-              <div>
-                <label className="block text-sm mb-2 text-gray-300 font-bold">Partidos ({editingJornada.matches.length})</label>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {editingJornada.matches.length === 0 ? (
-                    <p className="text-xs text-gray-500 text-center py-3">No hay partidos.</p>
-                  ) : (
-                    editingJornada.matches.map(match => {
-                      const localTeam = config.teams.find(t => t.id === match.localTeamId);
-                      const visitorTeam = config.teams.find(t => t.id === match.visitorTeamId);
-                      return (
-                        <div key={match.id} className="flex items-center justify-between bg-gray-700/80 p-2 rounded-lg">
-                          <div className="flex items-center gap-2 text-sm flex-1 min-w-0">
-                            <div className="flex items-center gap-1 truncate">
-                              {localTeam?.logo && <img src={localTeam.logo} alt="" className="w-4 h-4 object-contain" />}
-                              <span className="truncate">{localTeam?.name || 'N/A'}</span>
-                            </div>
-                            <span className="text-gray-500 text-xs flex-shrink-0">vs</span>
-                            <div className="flex items-center gap-1 truncate">
-                              <span className="truncate">{visitorTeam?.name || 'N/A'}</span>
-                              {visitorTeam?.logo && <img src={visitorTeam.logo} alt="" className="w-4 h-4 object-contain" />}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => {
-                              if (window.confirm(`¿Eliminar ${localTeam?.name} vs ${visitorTeam?.name}?`)) {
-                                setEditingJornada(prev => prev ? {
-                                  ...prev,
-                                  matches: prev.matches.filter(m => m.id !== match.id),
-                                  botinMatchId: prev.botinMatchId === match.id ? null : prev.botinMatchId
-                                } : null);
-                              }
-                            }}
-                            className="ml-2 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-full flex-shrink-0 transition"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-700/50 p-4 flex justify-end gap-3 rounded-b-lg">
-              <button onClick={() => setEditingJornada(null)} className="px-4 py-2 rounded-lg hover:bg-gray-600">Cancelar</button>
-              <button onClick={handleSaveEditJornada} className="px-4 py-2 rounded-lg bg-cyan-500 text-gray-900 font-bold hover:bg-cyan-400">Guardar</button>
-            </div>
-          </div>
-        </div>
       )}
       <div className="relative flex flex-col h-full bg-gray-900 text-white overflow-hidden">
         <Header
