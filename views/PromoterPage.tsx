@@ -49,7 +49,6 @@ const PromoterRechargeForm: React.FC<{ config: AppConfig; currentUser: Registere
         amount: val,
         proof_of_payment_url: proofUrl,
         status: 'pending',
-        type: 'seller',
       });
       if (error) throw error;
       alert('¡Solicitud enviada! El administrador revisará tu recarga.');
