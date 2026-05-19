@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Jornada, JackpotConfig } from '../types';
+import StarIcon from './icons/StarIcon';
 
 interface ActiveJornadaHeroProps {
     jornada: Jornada;
