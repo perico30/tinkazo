@@ -60,7 +60,6 @@ const initialAppConfig: AppConfig = {
     tutorialsSectionTitle: 'Tutoriales',
     globalJackpot: 0,
     seedJackpot: 0,
-    botinAmount: 0,
     teams: [],
     jornadas: [],
     gorditoJornadaId: null,
