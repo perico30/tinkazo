@@ -31,6 +31,73 @@ type PromoterTab = 'dashboard' | 'clients' | 'finance' | 'settings';
 
 import ClientRechargesTab from './seller/ClientRechargesTab';
 
+// Sub-component for promoter recharge requests
+const PromoterRechargeForm: React.FC<{ config: AppConfig; currentUser: RegisteredUser }> = ({ config, currentUser }) => {
+  const [amount, setAmount] = useState('');
+  const [proofUrl, setProofUrl] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseFloat(amount);
+    if (!val || val <= 0) { alert('Ingresa un monto válido.'); return; }
+    if (!proofUrl) { alert('Sube un comprobante de pago.'); return; }
+    setIsSending(true);
+    try {
+      const { error } = await supabase.from('recharge_requests').insert({
+        user_id: currentUser.id,
+        amount: val,
+        proof_of_payment_url: proofUrl,
+        status: 'pending',
+        type: 'seller',
+      });
+      if (error) throw error;
+      alert('¡Solicitud enviada! El administrador revisará tu recarga.');
+      setAmount('');
+      setProofUrl('');
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const whatsappLink = config.adminWhatsappNumber
+    ? `https://wa.me/${config.adminWhatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola Admin, soy el promotor ${currentUser.username}. He enviado una solicitud de recarga por Bs ${amount}. ¡Gracias!`)}`
+    : null;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <label className="block text-xs font-medium text-gray-300 mb-1">Monto pagado</label>
+        <input
+          type="number"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
+          className="w-full bg-gray-700 p-2 rounded border border-gray-600 text-sm"
+          placeholder="Ej. 100"
+          min="1" step="1" required
+        />
+      </div>
+      <ImageUpload label="Comprobante de Pago" imageUrl={proofUrl} onImageSelect={setProofUrl} />
+      <button
+        type="submit"
+        disabled={isSending || !amount || !proofUrl}
+        className="w-full text-white font-bold py-2 rounded-lg btn-gradient disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+      >
+        {isSending ? 'Enviando...' : 'Enviar Solicitud de Recarga'}
+      </button>
+      {whatsappLink && (
+        <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+          className="block text-center text-xs text-green-400 hover:text-green-300 mt-1"
+        >
+          📲 Notificar al Admin por WhatsApp
+        </a>
+      )}
+    </form>
+  );
+};
+
 const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave, onUpdateUser, onTransferBalance, onLogout, onExit, onPlayJornada, onProcessClientRecharge, onUpdateCarton }) => {
   const { liveEvents } = useLiveScores();
   const [activeTab, setActiveTab] = useState<PromoterTab>(() => {
@@ -474,9 +541,26 @@ const PromoterPage: React.FC<PromoterPageProps> = ({ currentUser, config, onSave
                   </div>
                 </div>
 
+                {/* Solicitar Recarga de Saldo al Admin */}
+                <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                  <h3 className="font-bold text-green-400">💳 Solicitar Recarga de Saldo</h3>
+                  <p className="text-xs text-gray-400">
+                    Realiza el pago al administrador y envía tu comprobante para que tu saldo sea acreditado.
+                  </p>
+                  <div className="flex flex-col items-center py-2">
+                    {config.recharge?.qrCodeUrl ? (
+                      <img src={config.recharge.qrCodeUrl} alt="QR de pago del Admin" className="w-48 h-48 rounded-lg bg-white p-2" />
+                    ) : (
+                      <div className="w-48 h-48 rounded-lg bg-gray-700 flex items-center justify-center text-center p-4">
+                        <p className="text-sm text-gray-400">El administrador no ha configurado un QR de pago.</p>
+                      </div>
+                    )}
+                  </div>
+                  <PromoterRechargeForm config={config} currentUser={currentUser} />
+                </div>
+
                 {/* Solicitudes de Recarga de Clientes */}
                 <ClientRechargesTab currentUser={currentUser} config={config} onProcessClientRecharge={onProcessClientRecharge} />
-
 
 
                 {/* Transaction History */}
