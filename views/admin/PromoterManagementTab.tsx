@@ -241,50 +241,67 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
       {showCreateForm && (
         <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-lg space-y-3">
           <h3 className="font-bold text-purple-300">Crear Nuevo Promotor</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="text"
-              value={newUsername}
-              onChange={e => setNewUsername(e.target.value)}
-              placeholder="Nombre de usuario"
-              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
-            />
-            <input
-              type="email"
-              value={newEmail}
-              onChange={e => setNewEmail(e.target.value)}
-              placeholder="Email"
-              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
-            />
-            <input
-              type="password"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-              placeholder="Contraseña"
-              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
-            />
-            <input
-              type="text"
-              value={newDisplayName}
-              onChange={e => setNewDisplayName(e.target.value)}
-              placeholder="Nombre comercial (ej: El Tigre)"
-              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
-            />
-            <input
-              type="text"
-              value={newReferralCode}
-              onChange={e => setNewReferralCode(e.target.value.toUpperCase())}
-              placeholder="Código referido (ej: TIGRE24)"
-              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm font-mono"
-            />
-            <input
-              type="tel"
-              value={newPhone}
-              onChange={e => setNewPhone(e.target.value)}
-              placeholder="Teléfono"
-              className="bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
-            />
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Nombre del promotor</label>
+              <input
+                type="text"
+                value={newDisplayName}
+                onChange={e => setNewDisplayName(e.target.value)}
+                placeholder="Ej: Juan Pérez"
+                className="w-full bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Usuario</label>
+              <input
+                type="text"
+                value={newUsername}
+                onChange={e => setNewUsername(e.target.value)}
+                placeholder="Ej: juanperez"
+                className="w-full bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Correo</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                placeholder="correo@ejemplo.com"
+                className="w-full bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Contraseña</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Contraseña segura"
+                className="w-full bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Código de referido</label>
+              <input
+                type="text"
+                value={newReferralCode}
+                onChange={e => setNewReferralCode(e.target.value.toUpperCase())}
+                placeholder="Ej: TIGRE24"
+                className="w-full bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Teléfono</label>
+              <input
+                type="tel"
+                value={newPhone}
+                onChange={e => setNewPhone(e.target.value)}
+                placeholder="71234567"
+                className="w-full bg-gray-700 p-2 rounded-lg border border-gray-600 text-sm"
+              />
+            </div>
           </div>
           <button
             onClick={handleCreatePromoter}

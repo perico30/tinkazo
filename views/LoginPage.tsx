@@ -19,23 +19,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Mapeo especial para el usuario Super Admin
     let loginEmail = email.trim();
     if (loginEmail.toLowerCase() === 'superadmin') {
         loginEmail = 'superadmin@tinkazo.com';
     } else if (!loginEmail.includes('@')) {
-        // Buscar el correo por el nombre de usuario
         const matchedUser = users.find(u => u.username.toLowerCase() === loginEmail.toLowerCase());
         if (matchedUser) {
             loginEmail = matchedUser.email;
         } else {
-            setError('Usuario no encontrado. Intenta con tu correo electrónico.');
+            setError('Usuario no encontrado.');
             setIsLoading(false);
             return;
         }
@@ -53,15 +52,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
              const userProfile = users.find(u => u.email === authData.user?.email);
              if (userProfile) {
                  if (userProfile.status === 'pending') {
-                     // Sign out immediately if pending
                      await supabase.auth.signOut();
-                     setError('Tu cuenta está pendiente de activación por un administrador.');
+                     setError('Tu cuenta está pendiente de activación.');
                      setIsLoading(false);
                      return;
                  }
                  onUserLogin(userProfile);
              } else {
-                 setError('No se encontró el perfil de usuario. Contacta soporte.');
+                 setError('No se encontró el perfil de usuario.');
                  await supabase.auth.signOut();
              }
         }
@@ -107,11 +105,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
           <div className="glass-card p-8 rounded-2xl">
             <h2 className="text-3xl font-bold text-center text-white mb-6">Iniciar Sesión</h2>
             
-            {/* Google Login Button */}
+            {/* Google Login Button - Primary */}
             <button
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading || isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-semibold py-3 rounded-lg shadow-lg hover:bg-gray-100 transition disabled:opacity-50 mb-6"
+              className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-semibold py-3.5 rounded-lg shadow-lg hover:bg-gray-100 transition disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -122,52 +120,56 @@ const LoginPage: React.FC<LoginPageProps> = ({ setCurrentView, onAdminLogin, onU
               {isGoogleLoading ? 'Redirigiendo...' : 'Continuar con Google'}
             </button>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex-1 h-px bg-gray-600"></div>
-              <span className="text-gray-500 text-sm">o con tu cuenta</span>
-              <div className="flex-1 h-px bg-gray-600"></div>
-            </div>
+            {error && !showAdminLogin && <p className="text-sm text-red-400 text-center mt-4">{error}</p>}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="text-sm font-medium text-gray-300 block mb-2">Correo o Usuario</label>
-                <input
-                  type="text"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition"
-                  placeholder="usuario o tu@correo.com"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="text-sm font-medium text-gray-300 block mb-2">Contraseña</label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full text-white font-bold py-3 rounded-lg shadow-lg btn-gradient disabled:opacity-50"
-              >
-                {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-              </button>
-            </form>
             <p className="text-center text-gray-400 mt-6">
               ¿No tienes cuenta?{' '}
               <button onClick={() => setCurrentView('register')} className="font-semibold text-cyan-400 hover:underline">Regístrate</button>
             </p>
+
+            {/* Admin/Promoter Login - Secondary */}
+            <div className="mt-6 pt-4 border-t border-gray-700">
+              <button
+                onClick={() => setShowAdminLogin(!showAdminLogin)}
+                className="w-full text-xs text-gray-500 hover:text-gray-300 transition"
+              >
+                {showAdminLogin ? '▲ Ocultar acceso promotor/admin' : '▼ Acceso promotor / administrador'}
+              </button>
+              
+              {showAdminLogin && (
+                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                  <div>
+                    <input
+                      type="text"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition text-sm"
+                      placeholder="Correo o usuario"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition text-sm"
+                      placeholder="Contraseña"
+                      required
+                    />
+                  </div>
+                  {error && showAdminLogin && <p className="text-sm text-red-400 text-center">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full text-white font-bold py-2.5 rounded-lg shadow-lg bg-gray-700 hover:bg-gray-600 transition text-sm disabled:opacity-50"
+                  >
+                    {isLoading ? 'Iniciando...' : 'Iniciar como Promotor/Admin'}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </div>
