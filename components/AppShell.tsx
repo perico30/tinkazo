@@ -59,7 +59,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
             <button 
-              onClick={() => window.location.reload()} 
+              onClick={async () => {
+                if ('serviceWorker' in navigator) {
+                  try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                      await registration.unregister();
+                    }
+                  } catch (e) {
+                    console.error('Failed to unregister service workers:', e);
+                  }
+                }
+                if ('caches' in window) {
+                  try {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                  } catch (e) {
+                    console.error('Failed to clear caches:', e);
+                  }
+                }
+                window.location.reload();
+              }} 
               className="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_15px_rgba(239,68,68,0.3)] w-full"
             >
               Reintentar
