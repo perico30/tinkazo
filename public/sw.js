@@ -1,4 +1,4 @@
-// TINKAZO Service Worker with Workbox — v2 (force cache refresh)
+// TINKAZO Service Worker with Workbox — v3 (force cache refresh / remove Supabase cache)
 importScripts(
   "https://storage.googleapis.com/workbox-cdn/releases/7.1.0/workbox-sw.js"
 );
@@ -16,7 +16,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => !name.includes('-v2'))
+          .filter((name) => !name.includes('-v3'))
           .map((name) => caches.delete(name))
       );
     }).then(() => self.clients.claim())
@@ -24,7 +24,7 @@ self.addEventListener('activate', (event) => {
 });
 
 if (workbox) {
-  console.log("[SW] Workbox v2 loaded successfully");
+  console.log("[SW] Workbox v3 loaded successfully");
 
   const { registerRoute } = workbox.routing;
   const { NetworkFirst, StaleWhileRevalidate } = workbox.strategies;
@@ -35,7 +35,7 @@ if (workbox) {
   registerRoute(
     ({ request }) => request.mode === "navigate",
     new NetworkFirst({
-      cacheName: "tinkazo-pages-v2",
+      cacheName: "tinkazo-pages-v3",
       plugins: [
         new CacheableResponsePlugin({ statuses: [0, 200] }),
         new ExpirationPlugin({
@@ -51,7 +51,7 @@ if (workbox) {
     ({ request }) =>
       ["style", "script", "worker"].includes(request.destination),
     new NetworkFirst({
-      cacheName: "tinkazo-assets-v2",
+      cacheName: "tinkazo-assets-v3",
       plugins: [
         new CacheableResponsePlugin({ statuses: [0, 200] }),
         new ExpirationPlugin({
@@ -66,7 +66,7 @@ if (workbox) {
   registerRoute(
     ({ request }) => request.destination === "image",
     new StaleWhileRevalidate({
-      cacheName: "tinkazo-images-v2",
+      cacheName: "tinkazo-images-v3",
       plugins: [
         new CacheableResponsePlugin({ statuses: [0, 200] }),
         new ExpirationPlugin({
@@ -81,7 +81,7 @@ if (workbox) {
   registerRoute(
     ({ request }) => request.destination === "font",
     new StaleWhileRevalidate({
-      cacheName: "tinkazo-fonts-v2",
+      cacheName: "tinkazo-fonts-v3",
       plugins: [
         new CacheableResponsePlugin({ statuses: [0, 200] }),
         new ExpirationPlugin({
@@ -92,20 +92,7 @@ if (workbox) {
     })
   );
 
-  // Cache API requests to Supabase with NetworkFirst
-  registerRoute(
-    ({ url }) => url.hostname.includes("supabase.co"),
-    new NetworkFirst({
-      cacheName: "tinkazo-api-v2",
-      plugins: [
-        new CacheableResponsePlugin({ statuses: [0, 200] }),
-        new ExpirationPlugin({
-          maxEntries: 50,
-          maxAgeSeconds: 5 * 60, // 5 minutes
-        }),
-      ],
-    })
-  );
+  // Supabase requests must not be cached by Service Worker to avoid connection errors, session sync issues and cold start timeout conflicts.
 } else {
   console.warn("[SW] Workbox failed to load");
 }
