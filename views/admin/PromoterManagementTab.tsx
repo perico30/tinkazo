@@ -77,17 +77,15 @@ const PromoterManagementTab: React.FC<PromoterManagementTabProps> = ({ config, s
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Step 3: Update the auto-created row (trigger already inserted it)
-      const { error: updateError } = await supabase.from('users').upsert({
-        id: userId,
+      const { error: updateError } = await supabase.from('users').update({
         username: newUsername,
         email: newEmail,
         phone: newPhone || '0000000',
         country: 'VE',
         role: 'promoter',
         status: 'active',
-        balance: 0,
         referral_code: newReferralCode.toUpperCase()
-      }, { onConflict: 'id' });
+      }).eq('id', userId);
       if (updateError) {
         console.error("Error updating public.users:", updateError);
       }

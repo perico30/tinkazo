@@ -593,21 +593,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
             if (data?.user) {
                 await new Promise(resolve => setTimeout(resolve, 500));
-                const { error: upsertError } = await supabase.from('users').upsert({
-                    id: data.user.id,
+                const { error: updateError } = await supabase.from('users').update({
                     username: userData.username,
                     email: userData.email,
                     role: 'client',
                     phone: userData.phone,
                     country: 'BO',
                     status: autoActivate ? 'active' : 'pending',
-                    balance: 0,
                     assigned_seller_id: assignedSellerId,
                     referred_by: referrerId,
-                    referral_code: null
-                }, { onConflict: 'id' });
-                if (upsertError) {
-                    console.error("Error upsert public.users:", upsertError);
+                }).eq('id', data.user.id);
+                if (updateError) {
+                    console.error("Error updating public.users:", updateError);
                 }
             }
 

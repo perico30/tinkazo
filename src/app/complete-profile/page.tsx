@@ -13,6 +13,7 @@ export default function CompleteProfilePage() {
   const [phone, setPhone] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [googleData, setGoogleData] = useState<{ id: string; email: string; name: string } | null>(null);
 
@@ -63,22 +64,17 @@ export default function CompleteProfilePage() {
         return;
       }
 
-      // Create user profile in public.users
-      const { error: upsertError } = await supabase.from('users').upsert({
-        id: googleData.id,
+      // Update the existing user profile in public.users (already created by auth trigger)
+      const { error: updateError } = await supabase.from('users').update({
         username: username.trim(),
-        email: googleData.email,
-        role: 'client',
         phone: phone.trim(),
         country: 'BO',
         status: 'active',
-        balance: 0,
         assigned_seller_id: assignedSellerId,
         referred_by: referrerId,
-        referral_code: null,
-      }, { onConflict: 'id' });
+      }).eq('id', googleData.id);
 
-      if (upsertError) throw upsertError;
+      if (updateError) throw updateError;
 
       // Clean up temp data
       localStorage.removeItem('tinkazoGooglePending');
@@ -100,16 +96,28 @@ export default function CompleteProfilePage() {
       localStorage.setItem('tinkazoCurrentUser', JSON.stringify(newUser));
       localStorage.setItem('tinkazoUserRole', 'client');
 
-      alert('¡Registro exitoso! Tu cuenta ha sido activada automáticamente.');
-      
-      // Force a full page reload to re-fetch data
-      window.location.href = '/';
+      setIsSuccess(true);
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1500);
     } catch (err: any) {
       setError(err.message || 'Error al completar el perfil.');
-    } finally {
       setIsLoading(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-4">
+        <div className="w-full max-w-md text-center bg-gray-800/80 border border-purple-500/30 p-8 rounded-2xl shadow-2xl shadow-purple-500/10 backdrop-blur-md">
+          <span className="text-6xl mb-4 block animate-bounce">🎉</span>
+          <h2 className="text-2xl font-bold text-white mb-2 font-sans">¡Registro Exitoso!</h2>
+          <p className="text-purple-400 text-sm font-semibold mb-4">Tu cuenta ha sido activada automáticamente.</p>
+          <p className="text-gray-400 text-xs font-medium">Redirigiéndote al inicio...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!googleData) {
     return (
