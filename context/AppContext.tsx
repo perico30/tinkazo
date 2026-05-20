@@ -333,64 +333,84 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             console.log('onAuthStateChange:', event, session?.user?.email);
 
             if (session?.user) {
-                try {
-                    const { data: profile, error } = await supabase
-                        .from('users')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single();
+                // Only fetch and update if there is no currentUser, or if the user ID changed
+                if (!currentUser || currentUser.id !== session.user.id) {
+                    try {
+                        const { data: profile, error } = await supabase
+                            .from('users')
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
 
-                    if (error || !profile) {
-                        console.error('Error fetching user profile from users table:', error);
-                        return;
-                    }
+                        if (error || !profile) {
+                            console.error('Error fetching user profile from users table:', error);
+                            return;
+                        }
 
-                    const hasCompletedProfile = !!(profile.phone && profile.username && profile.country);
+                        const hasCompletedProfile = !!(profile.phone && profile.username && profile.country);
 
-                    if (profile.status === 'active') {
-                        const role = profile.role as UserRole;
-                        const sanitizedUser = {
-                            id: profile.id,
-                            username: profile.username,
-                            email: profile.email,
-                            phone: profile.phone || '',
-                            country: profile.country || '',
-                            role: profile.role,
-                            status: profile.status,
-                            assignedSellerId: profile.assigned_seller_id,
-                            balance: parseFloat(profile.balance || '0'),
-                            referredBy: profile.referred_by
-                        };
+                        if (profile.status === 'active') {
+                            const role = profile.role as UserRole;
+                            
+                            // Fetch seller profile details if user is a seller to match useSupabaseData shape
+                            let sellerQrCodeUrl = undefined;
+                            let sellerWhatsappNumber = undefined;
+                            if (profile.role === 'seller') {
+                                const { data: sellerProfile } = await supabase
+                                    .from('seller_profiles')
+                                    .select('*')
+                                    .eq('user_id', profile.id)
+                                    .single();
+                                if (sellerProfile) {
+                                    sellerQrCodeUrl = sellerProfile.qr_code_url;
+                                    sellerWhatsappNumber = sellerProfile.whatsapp_number;
+                                }
+                            }
 
-                        if (JSON.stringify(currentUser) !== JSON.stringify(sanitizedUser) || userRole !== role) {
+                            const sanitizedUser = {
+                                id: profile.id,
+                                username: profile.username,
+                                email: profile.email,
+                                phone: profile.phone || '',
+                                country: profile.country || '',
+                                role: profile.role,
+                                status: profile.status,
+                                assignedSellerId: profile.assigned_seller_id,
+                                balance: parseFloat(profile.balance || '0'),
+                                referredBy: profile.referred_by,
+                                sellerQrCodeUrl,
+                                sellerWhatsappNumber,
+                                referralCode: profile.referral_code || null
+                            };
+
                             setCurrentUser(sanitizedUser);
                             setUserRole(role);
                             localStorage.setItem('tinkazoCurrentUser', JSON.stringify(sanitizedUser));
                             localStorage.setItem('tinkazoUserRole', role || '');
-                        }
-                    } else if (profile.status === 'pending') {
-                        if (!hasCompletedProfile) {
-                            localStorage.setItem('tinkazoGooglePending', JSON.stringify({
-                                id: session.user.id,
-                                email: session.user.email,
-                                name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
-                            }));
-                            if (window.location.pathname !== '/complete-profile') {
-                                window.location.href = '/complete-profile';
+                        } else if (profile.status === 'pending') {
+                            if (!hasCompletedProfile) {
+                                localStorage.setItem('tinkazoGooglePending', JSON.stringify({
+                                    id: session.user.id,
+                                    email: session.user.email,
+                                    name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
+                                }));
+                                if (window.location.pathname !== '/complete-profile') {
+                                    window.location.href = '/complete-profile';
+                                }
+                            } else {
+                                await supabase.auth.signOut();
+                                setUserRole(null);
+                                setCurrentUser(null);
+                                localStorage.removeItem('tinkazoUserRole');
+                                localStorage.removeItem('tinkazoCurrentUser');
+                                localStorage.removeItem('tinkazoCurrentPath');
+                                alert('Tu cuenta está registrada pero requiere la activación por parte de un administrador o promotor.');
+                                window.location.href = '/login';
                             }
-                        } else {
-                            await supabase.auth.signOut();
-                            setUserRole(null);
-                            setCurrentUser(null);
-                            localStorage.removeItem('tinkazoUserRole');
-                            localStorage.removeItem('tinkazoCurrentUser');
-                            localStorage.removeItem('tinkazoCurrentPath');
-                            alert('Tu cuenta está registrada pero requiere la activación por parte de un administrador o promotor.');
-                            window.location.href = '/login';
                         }
+                    } catch (fetchErr) {
+                        console.error('Failed to sync auth state profile:', fetchErr);
                     }
-                } catch (fetchErr) {
-                    console.error('Failed to sync auth state profile:', fetchErr);
                 }
             } else {
                 const localUser = localStorage.getItem('tinkazoCurrentUser');
