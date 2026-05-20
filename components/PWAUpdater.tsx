@@ -10,7 +10,7 @@ export default function PWAUpdater() {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
     navigator.serviceWorker
-      .register('/sw.js')
+      .register('/sw.js?v=3')
       .then((reg) => {
         console.log('[PWA] Service Worker registered:', reg.scope);
         setRegistration(reg);
