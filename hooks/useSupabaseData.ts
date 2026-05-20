@@ -32,7 +32,7 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
         ]);
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout de conexión a Supabase (10 segundos)')), 10000)
+          setTimeout(() => reject(new Error('Timeout de conexión a Supabase (25 segundos)')), 25000)
         );
 
         const [
