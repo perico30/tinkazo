@@ -327,6 +327,88 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    // --- Effect: Sync and handle Supabase Auth state changes ---
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('onAuthStateChange:', event, session?.user?.email);
+
+            if (session?.user) {
+                try {
+                    const { data: profile, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    if (error || !profile) {
+                        console.error('Error fetching user profile from users table:', error);
+                        return;
+                    }
+
+                    const hasCompletedProfile = !!(profile.phone && profile.username && profile.country);
+
+                    if (profile.status === 'active') {
+                        const role = profile.role as UserRole;
+                        const sanitizedUser = {
+                            id: profile.id,
+                            username: profile.username,
+                            email: profile.email,
+                            phone: profile.phone || '',
+                            country: profile.country || '',
+                            role: profile.role,
+                            status: profile.status,
+                            assignedSellerId: profile.assigned_seller_id,
+                            balance: parseFloat(profile.balance || '0'),
+                            referredBy: profile.referred_by
+                        };
+
+                        if (JSON.stringify(currentUser) !== JSON.stringify(sanitizedUser) || userRole !== role) {
+                            setCurrentUser(sanitizedUser);
+                            setUserRole(role);
+                            localStorage.setItem('tinkazoCurrentUser', JSON.stringify(sanitizedUser));
+                            localStorage.setItem('tinkazoUserRole', role || '');
+                        }
+                    } else if (profile.status === 'pending') {
+                        if (!hasCompletedProfile) {
+                            localStorage.setItem('tinkazoGooglePending', JSON.stringify({
+                                id: session.user.id,
+                                email: session.user.email,
+                                name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
+                            }));
+                            if (window.location.pathname !== '/complete-profile') {
+                                window.location.href = '/complete-profile';
+                            }
+                        } else {
+                            await supabase.auth.signOut();
+                            setUserRole(null);
+                            setCurrentUser(null);
+                            localStorage.removeItem('tinkazoUserRole');
+                            localStorage.removeItem('tinkazoCurrentUser');
+                            localStorage.removeItem('tinkazoCurrentPath');
+                            alert('Tu cuenta está registrada pero requiere la activación por parte de un administrador o promotor.');
+                            window.location.href = '/login';
+                        }
+                    }
+                } catch (fetchErr) {
+                    console.error('Failed to sync auth state profile:', fetchErr);
+                }
+            } else {
+                const localUser = localStorage.getItem('tinkazoCurrentUser');
+                if (localUser) {
+                    setUserRole(null);
+                    setCurrentUser(null);
+                    localStorage.removeItem('tinkazoUserRole');
+                    localStorage.removeItem('tinkazoCurrentUser');
+                    localStorage.removeItem('tinkazoCurrentPath');
+                }
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [currentUser, userRole]);
+
     // --- Effect: Sync currentUser with real-time appConfig.users ---
     useEffect(() => {
         if (currentUser && appConfig.users.length > 0) {
@@ -519,7 +601,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
     }, [showNotification, appConfig.promoterProfiles, appConfig.users, router]);
 
-    const handleLogout = useCallback(() => {
+    const handleLogout = useCallback(async () => {
+        try {
+            await supabase.auth.signOut();
+        } catch (err) {
+            console.error("Error signing out from Supabase:", err);
+        }
         setUserRole(null);
         setCurrentUser(null);
         localStorage.removeItem('tinkazoUserRole');
