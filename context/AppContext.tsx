@@ -216,7 +216,7 @@ interface AppContextType {
     updateConfig: (config: Partial<AppConfig>) => void;
     isLoading: boolean;
     isConfigLoaded: boolean;
-    dataFetchError: boolean;
+    dataFetchError: string | null;
     currentUser: RegisteredUser | null;
     userRole: UserRole;
     notification: string | null;

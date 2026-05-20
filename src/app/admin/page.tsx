@@ -14,7 +14,7 @@ export default function AdminRoute() {
       onExit={ctx.navigateToHome}
       onProcessWithdrawal={ctx.handleProcessWithdrawal}
       onProcessSellerRecharge={ctx.handleProcessSellerRecharge}
-      dataFetchError={ctx.dataFetchError}
+      dataFetchError={!!ctx.dataFetchError}
     />
   );
 }

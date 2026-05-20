@@ -6,14 +6,14 @@ import type { AppConfig, RegisteredUser, Jornada, Carton, WithdrawalRequest, Rec
 export function useSupabaseData(initialAppConfig: AppConfig) {
   const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
   const [isLoading, setIsLoading] = useState(true);
-  const [dataFetchError, setDataFetchError] = useState(false);
+  const [dataFetchError, setDataFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     if (!supabase) {
       setIsLoading(false);
-      setDataFetchError(true);
+      setDataFetchError('Cliente Supabase no inicializado (faltan variables de entorno NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY).');
       return;
     }
 
@@ -186,10 +186,10 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
         }
 
         setAppConfig(mergedConfig);
-        setDataFetchError(false); // Clear error on success
-      } catch (error) {
+        setDataFetchError(null); // Clear error on success
+      } catch (error: any) {
         console.error("Error loading initial data from Supabase:", error);
-        setDataFetchError(true); // Flag that an error occurred preventing full load
+        setDataFetchError(error?.message || 'Error desconocido al cargar datos iniciales de Supabase.');
       } finally {
         if (isMounted) setIsLoading(false);
       }

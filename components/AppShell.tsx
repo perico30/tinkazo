@@ -44,15 +44,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-2xl max-w-md w-full shadow-[0_0_50px_rgba(239,68,68,0.1)]">
             <span className="text-5xl mb-4 block animate-bounce">⚠️</span>
             <h2 className="text-xl font-bold text-red-400 mb-2">Error de Conexión</h2>
-            <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+            <p className="text-gray-300 text-sm mb-4 leading-relaxed">
               No se pudo establecer la conexión con la base de datos de Supabase. 
               Por favor, asegúrate de configurar las variables de entorno 
               <code className="text-cyan-400 bg-cyan-950/50 px-1 py-0.5 rounded mx-1 font-mono text-xs">NEXT_PUBLIC_SUPABASE_URL</code> y 
               <code className="text-cyan-400 bg-cyan-950/50 px-1 py-0.5 rounded mx-1 font-mono text-xs">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> en tu hosting.
             </p>
+            {dataFetchError !== 'true' && (
+              <div className="bg-black/40 border border-red-500/20 rounded-xl p-3 mb-6 text-left">
+                <span className="text-red-400 text-xs font-bold block mb-1">Detalle del error:</span>
+                <code className="text-red-300/80 text-[11px] block font-mono break-all whitespace-pre-wrap">
+                  {dataFetchError}
+                </code>
+              </div>
+            )}
             <button 
               onClick={() => window.location.reload()} 
-              className="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_15px_rgba(239,68,68,0.3)]"
+              className="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_15px_rgba(239,68,68,0.3)] w-full"
             >
               Reintentar
             </button>
