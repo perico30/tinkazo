@@ -19,17 +19,7 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
 
     async function loadData() {
       try {
-        const [
-          { data: configData },
-          { data: usersData },
-          { data: jornadasData },
-          { data: ticketsData },
-          { data: withdrawalData },
-          { data: rechargeData },
-          { data: sellerProfilesData },
-          { data: transactionsData },
-          { data: promoterProfilesData }
-        ] = await Promise.all([
+        const fetchPromise = Promise.all([
           supabase.from('app_config').select('*').eq('id', 'main').single(),
           supabase.from('users').select('*'),
           supabase.from('jornadas').select('*'),
@@ -40,6 +30,22 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
           supabase.from('transactions').select('*').order('created_at', { ascending: false }),
           supabase.from('promoter_profiles').select('*')
         ]);
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout de conexión a Supabase (10 segundos)')), 10000)
+        );
+
+        const [
+          { data: configData },
+          { data: usersData },
+          { data: jornadasData },
+          { data: ticketsData },
+          { data: withdrawalData },
+          { data: rechargeData },
+          { data: sellerProfilesData },
+          { data: transactionsData },
+          { data: promoterProfilesData }
+        ] = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
         if (!isMounted) return;
 
