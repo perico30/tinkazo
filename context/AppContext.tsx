@@ -329,6 +329,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // --- Effect: Sync and handle Supabase Auth state changes ---
     useEffect(() => {
+        if (!supabase) return;
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('onAuthStateChange:', event, session?.user?.email);
 
@@ -449,7 +450,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // --- Effect: Auto-Close Jornadas at < 10 Minutes ---
     useEffect(() => {
-        if (!isConfigLoaded) return;
+        if (!isConfigLoaded || !supabase) return;
         const interval = setInterval(() => {
             const now = Date.now();
             appConfig.jornadas.forEach(async (j) => {

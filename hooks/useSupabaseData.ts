@@ -11,6 +11,12 @@ export function useSupabaseData(initialAppConfig: AppConfig) {
   useEffect(() => {
     let isMounted = true;
 
+    if (!supabase) {
+      setIsLoading(false);
+      setDataFetchError(true);
+      return;
+    }
+
     async function loadData() {
       try {
         const [
